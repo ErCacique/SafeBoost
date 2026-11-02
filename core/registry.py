@@ -78,10 +78,12 @@ class RegistryBackend(Protocol):
 
 
 class MemoryRegistryBackend:
-    """Registro simulado. Claves case-insensitive como en Windows."""
+    """Registro simulado. Claves y nombres case-insensitive como en Windows, pero conserva
+    la grafía original de cada nombre de valor."""
 
     def __init__(self) -> None:
-        self._keys: dict[tuple[str, str], dict[str, RegValue]] = {}
+        # (raíz, ruta en minúsculas) -> {nombre en minúsculas: (nombre original, valor)}
+        self._keys: dict[tuple[str, str], dict[str, tuple[str, RegValue]]] = {}
 
     @staticmethod
     def _k(root: Root, path: str) -> tuple[str, str]:
@@ -91,17 +93,15 @@ class MemoryRegistryBackend:
         self.write(root, path, name, value)
 
     def read(self, root: Root, path: str, name: str) -> RegValue | None:
-        values = self._keys.get(self._k(root, path))
-        if values is None:
-            return None
-        return values.get(name.lower())
+        entry = self._keys.get(self._k(root, path), {}).get(name.lower())
+        return entry[1] if entry else None
 
     def write(self, root: Root, path: str, name: str, value: RegValue) -> None:
         # Crear también las claves padre, como CreateKeyEx.
         parts = path.strip("\\").split("\\")
         for i in range(1, len(parts) + 1):
             self._keys.setdefault(self._k(root, "\\".join(parts[:i])), {})
-        self._keys[self._k(root, path)][name.lower()] = value
+        self._keys[self._k(root, path)][name.lower()] = (name, value)
 
     def delete_value(self, root: Root, path: str, name: str) -> bool:
         values = self._keys.get(self._k(root, path))
@@ -130,7 +130,7 @@ class MemoryRegistryBackend:
         return sorted(out)
 
     def values(self, root: Root, path: str) -> dict[str, RegValue]:
-        return dict(self._keys.get(self._k(root, path), {}))
+        return {name: value for name, value in self._keys.get(self._k(root, path), {}).values()}
 
 
 # --------------------------------------------------------------------------- backend winreg
