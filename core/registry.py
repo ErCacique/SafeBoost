@@ -161,10 +161,10 @@ class WinRegBackend:
         self._kind_names = {v: k for k, v in self._kinds.items()}
 
     def _open(self, root: Root, path: str, write: bool = False) -> Any:
-        access = self._w.KEY_WOW64_64KEY | (
+        rights = self._w.KEY_WOW64_64KEY | (
             self._w.KEY_READ | self._w.KEY_SET_VALUE if write else self._w.KEY_READ
         )
-        return self._w.OpenKey(self._roots[root], path, 0, access)
+        return self._w.OpenKey(self._roots[root], path, 0, rights)
 
     def read(self, root: Root, path: str, name: str) -> RegValue | None:
         try:
@@ -178,8 +178,8 @@ class WinRegBackend:
         return RegValue(kind_name, data)  # type: ignore[arg-type]
 
     def write(self, root: Root, path: str, name: str, value: RegValue) -> None:
-        access = self._w.KEY_WOW64_64KEY | self._w.KEY_SET_VALUE
-        with self._w.CreateKeyEx(self._roots[root], path, 0, access) as key:
+        rights = self._w.KEY_WOW64_64KEY | self._w.KEY_SET_VALUE
+        with self._w.CreateKeyEx(self._roots[root], path, 0, rights) as key:
             self._w.SetValueEx(key, name, 0, self._kinds[value.kind], value.data)
 
     def delete_value(self, root: Root, path: str, name: str) -> bool:
