@@ -60,7 +60,11 @@ class Snapshot:
 
 def take_snapshot(system_drive: str = "C:", cpu_interval: float = 0.5) -> Snapshot:
     mem = psutil.virtual_memory()
-    disk = psutil.disk_usage(system_drive.rstrip("\\") + "\\")
+    root = system_drive.rstrip("\\") + "\\"
+    if not Path(root).exists():
+        # Modo demo fuera de Windows: no hay unidad C:, se mide la raíz del sistema actual.
+        root = str(Path.cwd().anchor or "/")
+    disk = psutil.disk_usage(root)
     return Snapshot(
         taken=datetime.now().isoformat(timespec="seconds"),
         ram_total=mem.total,

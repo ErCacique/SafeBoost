@@ -1,0 +1,178 @@
+"""Modo demostración (`python main.py --demo`): entorno y sistema simulados.
+
+Permite desarrollar y probar la interfaz fuera de Windows o sin privilegios. Nada de lo que
+se "aplica" en este modo toca el sistema real: el registro es en memoria y los comandos se
+responden con datos ficticios.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
+from core.constants import SERVICES_KEY
+from core.environment import EnvironmentInfo
+from core.process import CommandResult
+from core.registry import MemoryRegistryBackend, RegValue
+
+DEMO_SID = "S-1-5-21-1000000000-2000000000-3000000000-1001"
+
+_DEMO_SERVICES: dict[str, int] = {
+    "DiagTrack": 2,
+    "dmwappushservice": 3,
+    "Fax": 3,
+    "MapsBroker": 2,
+    "RetailDemo": 3,
+    "WerSvc": 3,
+    "SysMain": 2,
+    "PcaSvc": 2,
+    "TrkWks": 2,
+    "wisvc": 3,
+    "PhoneSvc": 3,
+    "WMPNetworkSvc": 3,
+    "XblAuthManager": 3,
+    "XblGameSave": 3,
+    "XboxNetApiSvc": 3,
+    "lfsvc": 3,
+    "Spooler": 2,
+    "WinDefend": 2,
+    "wuauserv": 3,
+}
+
+
+def demo_environment() -> EnvironmentInfo:
+    return EnvironmentInfo(
+        build=22631,
+        ubr=4317,
+        display_version="23H2",
+        product_name="Windows 10 Pro",
+        edition_id="Professional",
+        edition="pro",
+        system_drive="C:",
+        disk_type="ssd",
+        chassis="desktop",
+        interactive_user="DEMO\\usuario",
+        interactive_sid=DEMO_SID,
+        elevated_user="DEMO\\usuario",
+        is_admin=True,
+        warnings=["Modo demostración: ningún cambio afecta al sistema real."],
+    )
+
+
+def demo_registry() -> MemoryRegistryBackend:
+    backend = MemoryRegistryBackend()
+    for name, start in _DEMO_SERVICES.items():
+        key = f"{SERVICES_KEY}\\{name}"
+        backend.seed("HKLM", key, "Start", RegValue("REG_DWORD", start))
+        backend.seed("HKLM", key, "Type", RegValue("REG_DWORD", 16))
+    backend.seed(
+        "HKLM",
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+        "SecurityHealth",
+        RegValue("REG_EXPAND_SZ", r"%windir%\system32\SecurityHealthSystray.exe"),
+    )
+    user_run = rf"{DEMO_SID}\Software\Microsoft\Windows\CurrentVersion\Run"
+    backend.seed(
+        "HKU",
+        user_run,
+        "OneDrive",
+        RegValue("REG_SZ", r'"C:\Program Files\Microsoft OneDrive\OneDrive.exe" /background'),
+    )
+    backend.seed(
+        "HKU",
+        user_run,
+        "Spotify",
+        RegValue("REG_SZ", r'"C:\Users\usuario\AppData\Roaming\Spotify\Spotify.exe" /minimized'),
+    )
+    backend.seed(
+        "HKLM",
+        r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{11111111-2222-3333-4444-555555555555}",
+        "DhcpIPAddress",
+        RegValue("REG_SZ", "192.168.1.20"),
+    )
+    backend.seed(
+        "HKLM",
+        r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore",
+        "RPSessionInterval",
+        RegValue("REG_DWORD", 1),
+    )
+    return backend
+
+
+class DemoRunner:
+    """Responde a los comandos con datos plausibles. No ejecuta nada."""
+
+    def __init__(self) -> None:
+        self._sequence = 40
+        self._scheme = "381b4222-f694-41f0-9685-ff5bb260df2e"
+        self._removed: set[str] = set()
+
+    def run(self, args: list[str], timeout: int = 60, encoding: str | None = None) -> CommandResult:
+        joined = " ".join(args).lower()
+        out = ""
+        if "/getactivescheme" in joined:
+            out = f"GUID del plan de energía: {self._scheme}  (Demo)"
+        elif "/list" in joined and "powercfg" in joined:
+            out = (
+                "381b4222-f694-41f0-9685-ff5bb260df2e (Equilibrado)\n"
+                "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c (Alto rendimiento)"
+            )
+        elif "/setactive" in joined:
+            self._scheme = args[-1].lower()
+        elif "dxdiag" in joined:
+            return CommandResult(tuple(args), 1, "", "dxdiag no disponible en demo")
+        return CommandResult(tuple(args), 0, out, "")
+
+    def powershell(self, script: str, timeout: int = 120) -> CommandResult:
+        if "Remove-AppxPackage" in script or "Remove-AppxProvisionedPackage" in script:
+            self._removed.add(script.split("'")[1].split("_")[0].lower())
+        return CommandResult(("powershell",), 0, "", "")
+
+    def powershell_json(self, script: str, timeout: int = 120) -> Any:
+        if "Get-AppxPackage" in script:
+            names = [
+                "king.com.CandyCrushSaga",
+                "Microsoft.BingNews",
+                "Microsoft.BingWeather",
+                "Clipchamp.Clipchamp",
+                "Microsoft.MicrosoftSolitaireCollection",
+                "Microsoft.GetHelp",
+                "Microsoft.Getstarted",
+                "Microsoft.WindowsFeedbackHub",
+                "Microsoft.YourPhone",
+                "Microsoft.Copilot",
+                "Microsoft.GamingApp",
+            ]
+            live = [n for n in names if n.lower() not in self._removed]
+            return {
+                "installed": [
+                    {"Name": n, "PackageFullName": f"{n}_1.0.0.0_x64__demo"} for n in live
+                ],
+                "provisioned": [
+                    {"DisplayName": n, "PackageName": f"{n}_1.0.0.0_neutral_~_demo"} for n in live
+                ],
+            }
+        if "SequenceNumber" in script:
+            self._sequence += 1
+            return self._sequence
+        if "MSFT_TaskLogonTrigger" in script:
+            return [
+                {
+                    "path": "\\Adobe Acrobat Update Task",
+                    "state": "Ready",
+                    "action": r"C:\Program Files (x86)\Common Files\Adobe\ARM\1.0\AdobeARM.exe",
+                }
+            ]
+        if "Get-ScheduledTask" in script:
+            return {"state": "Ready"}
+        if "Get-NetTCPSetting" in script:
+            return [{"level": "Normal"}]
+        if "Get-NetAdapter" in script:
+            return [{"index": 12, "name": "Ethernet", "static": "", "servers": ["192.168.1.1"]}]
+        if "Win32_PageFileSetting" in script:
+            return {"auto": True, "settings": []}
+        if "Win32_Volume" in script:
+            return [{"letter": "C:", "indexing": True}, {"letter": "D:", "indexing": True}]
+        if "EventID=100" in script:
+            return {"boot_ms": 24310, "timestamp": datetime.now().replace(hour=8).isoformat()}
+        return None

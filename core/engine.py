@@ -171,6 +171,10 @@ class Engine:
             except OP_ERRORS as exc:
                 log.warning("detect_failed", extra={"tweak": tweak.id, "err": str(exc)})
                 return DetectResult(DetectState.UNKNOWN, str(exc))
+        if not any(c is not None for c in partial) and all(
+            op["op"] == "appx_remove" for op in tweak.apply
+        ):
+            return DetectResult(DetectState.APPLIED, "No instalado")
         return combine_checks(partial)
 
     def _check_op(self, op: dict[str, Any], ctx: HandlerContext) -> bool | None:
@@ -190,7 +194,8 @@ class Engine:
             info = self.tasks.query(op["path"])
             return None if not info.exists else info.enabled == op["enabled"]
         if kind == "appx_remove":
-            return not self.appx.inventory().present(op["package"])
+            # Ausente = nada que hacer (None); presente = pendiente. Ver detect().
+            return False if self.appx.inventory().present(op["package"]) else None
         return None  # command / handler: no se pueden verificar de forma genérica
 
     # ================================================================== simulación
