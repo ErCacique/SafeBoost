@@ -12,7 +12,7 @@ simulación, copias de seguridad automáticas y deshacer por sesión.
 |---|---|
 | Windows | 10 22H2 (build 19045) · 11 22H2 o superior (22621, 22631, 26100, 26200) |
 | Ediciones | Home, Pro, Enterprise, Education |
-| Python (desarrollo) | 3.12.x (PyInstaller 6.22 no admite 3.16+; el proyecto fija 3.12) |
+| Python (desarrollo) | 3.12.x (el proyecto fija 3.12) |
 | CustomTkinter | 5.2.2 (la 6.0.0 existe pero es una versión mayor; no se adopta hasta probarla) |
 | psutil | 7.2.2 |
 | PyInstaller | 6.22.3 |
@@ -27,11 +27,37 @@ py -3.12 -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements-dev.txt
 pre-commit install
-python main.py            # desde una consola elevada
+pre-commit install --hook-type pre-push
+python main.py            # pide UAC si la consola no está elevada
+python main.py --demo     # interfaz con un sistema simulado: no toca nada
 ```
 
-En Linux/macOS solo se pueden ejecutar `ruff`, `pytest` (con el registro simulado) y la
-validación del catálogo; la aplicación en sí requiere Windows.
+`--demo` funciona en cualquier sistema operativo (registro en memoria, comandos simulados) y
+sirve para desarrollar la interfaz. En Linux/macOS se pueden ejecutar además `ruff`, `pytest` y
+la validación del catálogo.
+
+### Comprobaciones locales
+
+```bash
+ruff check . && ruff format --check .
+python scripts/validate_tweaks.py      # esquema + reglas + handlers resolubles
+pytest                                  # en Linux se omiten los tests marcados "windows"
+pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store del catálogo
+```
+
+### Empaquetado
+
+```powershell
+pip install -r requirements-build.txt   # PyInstaller 6.22.3
+pyinstaller --clean --noconfirm packaging/WinTune.spec
+.\dist\WinTune.exe --self-test           # catálogo y handlers dentro del binario
+(Get-FileHash .\dist\WinTune.exe -Algorithm SHA256).Hash.ToLower()
+```
+
+El `.spec` genera un único `.exe` sin consola, con manifest `requireAdministrator`, sin UPX y
+con recurso de versión. La línea de comandos equivalente está comentada al principio del
+`.spec`. Los handlers de `tweaks/` se declaran como *hidden imports* porque se cargan
+dinámicamente; `--self-test` lo verifica en `release.yml`.
 
 ## Uso
 
@@ -250,7 +276,9 @@ ui/                     CustomTkinter: ventana, sidebar, páginas, diálogos
 data/tweaks.json        Catálogo declarativo
 data/tweaks.schema.json Esquema JSON del catálogo
 tests/                  pytest con registro/servicios simulados
-packaging/              Manifest, .spec de PyInstaller y metadatos de versión
+packaging/              .spec de PyInstaller y recurso de versión del .exe
+scripts/                Validación del catálogo y de IDs de Store
+docs/                   Configuración de GitHub y distribución
 .github/                CI, release y Dependabot
 ```
 
@@ -259,22 +287,29 @@ packaging/              Manifest, .spec de PyInstaller y metadatos de versión
 - Ramas `feat/*` y `fix/*` → PR hacia `main` (contra uno mismo) para que se ejecute el CI.
 - Commits con [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/), versiones con SemVer.
 - Release: tag `vX.Y.Z` en `main` → `release.yml` compila, calcula el SHA256 y publica.
-- La configuración de GitHub (protección de rama, escaneo de secretos), la distribución del
-  `.exe`, los falsos positivos de antivirus y la firma de código se documentan en
-  `docs/` (fase 5).
+- Configuración de GitHub (protección de rama según plan, escaneo de secretos, consumo de
+  minutos, publicación de versiones): [`docs/GITHUB_SETUP.md`](docs/GITHUB_SETUP.md).
+- Entrega del `.exe` a terceros, antivirus/SmartScreen y firma de código:
+  [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
 ## Estado
 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Estructura, README, pyproject, catálogo y esquema | ✅ |
-| 2 | `core/` | ⏳ |
-| 3 | `tweaks/` (handlers) | ⏳ |
-| 4 | `ui/` y `main.py` | ⏳ |
-| 5 | Tests, GitHub Actions, empaquetado, docs de distribución | ⏳ |
+| 2 | `core/` | ✅ |
+| 3 | `tweaks/` (handlers) | ✅ |
+| 4 | `ui/` y `main.py` | ✅ |
+| 5 | Tests, GitHub Actions, empaquetado, docs de distribución | ✅ |
+
+Probado: lint, 110 tests con registro simulado, recorrido completo de la UI en `--demo` y
+`--self-test` del binario de PyInstaller. **No probado todavía sobre Windows real**: ver Pendiente.
 
 ## Pendiente
 
-- Verificar en Windows los IDs de Microsoft Store de `appx_reinstall` y completar los cuatro `null`.
+- **Validar en una VM Windows 10 22H2 y 11 24H2** (con snapshot): perfil 1, 2 y 3, Deshacer,
+  y medición del arranque tras reiniciar. Es la primera ejecución sobre un sistema real.
+- Ejecutar `scripts/verify_store_ids.ps1` y completar los cuatro `store_id: null`.
+- Icono de la aplicación (`packaging/wintune.ico` + `icon=` en el `.spec`).
 - Si el repo se hace público: añadir `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md` y plantillas
   de issues/PR, y revisar el historial en busca de datos personales.

@@ -23,6 +23,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         prog=APP_NAME, description="Optimización reversible de Windows"
     )
     parser.add_argument("--demo", action="store_true", help="entorno simulado, sin cambios reales")
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="comprueba catálogo y handlers dentro del ejecutable y sale (código 0 = OK)",
+    )
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
     return parser.parse_args(argv)
 
@@ -40,9 +45,42 @@ def _relaunch_elevated(argv: list[str]) -> bool:
     return int(rc) > 32
 
 
+def self_test() -> int:
+    """Verifica que el binario incluye el catálogo y todos los handlers que referencia.
+
+    Los handlers se importan dinámicamente, así que un fallo de empaquetado solo aparecería
+    al aplicar un tweak concreto; esto lo detecta en el pipeline de release.
+    """
+    from core.catalog import Catalog
+    from core.context import HandlerError, resolve_handler
+
+    try:
+        catalog = Catalog.load()
+        refs = {
+            op["ref"]
+            for tweak in catalog.tweaks
+            for op in (*tweak.apply, *tweak.revert, *tweak.detect)
+            if op["op"] == "handler"
+        } | {t.requires["check"] for t in catalog.tweaks if t.requires.get("check")}
+        for ref in sorted(refs):
+            resolve_handler(ref)
+        import customtkinter  # noqa: F401
+
+        import tweaks.startup  # noqa: F401
+    except (HandlerError, ImportError, OSError, ValueError) as exc:
+        if sys.stderr:
+            print(f"self-test FALLÓ: {exc}", file=sys.stderr)
+        return 1
+    if sys.stdout:
+        print(f"self-test OK: {len(catalog.tweaks)} tweaks, {len(refs)} handlers")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     args = _parse_args(argv)
+    if args.self_test:
+        return self_test()
 
     if not args.demo:
         if sys.platform != "win32":
