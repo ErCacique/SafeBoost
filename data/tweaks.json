@@ -2247,8 +2247,8 @@
     {
       "id": "cleanup.prefetch_orphans",
       "name": "Limpiar: Prefetch obsoleto",
-      "description": "Borra entradas de Prefetch de programas que ya no existen en disco.",
-      "rationale": "Vaciar Prefetch entero empeora el arranque; solo se eliminan .pf huérfanos.",
+      "description": "Borra entradas de Prefetch que no se usan desde hace más de 90 días (normalmente de programas desinstalados).",
+      "rationale": "Vaciar Prefetch entero empeora el arranque; solo se eliminan .pf obsoletos. Windows los regenera si el programa vuelve a ejecutarse.",
       "category": "cleanup",
       "level": 2,
       "risk": "bajo",

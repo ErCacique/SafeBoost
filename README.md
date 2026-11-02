@@ -80,8 +80,9 @@ No es un tweak del catálogo, sino una herramienta interactiva: enumera las clav
 inicio de sesión. Muestra un **impacto estimado**: se calcula con los eventos de
 `Microsoft-Windows-Diagnostics-Performance` cuando existen y, si no, con una heurística (tamaño
 del binario, editor, si es un actualizador). Windows no expone por API el valor del
-Administrador de tareas. Desactivar una entrada la mueve a una ubicación de respaldo de
-WinTune, así que se puede reactivar.
+Administrador de tareas. Desactivar una entrada usa el mismo mecanismo que el
+Administrador de tareas (valores `StartupApproved`, o deshabilitar la tarea): no se borra nada,
+y cada cambio queda en una sesión que se puede deshacer desde Historial.
 
 ## Modelo de tweaks
 
@@ -163,7 +164,7 @@ Campos obligatorios: `id`, `name`, `description`, `rationale`, `category`, `leve
 | `cleanup.temp_user` | Limpiar: Temporales del usuario | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.temp_windows` | Limpiar: Temporales de Windows | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.wu_cache` | Limpiar: Caché de descargas de Windows Update | bajo | Sí | No (acción) | 10/11 |
-| `cleanup.prefetch_orphans` | Limpiar: Prefetch obsoleto | bajo | Sí | No (acción) | 10/11 |
+| `cleanup.prefetch_orphans` | Limpiar: Prefetch obsoleto (>90 días) | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.recycle_bin` | Limpiar: Papelera de reciclaje | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.thumbnails` | Limpiar: Caché de miniaturas | bajo | Sí | No (acción) | 10/11 |
 | `power.hibernate_off` | Desactivar hibernación | medio | No | Sí | 10/11 |

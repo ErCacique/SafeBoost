@@ -39,7 +39,6 @@ BACKUP_DIR: Final = APP_HOME / "backups"
 SESSIONS_DIR: Final = APP_HOME / "sessions"
 LOG_DIR: Final = APP_HOME / "logs"
 METRICS_DIR: Final = APP_HOME / "metrics"
-STARTUP_BACKUP_DIR: Final = APP_HOME / "startup_disabled"
 SETTINGS_FILE: Final = APP_HOME / "settings.json"
 
 RESOURCE_ROOT: Final = _resource_root()
@@ -245,6 +244,9 @@ TIMEOUT_DXDIAG: Final = 90
 
 CLEAN_TEMP_MIN_AGE_HOURS: Final = 24
 CLEAN_WU_MIN_AGE_DAYS: Final = 10
+CLEAN_PREFETCH_MIN_AGE_DAYS: Final = 90
+# Por debajo de este tamaño una limpieza se considera ya hecha.
+CLEAN_NEGLIGIBLE_BYTES: Final = 1024 * 1024
 
 # --------------------------------------------------------------------------- energía
 
