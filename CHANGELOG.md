@@ -7,6 +7,8 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-03
+
 ### Added
 - Estructura del repositorio, `pyproject.toml` y dependencias fijadas.
 - Catálogo declarativo `data/tweaks.json` (70 entradas en 3 niveles) y su esquema
@@ -26,3 +28,6 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - CI (`ci.yml`), release con SHA256 (`release.yml`), Dependabot y pre-commit (ruff, gitleaks,
   validación del catálogo, bloqueo de commits a `main`).
 - Documentación de configuración de GitHub y de distribución/firma de código.
+
+[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ErCacique/WinOpt/releases/tag/v0.1.0
