@@ -46,3 +46,6 @@ sessions/
 .env.*
 *.pfx
 *.p12
+
+# --- graphify (salida local; se regenera con /graphify) ---
+graphify-out/
