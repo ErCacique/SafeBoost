@@ -5,17 +5,25 @@ on:
     tags: ["v*.*.*"]
   workflow_dispatch:
     inputs:
-      publish:
-        description: "Publicar como GitHub Release (requiere ejecutarlo sobre un tag)"
-        type: boolean
-        default: false
+      tag:
+        description: >-
+          Tag a crear y publicar (p. ej. v0.1.0) sobre el commit de la rama elegida.
+          Vacío = solo compilar y subir el artifact.
+        type: string
+        default: ""
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
-  contents: write  # crear el Release y subir assets
+  contents: write  # crear el tag, el Release y subir assets
+
+env:
+  # Tag de la versión: el del push, o el indicado al lanzarlo a mano (vacío = sin publicar).
+  # Con workflow_dispatch el tag lo crea action-gh-release: un tag subido con GITHUB_TOKEN no
+  # dispararía este workflow otra vez, así que todo ocurre en esta misma ejecución.
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
 
 jobs:
   build:
@@ -40,9 +48,13 @@ jobs:
         run: pip install -r requirements-build.txt pytest==9.2.0 jsonschema==4.26.0
 
       - name: Comprobar versión (tag = APP_VERSION = pyproject)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE_TAG != ''
         run: |
-          $tag = "${{ github.ref_name }}".TrimStart('v')
+          if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+$') {
+            Write-Error "Tag no válido: $env:RELEASE_TAG (formato vX.Y.Z)"
+            exit 1
+          }
+          $tag = $env:RELEASE_TAG.TrimStart('v')
           $app = python -c "from core.constants import APP_VERSION; print(APP_VERSION)"
           $proj = python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"
           $vi = (Select-String -Path packaging/version_info.txt -Pattern "'ProductVersion', '([^']+)'").Matches[0].Groups[1].Value
@@ -75,16 +87,19 @@ jobs:
       - name: Subir artifact
         uses: actions/upload-artifact@v7
         with:
-          name: WinTune-${{ github.ref_name }}
+          name: WinTune-${{ env.RELEASE_TAG || github.sha }}
           path: |
             dist/WinTune.exe
             dist/WinTune.exe.sha256
           retention-days: 30
 
       - name: Publicar Release
-        if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'push' || inputs.publish)
+        if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          name: WinTune ${{ env.RELEASE_TAG }}
           files: |
             dist/WinTune.exe
             dist/WinTune.exe.sha256
@@ -96,4 +111,4 @@ jobs:
             (Get-FileHash .\WinTune.exe -Algorithm SHA256).Hash.ToLower()
             ```
 
-            Cambios: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md).
+            Cambios: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ env.RELEASE_TAG }}/CHANGELOG.md).

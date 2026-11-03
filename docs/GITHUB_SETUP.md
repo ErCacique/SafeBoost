@@ -104,6 +104,10 @@ git tag -a vX.Y.Z -m "WinTune vX.Y.Z"
 git push origin vX.Y.Z                         # dispara release.yml
 ```
 
+**Alternativa sin crear el tag en local:** *Actions → Release → Run workflow* sobre `main`
+con `tag = vX.Y.Z`. El workflow compila y crea el tag y el Release en esa misma ejecución.
+Con `tag` vacío solo compila y deja el `.exe` como artifact.
+
 `release.yml` compila en `windows-latest` y ejecuta `WinTune.exe --self-test`. Después
 calcula el SHA256 y publica el `.exe` y el `.sha256` como assets del Release y como artifact.
 
