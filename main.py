@@ -28,6 +28,17 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="comprueba catálogo y handlers dentro del ejecutable y sale (código 0 = OK)",
     )
+    parser.add_argument(
+        "--apply-selection",
+        metavar="ARCHIVO",
+        help="aplica una selección exportada (sin --yes solo muestra la simulación)",
+    )
+    parser.add_argument("--yes", action="store_true", help="confirma la aplicación por CLI")
+    parser.add_argument(
+        "--include-irreversible",
+        action="store_true",
+        help="con --apply-selection: incluye las acciones irreversibles (limpieza)",
+    )
     # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
     parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
@@ -83,6 +94,98 @@ def self_test() -> int:
     return 0
 
 
+def _attach_console() -> None:
+    """El .exe no tiene consola (--noconsole): para la CLI se engancha a la de quien lo lanzó."""
+    if sys.platform != "win32" or not getattr(sys, "frozen", False):
+        return
+    if ctypes.windll.kernel32.AttachConsole(-1):  # type: ignore[attr-defined]
+        # CONOUT$ es un dispositivo de Windows, no una ruta: Path no aporta nada aquí.
+        stream = open("CONOUT$", "w", encoding="utf-8", errors="replace")  # noqa: PTH123, SIM115
+        sys.stdout = sys.stderr = stream
+
+
+def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: bool) -> int:
+    """Aplica una selección exportada sin interfaz.
+
+    Códigos de salida: 0 correcto, 1 sin permisos, 2 archivo/condiciones previas, 3 hubo fallos.
+    Los tweaks de riesgo alto (doble confirmación) nunca se aplican por CLI.
+    """
+    from pathlib import Path
+
+    from core.app import build_context
+    from core.engine import PreflightError
+    from core.selection import SelectionError, load_selection
+    from core.settings import Settings
+
+    _attach_console()
+    if not demo:
+        if sys.platform != "win32":
+            print("La CLI solo funciona en Windows (o con --demo).")
+            return 2
+        if not is_admin():
+            print("Ejecuta WinTune desde una consola abierta como administrador.")
+            return 1
+    setup_logging()
+    settings = Settings.load()
+    if demo:
+        from core.demo import DemoRunner, demo_environment, demo_registry
+
+        app = build_context(
+            settings=settings,
+            backend=(demo_backend := demo_registry()),
+            runner=DemoRunner(demo_backend),
+            env=demo_environment(),
+        )
+    else:
+        app = build_context(settings=settings)
+    engine = app.engine
+    try:
+        selection, warnings = load_selection(Path(path), engine.catalog)
+    except SelectionError as exc:
+        print(f"Error: {exc}")
+        return 2
+    for warning in warnings:
+        print(f"Aviso: {warning}")
+    high_risk = [t for t in selection.tweaks if engine.catalog.get(t).confirm_double]
+    for tid in high_risk:
+        print(f"Omitido (riesgo alto, solo desde la interfaz): {tid}")
+    ids = [t for t in selection.tweaks if t not in high_risk]
+
+    print(f"\nSimulación de {len(ids)} tweaks ({app.env.os_label}):")
+    for item in engine.plan(ids, selection.params):
+        if not item.applicability.applicable:
+            print(f"  - {item.tweak.id}: no aplicable ({'; '.join(item.applicability.reasons)})")
+        elif item.already_applied:
+            print(f"  = {item.tweak.id}: ya aplicado")
+        else:
+            print(f"  + {item.tweak.id}")
+            for line in item.lines:
+                print(f"      {line}")
+    if not yes:
+        print("\nSolo simulación. Añade --yes para aplicar.")
+        return 0
+
+    actions = {t for t in ids if engine.catalog.get(t).is_action}
+    if actions and not include_irreversible:
+        print(f"\n{len(actions)} acciones irreversibles se omitirán (usa --include-irreversible).")
+    try:
+        session = engine.apply(
+            ids,
+            selection.params,
+            profile=selection.profile,
+            confirmed=actions if include_irreversible else set(),
+        )
+    except PreflightError as exc:
+        print(f"\nNo se aplicó nada: {exc}")
+        return 2
+    print(f"\nSesión {session.id}:")
+    for tid, result in session.results.items():
+        print(f"  [{result.status}] {tid}: {result.message}")
+    summary = session.summary()
+    print("Resumen: " + ", ".join(f"{k}={v}" for k, v in summary.items() if v))
+    return 3 if summary["failed"] or summary["partial"] else 0
+
+
 def capture_boot() -> int:
     """Medición tras reinicio (tarea programada como SYSTEM). Sin interfaz.
 
@@ -117,6 +220,10 @@ def main(argv: list[str] | None = None) -> int:
         return self_test()
     if args.capture_boot:
         return capture_boot()
+    if args.apply_selection:
+        return apply_selection_cli(
+            args.apply_selection, args.yes, args.include_irreversible, args.demo
+        )
 
     if not args.demo:
         if sys.platform != "win32":
@@ -147,8 +254,8 @@ def main(argv: list[str] | None = None) -> int:
 
             return build_context(
                 settings=settings,
-                backend=demo_registry(),
-                runner=DemoRunner(),
+                backend=(demo_backend := demo_registry()),
+                runner=DemoRunner(demo_backend),
                 env=demo_environment(),
             )
         return build_context(settings=settings)

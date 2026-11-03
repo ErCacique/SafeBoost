@@ -77,3 +77,28 @@ jobs:
 
       - name: Tests Windows
         run: pytest -m windows
+
+  e2e:
+    name: E2E aplicar y revertir (Windows real)
+    needs: windows
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt pytest==9.2.0 jsonschema==4.26.0
+
+      # El runner es una VM desechable con administrador: aquí sí se toca el sistema.
+      - name: Aplicar y revertir tweaks reales
+        env:
+          WINTUNE_E2E: "1"
+          PYTHONUTF8: "1"  # tildes legibles en el log del runner
+          WINTUNE_HOME: ${{ runner.temp }}\wintune
+        run: pytest -m e2e -rA -s

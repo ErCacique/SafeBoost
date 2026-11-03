@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from core.constants import POLICY_PATH_MARKER, TWEAKS_FILE
+from core.constants import POLICY_PATH_MARKER, SUPPORTED_EDITIONS, TWEAKS_FILE
 from core.environment import EnvironmentInfo
 
 REQUIRED_FIELDS = (
@@ -184,7 +184,13 @@ def windows_reasons(tweak: Tweak, env: EnvironmentInfo) -> list[str]:
         reasons.append(f"requiere build {w['min_build']} o superior")
     if env.build and w.get("max_build") is not None and env.build > w["max_build"]:
         reasons.append(f"solo aplica hasta la build {w['max_build']}")
-    if env.edition != "unknown" and env.edition not in w["editions"]:
+    edition_specific = set(w["editions"]) != set(SUPPORTED_EDITIONS)
+    if env.edition == "unknown":
+        # Con una edición no reconocida (Server, algunas OEM/IoT) no se puede saber cuál de
+        # dos tweaks excluyentes por edición corresponde: se descartan ambos.
+        if edition_specific:
+            reasons.append("edición de Windows no reconocida")
+    elif env.edition not in w["editions"]:
         reasons.append(f"no aplica a la edición {env.edition}")
     return reasons
 

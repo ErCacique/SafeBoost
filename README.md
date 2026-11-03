@@ -42,6 +42,8 @@ la validación del catálogo.
 ruff check . && ruff format --check .
 python scripts/validate_tweaks.py      # esquema + reglas + handlers resolubles
 pytest                                  # en Linux se omiten los tests marcados "windows"
+# El test e2e (tests/e2e) APLICA tweaks reales: solo corre con WINTUNE_E2E=1, como admin y
+# en Windows. Lo ejecuta el CI en una VM desechable; no lo lances en tu equipo.
 pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store del catálogo
 ```
 
@@ -73,7 +75,9 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 5. **Aplicar**: WinTune crea un punto de restauración, exporta las claves de registro
    afectadas a `.reg` y aplica. Un fallo en un tweak no detiene el resto.
 6. **Resumen**: aplicados / omitidos / fallidos con la causa de cada uno, y medición antes/después.
-7. **Historial/Deshacer**: revierte cualquier sesión anterior, o abre "Restaurar sistema".
+7. **Historial/Deshacer**: revierte cualquier sesión anterior y verifica que cada cambio volvió
+   a su estado previo ("Revertido y verificado"), exporta un informe HTML de la sesión, o abre
+   "Restaurar sistema".
 8. **Tras reiniciar**, una tarea temporal mide el nuevo tiempo de arranque y se elimina sola
    (desactivable en Ajustes). El resultado aparece en "Antes / después" del Dashboard.
 
@@ -85,6 +89,28 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 | `%LOCALAPPDATA%\WinTune\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
 | `%LOCALAPPDATA%\WinTune\logs` | Logs estructurados (JSON Lines) y logs exportados |
 | `%LOCALAPPDATA%\WinTune\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
+
+### Deriva tras actualizaciones de Windows
+
+Al abrir WinTune, el Dashboard comprueba si alguno de los cambios aplicados (en sesiones no
+deshechas) ya no está en vigor. Las actualizaciones grandes de Windows suelen restablecer
+ajustes y reinstalar apps. Si hay deriva, se muestra la lista y un botón para revisarla y
+reaplicarla con el flujo normal de simulación y confirmación.
+
+### Replicar una configuración en otros equipos
+
+*Dashboard → Exportar selección…* guarda los tweaks elegidos y sus parámetros en un JSON.
+En otro equipo, *Importar selección…* los carga en la interfaz, o desde una consola de
+administrador:
+
+```powershell
+.\WinTune.exe --apply-selection seleccion.json                 # solo simulación
+.\WinTune.exe --apply-selection seleccion.json --yes           # aplica
+.\WinTune.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
+```
+
+Los tweaks de riesgo alto (mitigaciones de CPU) nunca se aplican por CLI. Códigos de salida:
+0 correcto, 1 sin permisos, 2 archivo o condiciones previas, 3 hubo fallos.
 
 ## Perfiles
 

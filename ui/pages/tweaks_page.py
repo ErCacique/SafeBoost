@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import customtkinter as ctk
 
 from core.catalog import CATEGORY_LABELS
+from core.context import DetectState
 from ui.pages.base import Page
 from ui.theme import FONT_SMALL, PAD, PAD_S, SECONDARY_BUTTON, TEXT_MUTED
 from ui.widgets import Card, SectionHeader, TweakRow
@@ -15,6 +16,13 @@ from ui.worker import BackgroundTask, ProgressFn
 
 if TYPE_CHECKING:
     from ui.app import MainWindow
+
+
+FILTER_ALL = "Todos"
+FILTER_PENDING = "Pendientes"
+FILTER_APPLIED = "Aplicados"
+FILTER_SELECTED = "Seleccionados"
+PENDING_STATES = (DetectState.NOT_APPLIED, DetectState.PARTIAL)
 
 
 class TweaksPage(Page):
@@ -48,6 +56,21 @@ class TweaksPage(Page):
         self.status = ctk.CTkLabel(bar, text="", font=FONT_SMALL, text_color=TEXT_MUTED)
         self.status.pack(side="right")
 
+        filters = ctk.CTkFrame(self, fg_color="transparent")
+        filters.pack(fill="x", padx=PAD, pady=(0, PAD_S))
+        # Sin textvariable: CustomTkinter oculta el placeholder si se usa.
+        self.search = ctk.CTkEntry(filters, width=260, placeholder_text="Buscar…")
+        self.search.bind("<KeyRelease>", lambda _e: self.apply_filter())
+        self.search.pack(side="left")
+        self.filter_mode = ctk.StringVar(value=FILTER_ALL)
+        ctk.CTkSegmentedButton(
+            filters,
+            values=[FILTER_ALL, FILTER_PENDING, FILTER_APPLIED, FILTER_SELECTED],
+            variable=self.filter_mode,
+            command=lambda _v: self.apply_filter(),
+        ).pack(side="left", padx=PAD_S)
+        self.groups: list[tuple[Any, list[TweakRow]]] = []
+
         body = ctk.CTkScrollableFrame(self, fg_color="transparent")
         body.pack(fill="both", expand=True, padx=PAD, pady=(0, PAD))
         engine = self.state.app.engine
@@ -60,6 +83,8 @@ class TweaksPage(Page):
             )
             card = Card(body)
             card.pack(fill="x")
+            group: list[TweakRow] = []
+            self.groups.append((card, group))
             for level in (1, 2, 3):
                 for tweak in (t for t in tweaks if t.level == level):
                     row = TweakRow(
@@ -73,13 +98,46 @@ class TweaksPage(Page):
                     )
                     row.pack(fill="x", padx=PAD, pady=3)
                     self.rows[tweak.id] = row
+                    group.append(row)
         self.state.subscribe(self._sync)
+
+    # ------------------------------------------------------------------ filtros
+
+    def _visible(self, row: TweakRow) -> bool:
+        tweak = row.tweak
+        text = self.search.get().strip().lower()
+        if text and not any(text in s.lower() for s in (tweak.name, tweak.description, tweak.id)):
+            return False
+        mode = self.filter_mode.get()
+        state = self.state.detections.get(tweak.id)
+        if mode == FILTER_PENDING:
+            return state is not None and state.state in PENDING_STATES
+        if mode == FILTER_APPLIED:
+            return state is not None and state.state == DetectState.APPLIED
+        if mode == FILTER_SELECTED:
+            return tweak.id in self.state.selected
+        return True
+
+    def apply_filter(self) -> None:
+        """Re-empaqueta las filas visibles en su orden original (pack no tiene 'ocultar')."""
+        shown = 0
+        for _card, rows in self.groups:
+            for row in rows:
+                row.pack_forget()
+            for row in rows:
+                if self._visible(row):
+                    row.pack(fill="x", padx=PAD, pady=3)
+                    shown += 1
+        if self.search.get() or self.filter_mode.get() != FILTER_ALL:
+            self.status.configure(text=f"{shown} de {len(self.rows)} visibles")
 
     # ------------------------------------------------------------------ selección
 
     def _sync(self) -> None:
         for tid, row in self.rows.items():
             row.set_selected(tid in self.state.selected)
+        if self.filter_mode.get() == FILTER_SELECTED:
+            self.apply_filter()
 
     def _select_recommended(self) -> None:
         engine = self.state.app.engine
@@ -109,6 +167,8 @@ class TweaksPage(Page):
         self.status.configure(text="Detectando estado actual…")
 
         def work(progress: ProgressFn, cancel: threading.Event) -> int:
+            # Una sola consulta para todas las tareas programadas y AppX de la página.
+            engine.prefetch([engine.catalog.get(tid) for tid in ids])
             for index, tid in enumerate(ids):
                 if cancel.is_set():
                     break
@@ -123,6 +183,7 @@ class TweaksPage(Page):
 
         def on_done(count: int) -> None:
             self.status.configure(text=f"Estado detectado ({count} elementos)")
+            self.apply_filter()
 
         def on_error(exc: BaseException) -> None:
             self.status.configure(text=f"Error al detectar: {exc}")

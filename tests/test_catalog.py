@@ -139,3 +139,40 @@ def test_build_window(env: EnvironmentInfo) -> None:
     assert not evaluate(tweak, env, 1).applicable
     env.build = 22631
     assert evaluate(tweak, env, 1).applicable
+
+
+def test_unknown_edition_excludes_edition_specific_tweaks(env: EnvironmentInfo) -> None:
+    """Regresión (detectada por el e2e en Windows Server): con edición desconocida se
+    aplicaban a la vez los dos tweaks de telemetría, que son excluyentes."""
+    catalog = Catalog.load()
+    env.edition = "unknown"
+    assert not evaluate(catalog.get("privacy.telemetry_policy_required"), env, 1).applicable
+    assert not evaluate(catalog.get("privacy.telemetry_policy_security"), env, 1).applicable
+    assert evaluate(catalog.get("privacy.advertising_id"), env, 1).applicable
+
+
+def _scope_overlaps(a: dict, b: dict) -> bool:
+    wa, wb = a["windows"], b["windows"]
+    if not set(wa["editions"]) & set(wb["editions"]):
+        return False
+    lo = max(wa["min_build"], wb["min_build"])
+    hi = min(wa["max_build"] or 10**9, wb["max_build"] or 10**9)
+    return lo <= hi
+
+
+def test_no_conflicting_registry_writes_in_same_scope() -> None:
+    """Dos tweaks que escriben el mismo valor con datos distintos deben ser excluyentes
+    (por edición o por build); si no, aplicarlos juntos deja un estado imprevisible."""
+    writes: dict[tuple[str, str, str], list[tuple[dict, object]]] = {}
+    for tweak in DATA["tweaks"]:
+        for op in tweak["apply"]:
+            if op["op"] == "registry_set":
+                key = (op["hive"], op["path"].lower(), op["name"].lower())
+                writes.setdefault(key, []).append((tweak, op["value"]))
+    conflicts = []
+    for key, entries in writes.items():
+        for i, (ta, va) in enumerate(entries):
+            for tb, vb in entries[i + 1 :]:
+                if va != vb and _scope_overlaps(ta, tb):
+                    conflicts.append(f"{ta['id']} y {tb['id']} escriben {key} distinto")
+    assert not conflicts, conflicts

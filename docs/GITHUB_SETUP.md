@@ -35,7 +35,7 @@ plan de pago. Para una cuenta personal basta GitHub Pro.
 | Restrict deletions | ✅ |
 | Block force pushes | ✅ |
 | Require a pull request before merging | ✅, con **0** aprobaciones (no puedes aprobar tu propio PR) |
-| Require status checks to pass | ✅ `Lint, catálogo y tests (Linux)` y `Tests con winreg nativo (Windows)` |
+| Require status checks to pass | ✅ `Lint, catálogo y tests (Linux)`, `Tests con winreg nativo (Windows)` y `E2E aplicar y revertir (Windows real)` |
 | Require branches to be up to date | ✅ |
 | Bypass list | Vacía, o tu usuario solo para emergencias |
 
@@ -79,6 +79,9 @@ agrupa las actualizaciones semanales para minimizar PRs y ejecuciones.
 
 - El job de Linux (lint, catálogo, tests y gitleaks) tarda unos 1-2 minutos.
 - El job de Windows solo corre si el de Linux pasa, y solo ejecuta los tests de `winreg`.
+- El job `e2e` (Windows, ~2-3 min) solo corre si el anterior pasa: aplica y revierte tweaks
+  reales en la VM del runner. Es el único que comprueba WinTune contra Windows de verdad en
+  cada PR; si los minutos aprietan, se puede limitar a `push` en `main`.
   Los minutos de Windows cuentan con multiplicador respecto a Linux en el cómputo de minutos
   incluidos.
 - `concurrency` con `cancel-in-progress` cancela ejecuciones obsoletas de la misma rama.

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "WinTune"
-APP_VERSION: Final = "0.1.2"
+APP_VERSION: Final = "0.2.0"
 APP_ID: Final = "ErCacique.WinTune"
 
 # --------------------------------------------------------------------------- rutas

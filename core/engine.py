@@ -61,6 +61,14 @@ class PreflightError(RuntimeError):
     """No se cumplen las condiciones para aplicar (admin, punto de restauración...)."""
 
 
+@dataclass(frozen=True)
+class DriftItem:
+    tweak_id: str
+    session_id: str
+    state: DetectState
+    detail: str = ""
+
+
 @dataclass
 class PlanItem:
     tweak: Tweak
@@ -194,6 +202,46 @@ class Engine:
             return DetectResult(DetectState.APPLIED, "No instalado")
         return combine_checks(partial)
 
+    def prefetch(self, tweaks: list[Tweak]) -> None:
+        """Precarga en bloque lo que la detección consultaría uno a uno (tareas y AppX)."""
+        paths = [op["path"] for tweak in tweaks for op in tweak.apply if op["op"] == "task_state"]
+        self.tasks.prefetch(paths)
+        if any(op["op"] == "appx_remove" for tweak in tweaks for op in tweak.apply):
+            try:
+                self.appx.inventory(refresh=True)
+            except AppxError as exc:
+                log.warning("appx_prefetch_failed", extra={"err": str(exc)})
+
+    def drift(self) -> list[DriftItem]:
+        """Tweaks aplicados en sesiones vigentes que ya no están aplicados (deriva).
+
+        Las actualizaciones de Windows suelen revertir ajustes y reinstalar apps. Se mira la
+        sesión más reciente de cada tweak; las sesiones deshechas no cuentan.
+        """
+        self.tasks.clear_cache()
+        candidates: list[tuple[Tweak, str]] = []
+        seen: set[str] = set()
+        for session in self.store.list():  # de más reciente a más antigua
+            if session.kind != "apply" or session.reverted_by:
+                continue
+            for tid, result in session.results.items():
+                if tid in seen or tid not in self.catalog:
+                    continue
+                if result.status not in ("applied", "partial"):
+                    continue
+                seen.add(tid)
+                tweak = self.catalog.get(tid)
+                if not tweak.is_action:
+                    candidates.append((tweak, session.id))
+        self.prefetch([t for t, _ in candidates])
+        items: list[DriftItem] = []
+        for tweak, session_id in candidates:
+            result = self.detect(tweak)
+            if result.state in (DetectState.NOT_APPLIED, DetectState.PARTIAL):
+                items.append(DriftItem(tweak.id, session_id, result.state, result.detail))
+        log.info("drift", extra={"count": len(items)})
+        return items
+
     def _check_op(self, op: dict[str, Any], ctx: HandlerContext) -> bool | None:
         """¿Está esta operación de apply en su estado objetivo? None = no evaluable."""
         kind = op["op"]
@@ -283,6 +331,7 @@ class Engine:
             "apply", profile=profile, env=self.env.to_dict(), selected=list(tweak_ids)
         )
         total = len(tweak_ids) + 2
+        self.tasks.clear_cache()  # el estado real manda al aplicar, no lo detectado antes
         progress(0.0, "Comprobaciones previas")
         self._preflight(session, tweak_ids)
         self.store.save(session)
@@ -342,6 +391,7 @@ class Engine:
             return TweakResult(
                 tweak.id, "skipped", "No aplicable: " + "; ".join(applicability.reasons)
             )
+        detect_before = self._safe_detect(tweak) if not tweak.is_action else None
         ctx = self._ctx(tweak, dry_run=False, session=session, params=params)
         outcomes: list[Outcome] = []
         errors: list[str] = []
@@ -359,10 +409,10 @@ class Engine:
         details = ctx.notes + skips + errors
         if errors:
             status = "partial" if changed else "failed"
-            return TweakResult(tweak.id, status, errors[0], details)
+            return TweakResult(tweak.id, status, errors[0], details, detect_before)
         if changed:
             msg = "Requiere reiniciar" if tweak.reboot_required else "Aplicado"
-            return TweakResult(tweak.id, "applied", msg, details)
+            return TweakResult(tweak.id, "applied", msg, details, detect_before)
         if skips and all(o == "skipped" for o in outcomes):
             return TweakResult(tweak.id, "skipped", skips[0], details)
         return TweakResult(tweak.id, "skipped", "Ya estaba aplicado", details)
@@ -550,6 +600,7 @@ class Engine:
         progress: ProgressFn,
         cancel: threading.Event | None,
     ) -> Session:
+        self.tasks.clear_cache()
         original = self.store.load(session_id)
         if original.kind != "apply":
             raise PreflightError("Solo se pueden deshacer sesiones de aplicación")
@@ -610,7 +661,58 @@ class Engine:
             return TweakResult(tid, "irreversible", irreversible[0], details)
         if errors:
             return TweakResult(tid, "partial" if changed else "failed", errors[0], details)
-        return TweakResult(tid, "reverted", "Simulado" if dry_run else "Revertido", details)
+        if dry_run:
+            return TweakResult(tid, "reverted", "Simulado", details)
+        diffs = self._verify_revert(tid, original)
+        if diffs:
+            return TweakResult(
+                tid, "partial", "Revertido con diferencias", details + diffs, verified=False
+            )
+        return TweakResult(tid, "reverted", "Revertido y verificado", details, verified=True)
+
+    def _safe_detect(self, tweak: Tweak) -> str | None:
+        try:
+            return self.detect(tweak).state.value
+        except OP_ERRORS as exc:
+            log.warning("detect_failed", extra={"tweak": tweak.id, "err": str(exc)})
+            return None
+
+    def _verify_revert(self, tid: str, original: Session) -> list[str]:
+        """Comprueba que lo revertido volvió al estado previo. Devuelve las diferencias."""
+        diffs: list[str] = []
+        for change in original.changes_for(tid):
+            target, before = change.target, change.before
+            try:
+                if change.kind == "registry":
+                    current = self.registry.read(target["hive"], target["path"], target["name"])
+                    expected = RegValue.from_json(before) if before else None
+                    same = (current is None and expected is None) or (
+                        expected is not None and values_equal(current, expected)
+                    )
+                    if not same:
+                        shown = current.display() if current else "(no existe)"
+                        wanted = expected.display() if expected else "(no existe)"
+                        diffs.append(f"{target['name']}: {shown} (esperado {wanted})")
+                elif change.kind == "service" and before in SC_START_ARG:
+                    current_start = self.services.state(target["name"]).start
+                    if current_start != before:
+                        diffs.append(
+                            f"Servicio {target['name']}: {current_start} (esperado {before})"
+                        )
+                elif change.kind == "task":
+                    info = self.tasks.query(target["path"])
+                    if info.exists and info.enabled != bool(before):
+                        diffs.append(f"Tarea {target['path']}: no volvió a su estado")
+            except OP_ERRORS as exc:
+                diffs.append(f"No se pudo verificar {change.kind}: {exc}")
+        previous = original.results[tid].detect_before if tid in original.results else None
+        if tid in self.catalog and previous in (DetectState.NOT_APPLIED, DetectState.PARTIAL):
+            # Solo se compara la detección si antes NO estaba aplicado: si ya lo estaba,
+            # la sesión no cambió nada y no hay estado previo distinto que recuperar.
+            now = self._safe_detect(self.catalog.get(tid))
+            if now is not None and now != previous:
+                diffs.append(f"Estado detectado: {now} (antes de aplicar: {previous})")
+        return diffs
 
 
 def combine_checks(checks: list[bool | None]) -> DetectResult:

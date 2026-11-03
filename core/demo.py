@@ -7,6 +7,7 @@ responden con datos ficticios.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any
 
@@ -103,10 +104,14 @@ def demo_registry() -> MemoryRegistryBackend:
 class DemoRunner:
     """Responde a los comandos con datos plausibles. No ejecuta nada."""
 
-    def __init__(self) -> None:
+    def __init__(self, backend: MemoryRegistryBackend | None = None) -> None:
+        # Con el backend del registro simulado, "sc config" cambia el Start del servicio igual
+        # que en Windows; así la detección, la deriva y la verificación son coherentes.
+        self.backend = backend
         self._sequence = 40
         self._scheme = "381b4222-f694-41f0-9685-ff5bb260df2e"
         self._removed: set[str] = set()
+        self._tasks: dict[str, str] = {}
 
     def run(self, args: list[str], timeout: int = 60, encoding: str | None = None) -> CommandResult:
         joined = " ".join(args).lower()
@@ -122,9 +127,25 @@ class DemoRunner:
             self._scheme = args[-1].lower()
         elif "dxdiag" in joined:
             return CommandResult(tuple(args), 1, "", "dxdiag no disponible en demo")
+        elif self.backend is not None and len(args) >= 5 and args[1] == "config":
+            start = {"auto": 2, "delayed-auto": 2, "demand": 3, "disabled": 4}.get(args[4])
+            if start is not None:
+                key = f"{SERVICES_KEY}\\{args[2]}"
+                self.backend.write("HKLM", key, "Start", RegValue("REG_DWORD", start))
         return CommandResult(tuple(args), 0, out, "")
 
+    @staticmethod
+    def _task_path(script: str) -> str:
+        quoted = script.split("'")
+        return quoted[1] + quoted[3]
+
     def powershell(self, script: str, timeout: int = 120) -> CommandResult:
+        for verb, state in (
+            ("Disable-ScheduledTask", "Disabled"),
+            ("Enable-ScheduledTask", "Ready"),
+        ):
+            if script.startswith(verb):
+                self._tasks[self._task_path(script).lower()] = state
         if "Remove-AppxPackage" in script or "Remove-AppxProvisionedPackage" in script:
             self._removed.add(script.split("'")[1].split("_")[0].lower())
         return CommandResult(("powershell",), 0, "", "")
@@ -164,8 +185,11 @@ class DemoRunner:
                     "action": r"C:\Program Files (x86)\Common Files\Adobe\ARM\1.0\AdobeARM.exe",
                 }
             ]
-        if "Get-ScheduledTask" in script:
-            return {"state": "Ready"}
+        if "foreach ($p in" in script and "Get-ScheduledTask" in script:
+            paths = re.findall(r"'(\\[^']+)'", script.split("foreach ($p in")[1].split(")")[0])
+            return {p: self._tasks.get(p.lower(), "Ready") for p in paths}
+        if "Get-ScheduledTask -TaskPath" in script:
+            return {"state": self._tasks.get(self._task_path(script).lower(), "Ready")}
         if "Get-NetTCPSetting" in script:
             return [{"level": "Normal"}]
         if "Get-NetAdapter" in script:

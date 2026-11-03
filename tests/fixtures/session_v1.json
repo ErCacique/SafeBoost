@@ -1,0 +1,143 @@
+{
+  "id": "20261102-120000-v1demo",
+  "kind": "apply",
+  "created": "2026-11-03T02:30:07",
+  "profile": null,
+  "parent_id": null,
+  "restore_point": "Punto de restauración #1 creado",
+  "env": {},
+  "selected": [
+    "privacy.feedback_frequency",
+    "privacy.advertising_id",
+    "privacy.diagtrack",
+    "privacy.task_ceip"
+  ],
+  "results": {
+    "privacy.feedback_frequency": {
+      "tweak_id": "privacy.feedback_frequency",
+      "status": "applied",
+      "message": "Aplicado",
+      "details": []
+    },
+    "privacy.advertising_id": {
+      "tweak_id": "privacy.advertising_id",
+      "status": "applied",
+      "message": "Aplicado",
+      "details": []
+    },
+    "privacy.diagtrack": {
+      "tweak_id": "privacy.diagtrack",
+      "status": "applied",
+      "message": "Aplicado",
+      "details": []
+    },
+    "privacy.task_ceip": {
+      "tweak_id": "privacy.task_ceip",
+      "status": "applied",
+      "message": "Aplicado",
+      "details": []
+    }
+  },
+  "changes": [
+    {
+      "tweak_id": "privacy.feedback_frequency",
+      "kind": "registry",
+      "target": {
+        "hive": "HKCU",
+        "path": "Software\\Microsoft\\Siuf\\Rules",
+        "name": "NumberOfSIUFInPeriod",
+        "key_existed": false
+      },
+      "before": null,
+      "after": {
+        "kind": "REG_DWORD",
+        "data": 0
+      },
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.advertising_id",
+      "kind": "registry",
+      "target": {
+        "hive": "HKCU",
+        "path": "Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+        "name": "Enabled",
+        "key_existed": true
+      },
+      "before": {
+        "kind": "REG_DWORD",
+        "data": 1
+      },
+      "after": {
+        "kind": "REG_DWORD",
+        "data": 0
+      },
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.advertising_id",
+      "kind": "registry",
+      "target": {
+        "hive": "HKLM",
+        "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo",
+        "name": "DisabledByGroupPolicy",
+        "key_existed": false
+      },
+      "before": null,
+      "after": {
+        "kind": "REG_DWORD",
+        "data": 1
+      },
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.diagtrack",
+      "kind": "service",
+      "target": {
+        "name": "DiagTrack"
+      },
+      "before": "automatic",
+      "after": "disabled",
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.task_ceip",
+      "kind": "task",
+      "target": {
+        "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator"
+      },
+      "before": true,
+      "after": false,
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.task_ceip",
+      "kind": "task",
+      "target": {
+        "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip"
+      },
+      "before": true,
+      "after": false,
+      "timestamp": "2026-11-03T02:30:07"
+    },
+    {
+      "tweak_id": "privacy.task_ceip",
+      "kind": "task",
+      "target": {
+        "path": "\\Microsoft\\Windows\\Autochk\\Proxy"
+      },
+      "before": true,
+      "after": false,
+      "timestamp": "2026-11-03T02:30:07"
+    }
+  ],
+  "handler_state": {
+    "privacy.feedback_frequency": {},
+    "privacy.advertising_id": {},
+    "privacy.diagtrack": {},
+    "privacy.task_ceip": {}
+  },
+  "backups": [],
+  "reverted_by": null,
+  "finished": "2026-11-03T02:30:07"
+}

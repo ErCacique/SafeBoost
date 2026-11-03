@@ -34,7 +34,9 @@ Responder = Callable[[str], Any]
 class FakeRunner:
     """Registra cada llamada. Las respuestas se configuran por subcadena del comando/script."""
 
-    def __init__(self) -> None:
+    def __init__(self, backend: MemoryRegistryBackend | None = None) -> None:
+        # Con backend, "sc config" escribe el Start del servicio como hace Windows de verdad.
+        self.backend = backend
         self.calls: list[list[str]] = []
         self.scripts: list[str] = []
         self.json_responses: list[tuple[str, Any]] = []
@@ -54,6 +56,12 @@ class FakeRunner:
         joined = " ".join(args)
         if any(needle in joined for needle in self.fail_on):
             return CommandResult(tuple(args), 5, "", "Acceso denegado.")
+        if self.backend is not None and len(args) >= 5 and args[1:2] == ["config"]:
+            start = {"auto": 2, "delayed-auto": 2, "demand": 3, "disabled": 4}[args[4]]
+            key = f"{SERVICES_KEY}\\{args[2]}"
+            self.backend.write("HKLM", key, "Start", RegValue("REG_DWORD", start))
+            delayed = 1 if args[4] == "delayed-auto" else 0
+            self.backend.write("HKLM", key, "DelayedAutostart", RegValue("REG_DWORD", delayed))
         return CommandResult(tuple(args), 0, "", "")
 
     def powershell(self, script: str, timeout: int = 120) -> CommandResult:
@@ -111,8 +119,8 @@ def backend() -> MemoryRegistryBackend:
 
 
 @pytest.fixture
-def runner() -> FakeRunner:
-    return FakeRunner()
+def runner(backend: MemoryRegistryBackend) -> FakeRunner:
+    return FakeRunner(backend)
 
 
 @pytest.fixture
