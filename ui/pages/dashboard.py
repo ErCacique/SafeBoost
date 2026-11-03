@@ -233,8 +233,8 @@ class DashboardPage(Page):
             parent=self,
             title="Exportar selección",
             defaultextension=".json",
-            initialfile="wintune-seleccion.json",
-            filetypes=[("Selección WinTune", "*.json")],
+            initialfile="safetrim-seleccion.json",
+            filetypes=[("Selección SafeTrim", "*.json")],
         )
         if not target:
             return
@@ -254,7 +254,7 @@ class DashboardPage(Page):
 
     def _import_selection(self) -> None:
         source = filedialog.askopenfilename(
-            parent=self, title="Importar selección", filetypes=[("Selección WinTune", "*.json")]
+            parent=self, title="Importar selección", filetypes=[("Selección SafeTrim", "*.json")]
         )
         if not source:
             return

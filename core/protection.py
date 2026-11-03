@@ -34,7 +34,7 @@ class ProtectionGuard:
             )
         state = self.services.state(name)
         if state.exists and state.is_driver:
-            raise ProtectionError(f"{name} es un driver y WinTune no modifica drivers")
+            raise ProtectionError(f"{name} es un driver y SafeTrim no modifica drivers")
 
     def check_appx(self, package: str) -> None:
         if is_protected_package(package):

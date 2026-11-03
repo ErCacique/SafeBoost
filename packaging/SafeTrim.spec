@@ -1,12 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 # PyInstaller 6.22.3 · Python 3.12 · Ejecutar desde la raíz del repo:
-#   pyinstaller --clean --noconfirm packaging/WinTune.spec
+#   pyinstaller --clean --noconfirm packaging/SafeTrim.spec
 #
 # Equivalente en línea de comandos (por referencia):
-#   pyinstaller --onefile --noconsole --uac-admin --name WinTune --clean ^
+#   pyinstaller --onefile --noconsole --uac-admin --name SafeTrim --clean ^
 #     --add-data "data/tweaks.json;data" --add-data "data/tweaks.schema.json;data" ^
 #     --collect-data customtkinter --paths . --hidden-import tweaks.cleanup (uno por módulo) ^
-#     --add-data "assets/wintune.ico;assets" --icon assets/wintune.ico ^
+#     --add-data "assets/safetrim.ico;assets" --icon assets/safetrim.ico ^
 #     --version-file packaging/version_info.txt --noupx main.py
 
 from pathlib import Path
@@ -18,7 +18,7 @@ ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH lo inyecta PyInstaller
 datas = [
     (str(ROOT / "data" / "tweaks.json"), "data"),
     (str(ROOT / "data" / "tweaks.schema.json"), "data"),
-    (str(ROOT / "assets" / "wintune.ico"), "assets"),
+    (str(ROOT / "assets" / "safetrim.ico"), "assets"),
 ]
 # Temas JSON y fuentes de CustomTkinter: sin esto el .exe arranca sin estilos.
 datas += collect_data_files("customtkinter")
@@ -46,13 +46,13 @@ exe = EXE(  # noqa: F821
     a.binaries,
     a.datas,
     [],
-    name="WinTune",
+    name="SafeTrim",
     console=False,
     # Manifest con requestedExecutionLevel=requireAdministrator: Windows pide UAC al abrir.
     uac_admin=True,
     # UPX desactivado: los binarios comprimidos con UPX disparan más falsos positivos de AV.
     upx=False,
     version=str(ROOT / "packaging" / "version_info.txt"),
-    icon=str(ROOT / "assets" / "wintune.ico"),
+    icon=str(ROOT / "assets" / "safetrim.ico"),
     disable_windowed_traceback=False,
 )

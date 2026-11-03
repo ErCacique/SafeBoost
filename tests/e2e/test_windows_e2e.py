@@ -3,7 +3,7 @@
 Modifica el sistema (registro, servicios, tareas, plan de energía, red). Solo se ejecuta si:
   - el sistema es Windows,
   - el proceso es administrador,
-  - WINTUNE_E2E=1 (lo define el job "e2e" de CI, que corre en una VM desechable).
+  - SAFETRIM_E2E=1 (lo define el job "e2e" de CI, que corre en una VM desechable).
 Nunca lo ejecutes en tu equipo.
 
 Quedan fuera los tweaks que no tienen sentido o no son reversibles en un runner de Windows
@@ -22,7 +22,7 @@ import pytest
 pytestmark = [
     pytest.mark.e2e,
     pytest.mark.skipif(sys.platform != "win32", reason="requiere Windows"),
-    pytest.mark.skipif(os.environ.get("WINTUNE_E2E") != "1", reason="requiere WINTUNE_E2E=1"),
+    pytest.mark.skipif(os.environ.get("SAFETRIM_E2E") != "1", reason="requiere SAFETRIM_E2E=1"),
 ]
 
 EXCLUDED_CATEGORIES = {"bloatware", "cleanup"}

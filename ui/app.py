@@ -97,7 +97,7 @@ class MainWindow(ctk.CTk):
 
     def _fatal(self, exc: BaseException) -> None:
         log.error("startup_failed", extra={"err": str(exc)})
-        messagebox.showerror(APP_NAME, f"No se pudo iniciar WinTune:\n\n{exc}")
+        messagebox.showerror(APP_NAME, f"No se pudo iniciar SafeTrim:\n\n{exc}")
         self.destroy()
 
     def _build(self, app: AppContext) -> None:

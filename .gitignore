@@ -23,7 +23,7 @@ ENV/
 build/
 dist/
 *.spec.bak
-# El .spec de WinTune SÍ se versiona (packaging/WinTune.spec); cualquier otro generado no.
+# El .spec de SafeTrim SÍ se versiona (packaging/SafeTrim.spec); cualquier otro generado no.
 /*.spec
 
 # --- IDE / SO ---
@@ -34,7 +34,7 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# --- Datos locales de WinTune (por si se ejecuta con WINTUNE_HOME apuntando al repo) ---
+# --- Datos locales de SafeTrim (por si se ejecuta con SAFETRIM_HOME apuntando al repo) ---
 logs/
 backups/
 sessions/

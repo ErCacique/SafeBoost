@@ -1,4 +1,4 @@
-"""Ajustes de usuario persistidos en %LOCALAPPDATA%\\WinTune\\settings.json."""
+"""Ajustes de usuario persistidos en %LOCALAPPDATA%\\SafeTrim\\settings.json."""
 
 from __future__ import annotations
 

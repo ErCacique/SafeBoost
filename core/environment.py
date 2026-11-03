@@ -157,7 +157,7 @@ class EnvironmentDetector:
         env.interactive_sid = str(sid) if sid else None
         if owner and current and owner.lower() != current.lower():
             env.warnings.append(
-                f"WinTune se ejecuta como {current} pero la sesión es de {owner}: "
+                f"SafeTrim se ejecuta como {current} pero la sesión es de {owner}: "
                 "los ajustes de usuario se aplicarán a la sesión de " + owner + "."
             )
 

@@ -19,7 +19,7 @@ from core.constants import (
     POST_REBOOT_TASK_NAME,
     RECOMMEND_HIGH_PROC_COUNT,
     RECOMMEND_LOW_RAM_GIB,
-    WINTUNE_TASK_FOLDER,
+    SAFETRIM_TASK_FOLDER,
 )
 from core.environment import EnvironmentInfo
 from core.logger import get_logger
@@ -233,11 +233,13 @@ def schedule_post_reboot_capture(runner: Runner, command: list[str], home: Path)
     """Programa una medición automática tras el próximo reinicio.
 
     Tarea de un uso como SYSTEM (leer el evento de arranque requiere privilegios), disparada
-    al iniciar sesión con retraso. `command` lanza WinTune con --capture-boot; WINTUNE_HOME
+    al iniciar sesión con retraso. `command` lanza SafeTrim con --capture-boot; SAFETRIM_HOME
     apunta al perfil del usuario porque SYSTEM tiene otro %LOCALAPPDATA%. La propia ejecución
     elimina la tarea cuando ya no quedan sesiones pendientes de medir.
     """
-    inner = f'set "WINTUNE_HOME={home}" && ' + subprocess.list2cmdline([*command, "--capture-boot"])
+    inner = f'set "SAFETRIM_HOME={home}" && ' + subprocess.list2cmdline(
+        [*command, "--capture-boot"]
+    )
     script = (
         f"$a = New-ScheduledTaskAction -Execute {ps_quote(resolve_exe('cmd.exe'))} "
         f"-Argument {ps_quote('/c ' + inner)};"
@@ -246,7 +248,7 @@ def schedule_post_reboot_capture(runner: Runner, command: list[str], home: Path)
         "-RunLevel Highest;"
         "$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries "
         "-ExecutionTimeLimit (New-TimeSpan -Minutes 5);"
-        f"Register-ScheduledTask -TaskPath {ps_quote(WINTUNE_TASK_FOLDER)} "
+        f"Register-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)} "
         f"-TaskName {ps_quote(POST_REBOOT_TASK_NAME)} -Action $a -Trigger $t -Principal $p "
         "-Settings $s -Force | Out-Null"
     )
@@ -260,7 +262,7 @@ def schedule_post_reboot_capture(runner: Runner, command: list[str], home: Path)
 
 def remove_post_reboot_task(runner: Runner) -> None:
     runner.powershell(
-        f"Unregister-ScheduledTask -TaskPath {ps_quote(WINTUNE_TASK_FOLDER)} "
+        f"Unregister-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)} "
         f"-TaskName {ps_quote(POST_REBOOT_TASK_NAME)} -Confirm:$false "
         "-ErrorAction SilentlyContinue"
     )

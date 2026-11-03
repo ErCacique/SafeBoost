@@ -1,11 +1,27 @@
 # Changelog
 
-Todos los cambios relevantes de WinTune se documentan aquí.
+Todos los cambios relevantes de SafeTrim (antes WinTune) se documentan aquí.
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/)
 y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
+
+## [0.3.0] - 2026-11-03
+
+### Changed
+- **El programa pasa a llamarse SafeTrim** (antes WinTune, nombre ya usado por otro
+  optimizador de Windows). Cambian el ejecutable (`SafeTrim.exe`), la carpeta de datos
+  (`%LOCALAPPDATA%\SafeTrim`), la carpeta de tareas programadas (`\SafeTrim\`), el log
+  (`safetrim.jsonl`) y las variables de entorno (`SAFETRIM_HOME`, `SAFETRIM_E2E`).
+
+### Added
+- Migración automática desde WinTune: al arrancar se **copian** (no se mueven) sesiones,
+  copias `.reg`, métricas, logs y ajustes de `%LOCALAPPDATA%\WinTune`, solo si esa carpeta es
+  de este programa, y se elimina la tarea programada antigua. Las sesiones de WinTune se
+  siguen pudiendo deshacer.
+- Compatibilidad: se siguen aceptando los archivos de selección `wintune-selection` y la
+  variable `WINTUNE_HOME`.
 
 ## [0.2.0] - 2026-11-03
 
@@ -92,7 +108,8 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
   validación del catálogo, bloqueo de commits a `main`).
 - Documentación de configuración de GitHub y de distribución/firma de código.
 
-[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ErCacique/WinOpt/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ErCacique/WinOpt/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/ErCacique/WinOpt/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...v0.1.1
