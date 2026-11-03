@@ -112,3 +112,72 @@ def test_appx_reinstall_by_name_when_no_store_id(runner: FakeRunner) -> None:
     manager.__dict__["winget_path"] = "winget.exe"
     manager.reinstall("Microsoft.Getstarted", None, "Microsoft Tips")
     assert runner.calls[-1][2:5] == ["--name", "Microsoft Tips", "--exact"]
+
+
+# --------------------------------------------------------------------------- correcciones 0.1.1
+
+
+def test_appx_remove_falls_back_to_interactive_user(runner: FakeRunner) -> None:
+    runner.respond_json(
+        "Get-AppxPackage",
+        {
+            "installed": {"Name": "Microsoft.BingNews", "PackageFullName": "BingNews_1_x64"},
+            "provisioned": [],
+        },
+    )
+    runner.fail_on.append("Remove-AppxPackage -AllUsers")
+    manager = AppxManager(runner, user_sid="S-1-5-21-9")
+    assert manager.remove("Microsoft.BingNews", provisioned=False) == ["BingNews_1_x64"]
+    assert runner.scripts[-1] == "Remove-AppxPackage -Package 'BingNews_1_x64' -User 'S-1-5-21-9'"
+    notes = manager.pop_notes()
+    assert len(notes) == 1
+    assert "solo para el usuario actual" in notes[0]
+    assert manager.pop_notes() == []
+
+
+def test_appx_remove_reports_both_errors(runner: FakeRunner) -> None:
+    runner.respond_json(
+        "Get-AppxPackage",
+        {
+            "installed": {"Name": "Microsoft.BingNews", "PackageFullName": "BingNews_1_x64"},
+            "provisioned": [],
+        },
+    )
+    runner.fail_on.append("Remove-AppxPackage")
+    with pytest.raises(AppxError, match="reintento por usuario"):
+        AppxManager(runner, user_sid="S-1-5-21-9").remove("Microsoft.BingNews", False)
+
+
+def test_reinstall_runs_in_user_session(runner: FakeRunner) -> None:
+    runner.respond_json("Register-ScheduledTask", {"state": "Ready", "result": 0})
+    manager = AppxManager(runner, run_as="EQUIPO\\ana")
+    manager.reinstall("Microsoft.BingNews", "9WZDNCRFHVFW", "Microsoft News")
+    script = runner.scripts[-1]
+    assert "-UserId 'EQUIPO\\ana' -LogonType Interactive -RunLevel Limited" in script
+    assert "winget install --id 9WZDNCRFHVFW --source msstore" in script
+    assert "Unregister-ScheduledTask" in script
+    assert not runner.calls  # no se ejecuta winget desde la cuenta elevada
+
+
+@pytest.mark.parametrize(
+    ("data", "match"),
+    [
+        ({"state": "Ready", "result": 2316632107}, "código"),
+        ({"state": "Running", "result": 0}, "a tiempo"),
+    ],
+)
+def test_reinstall_in_user_session_failures(runner: FakeRunner, data: dict, match: str) -> None:
+    runner.respond_json("Register-ScheduledTask", data)
+    with pytest.raises(AppxError, match=match):
+        AppxManager(runner, run_as="EQUIPO\\ana").reinstall("X", None, "Microsoft Tips")
+
+
+def test_run_as_only_when_accounts_differ() -> None:
+    from core.app import _run_as
+    from core.environment import EnvironmentInfo
+
+    same = EnvironmentInfo(interactive_user="PC\\ana", elevated_user="pc\\ANA")
+    other = EnvironmentInfo(interactive_user="PC\\ana", elevated_user="PC\\admin")
+    assert _run_as(same) is None
+    assert _run_as(other) == "PC\\ana"
+    assert _run_as(EnvironmentInfo()) is None

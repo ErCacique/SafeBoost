@@ -36,7 +36,10 @@ def build_context(
     runner: Runner | None = None,
     env: EnvironmentInfo | None = None,
     catalog: Catalog | None = None,
+    warm_checks: bool = True,
 ) -> AppContext:
+    """Construye el contexto completo. Llamar desde un hilo de trabajo, nunca desde Tk:
+    detecta el entorno y ejecuta las comprobaciones de hardware (lentas)."""
     settings = settings or Settings.load()
     runner = runner or SubprocessRunner()
     if backend is None:
@@ -53,10 +56,21 @@ def build_context(
         registry=registry,
         runner=runner,
         services=services,
-        appx=AppxManager(runner),
+        appx=AppxManager(runner, env.interactive_sid, _run_as(env)),
         tasks=TaskManager(runner),
         restore=RestoreManager(registry, runner, env.system_drive),
         store=store,
         settings=settings,
     )
+    if warm_checks:
+        engine.warm_checks()
     return AppContext(engine, env, runner, registry, settings, MetricsStore(), store)
+
+
+def _run_as(env: EnvironmentInfo) -> str | None:
+    """Usuario de la sesión si WinTune se elevó con otra cuenta; None si es la misma."""
+    interactive = (env.interactive_user or "").lower()
+    elevated = (env.elevated_user or "").lower()
+    if interactive and elevated and interactive != elevated:
+        return env.interactive_user
+    return None

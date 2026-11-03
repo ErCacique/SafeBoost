@@ -74,6 +74,8 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    afectadas a `.reg` y aplica. Un fallo en un tweak no detiene el resto.
 6. **Resumen**: aplicados / omitidos / fallidos con la causa de cada uno, y medición antes/después.
 7. **Historial/Deshacer**: revierte cualquier sesión anterior, o abre "Restaurar sistema".
+8. **Tras reiniciar**, una tarea temporal mide el nuevo tiempo de arranque y se elimina sola
+   (desactivable en Ajustes). El resultado aparece en "Antes / después" del Dashboard.
 
 ### Datos locales
 
@@ -310,6 +312,5 @@ Probado: lint, 110 tests con registro simulado, recorrido completo de la UI en `
 - **Validar en una VM Windows 10 22H2 y 11 24H2** (con snapshot): perfil 1, 2 y 3, Deshacer,
   y medición del arranque tras reiniciar. Es la primera ejecución sobre un sistema real.
 - Ejecutar `scripts/verify_store_ids.ps1` y completar los cuatro `store_id: null`.
-- Icono de la aplicación (`packaging/wintune.ico` + `icon=` en el `.spec`).
 - Si el repo se hace público: añadir `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md` y plantillas
   de issues/PR, y revisar el historial en busca de datos personales.

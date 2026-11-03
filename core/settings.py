@@ -17,6 +17,7 @@ class Settings:
     dry_run: bool = True
     allow_without_restore_point: bool = False
     export_reg_backups: bool = True
+    measure_boot_after_reboot: bool = True
     appearance: str = "dark"
     log_level: str = "INFO"
     first_run: bool = True

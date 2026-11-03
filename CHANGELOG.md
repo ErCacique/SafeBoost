@@ -7,6 +7,25 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-03
+
+### Fixed
+- La interfaz se congelaba hasta 90 s la primera vez que se abría "Optimización" o se elegía
+  un perfil: la comprobación de soporte de HAGS (dxdiag) se ejecutaba en el hilo de Tk. Ahora
+  todas las comprobaciones de hardware se hacen al arrancar, en segundo plano.
+- La medición "después del reinicio" podía guardarse sin haber reiniciado si no había dato de
+  arranque previo. Ahora solo cuenta un arranque registrado después de aplicar la sesión.
+- Si `Remove-AppxPackage -AllUsers` falla (ocurre con algunos paquetes en Windows 10), se
+  reintenta para el usuario interactivo y se informa en el resumen en lugar de marcar fallo.
+- Deshacer la eliminación de apps reinstalaba con winget en la cuenta elevada; si es distinta
+  del usuario con sesión, ahora se ejecuta en la sesión de ese usuario (tarea temporal).
+
+### Added
+- Medición automática del arranque tras el siguiente reinicio: tarea programada temporal
+  (`\WinTune\PostRebootMetrics`) que se elimina sola. Se puede desactivar en Ajustes.
+- Icono de la aplicación (`assets/wintune.ico`, generado con `scripts/make_icon.py`).
+- `--self-test` comprueba también que el icono va empaquetado.
+
 ## [0.1.0] - 2026-11-03
 
 ### Added
@@ -29,5 +48,6 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
   validación del catálogo, bloqueo de commits a `main`).
 - Documentación de configuración de GitHub y de distribución/firma de código.
 
-[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ErCacique/WinOpt/releases/tag/v0.1.0

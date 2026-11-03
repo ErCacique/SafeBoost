@@ -56,6 +56,14 @@ class SettingsPage(Page):
             font=FONT_BODY,
             command=self._save,
         ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.measure_boot = ctk.BooleanVar(value=settings.measure_boot_after_reboot)
+        ctk.CTkSwitch(
+            safety,
+            text="Medir el arranque automáticamente tras el próximo reinicio (tarea temporal)",
+            variable=self.measure_boot,
+            font=FONT_BODY,
+            command=self._save,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
         self.no_restore = ctk.BooleanVar(value=settings.allow_without_restore_point)
         ctk.CTkSwitch(
             safety,
@@ -114,6 +122,7 @@ class SettingsPage(Page):
         settings = self.state.app.settings
         settings.dry_run = self.dry_run.get()
         settings.export_reg_backups = self.backups.get()
+        settings.measure_boot_after_reboot = self.measure_boot.get()
         settings.allow_without_restore_point = self.no_restore.get()
         settings.appearance = self.appearance.get()
         settings.log_level = self.level.get()

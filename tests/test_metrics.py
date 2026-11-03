@@ -8,10 +8,12 @@ from core.metrics import (
     BootInfo,
     MetricsStore,
     Snapshot,
+    boot_after,
     compare,
     human_bytes,
     last_boot,
     recommend_profile,
+    schedule_post_reboot_capture,
 )
 from tests.conftest import FakeRunner
 
@@ -65,12 +67,44 @@ def test_last_boot(runner: FakeRunner) -> None:
 
 def test_metrics_store_post_reboot(tmp_path, runner: FakeRunner) -> None:
     store = MetricsStore(tmp_path)
-    store.save("s1", "before", snap(boot=BootInfo(30000, "boot-1")))
-    store.save("s1", "after", snap())
+    store.save("s1", "before", snap(boot=BootInfo(30000, "2026-11-03T07:00:00Z")))
+    after = snap()
+    after.taken = "2026-11-03T08:00:00+00:00"
+    store.save("s1", "after", after)
     assert store.pending_reboot_sessions() == ["s1"]
-    runner.respond_json("EventID=100", {"boot_ms": 30000, "timestamp": "boot-1"})
+    # Último arranque anterior a la sesión: todavía no se ha reiniciado.
+    runner.respond_json("EventID=100", {"boot_ms": 30000, "timestamp": "2026-11-03T07:00:00Z"})
     assert store.capture_post_reboot(runner, "C:") == []
     runner.json_responses.clear()
-    runner.respond_json("EventID=100", {"boot_ms": 20000, "timestamp": "boot-2"})
+    runner.respond_json("EventID=100", {"boot_ms": 20000, "timestamp": "2026-11-03T09:00:00Z"})
     assert store.capture_post_reboot(runner, "C:") == ["s1"]
     assert store.get("s1", "after_reboot").boot.boot_ms == 20000
+    assert store.pending_reboot_sessions() == []
+
+
+def test_no_capture_without_reboot_when_no_previous_boot(tmp_path, runner: FakeRunner) -> None:
+    """Regresión: sin dato de arranque previo se capturaba 'after_reboot' sin reiniciar."""
+    store = MetricsStore(tmp_path)
+    store.save("s1", "before", snap(boot=None))
+    after = snap()
+    after.taken = "2026-11-03T08:00:00+00:00"
+    store.save("s1", "after", after)
+    runner.respond_json("EventID=100", {"boot_ms": 30000, "timestamp": "2026-11-03T07:00:00Z"})
+    assert store.capture_post_reboot(runner, "C:") == []
+
+
+def test_boot_after_handles_local_and_utc() -> None:
+    assert boot_after(BootInfo(1, "2026-11-03T09:00:00Z"), "2026-11-03T08:59:59+00:00")
+    assert not boot_after(BootInfo(1, "2026-11-03T07:00:00Z"), "2026-11-03T08:00:00+00:00")
+    assert not boot_after(BootInfo(1, "no-es-fecha"), "2026-11-03T08:00:00+00:00")
+
+
+def test_schedule_post_reboot_task(runner: FakeRunner, tmp_path) -> None:
+    assert schedule_post_reboot_capture(runner, [r"C:\Apps\WinTune.exe"], tmp_path)
+    script = runner.scripts[-1]
+    assert "-UserId 'SYSTEM'" in script
+    assert f"WINTUNE_HOME={tmp_path}" in script
+    assert "WinTune.exe --capture-boot" in script
+    assert "-TaskPath '\\WinTune\\'" in script
+    runner.fail_on.append("Register-ScheduledTask")
+    assert not schedule_post_reboot_capture(runner, ["x.exe"], tmp_path)

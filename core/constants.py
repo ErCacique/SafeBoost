@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "WinTune"
-APP_VERSION: Final = "0.1.0"
+APP_VERSION: Final = "0.1.1"
 APP_ID: Final = "ErCacique.WinTune"
 
 # --------------------------------------------------------------------------- rutas
@@ -43,6 +43,15 @@ SETTINGS_FILE: Final = APP_HOME / "settings.json"
 
 RESOURCE_ROOT: Final = _resource_root()
 TWEAKS_FILE: Final = RESOURCE_ROOT / "data" / "tweaks.json"
+ICON_FILE: Final = RESOURCE_ROOT / "assets" / "wintune.ico"
+
+
+def self_command() -> list[str]:
+    """Orden para relanzar WinTune: el .exe empaquetado o `python main.py` en desarrollo."""
+    if getattr(sys, "frozen", False):
+        return [sys.executable]
+    return [sys.executable, str(RESOURCE_ROOT / "main.py")]
+
 
 SYSTEM_ROOT: Final = Path(os.environ.get("SYSTEMROOT", r"C:\Windows"))
 SYSTEM32: Final = SYSTEM_ROOT / "System32"
@@ -239,6 +248,15 @@ TIMEOUT_APPX: Final = 300
 TIMEOUT_RESTORE_POINT: Final = 600
 TIMEOUT_WINGET: Final = 600
 TIMEOUT_DXDIAG: Final = 90
+
+# --------------------------------------------------------------------------- tareas propias
+
+# Carpeta del Programador de tareas para las tareas temporales que crea WinTune.
+WINTUNE_TASK_FOLDER: Final = "\\WinTune\\"
+POST_REBOOT_TASK_NAME: Final = "PostRebootMetrics"
+# Retraso tras el inicio de sesión: Windows registra el evento de arranque unos minutos
+# después de terminar el arranque.
+POST_REBOOT_DELAY: Final = "PT10M"
 
 # --------------------------------------------------------------------------- limpieza
 

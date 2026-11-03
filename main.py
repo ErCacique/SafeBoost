@@ -28,6 +28,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="comprueba catálogo y handlers dentro del ejecutable y sale (código 0 = OK)",
     )
+    # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
+    parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
     return parser.parse_args(argv)
 
@@ -66,6 +68,11 @@ def self_test() -> int:
             resolve_handler(ref)
         import customtkinter  # noqa: F401
 
+        from core.constants import ICON_FILE
+
+        if not ICON_FILE.exists():
+            raise OSError(f"Falta el icono empaquetado: {ICON_FILE}")
+
         import tweaks.startup  # noqa: F401
     except (HandlerError, ImportError, OSError, ValueError) as exc:
         if sys.stderr:
@@ -76,11 +83,40 @@ def self_test() -> int:
     return 0
 
 
+def capture_boot() -> int:
+    """Medición tras reinicio (tarea programada como SYSTEM). Sin interfaz.
+
+    Guarda la medición 'after_reboot' de las sesiones pendientes y elimina la tarea cuando ya
+    no queda ninguna. Si el evento de arranque aún no se ha registrado, la tarea se conserva
+    para el siguiente inicio de sesión.
+    """
+    import os
+
+    from core.metrics import MetricsStore, remove_post_reboot_task
+    from core.process import SubprocessRunner
+
+    setup_logging()
+    log = get_logger("capture_boot")
+    runner = SubprocessRunner()
+    store = MetricsStore()
+    try:
+        captured = store.capture_post_reboot(runner, os.environ.get("SYSTEMDRIVE", "C:"))
+    except OSError as exc:
+        log.error("capture_boot_failed", extra={"err": str(exc)})
+        return 1
+    log.info("capture_boot", extra={"captured": captured})
+    if not store.pending_reboot_sessions():
+        remove_post_reboot_task(runner)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     args = _parse_args(argv)
     if args.self_test:
         return self_test()
+    if args.capture_boot:
+        return capture_boot()
 
     if not args.demo:
         if sys.platform != "win32":
