@@ -100,6 +100,7 @@ class Engine:
         self.settings = settings
         self.guard = ProtectionGuard(env, services)
         self._check_cache: dict[str, bool] = {}
+        self._check_lock = threading.Lock()
         self._lock = threading.Lock()
 
     # ================================================================== contexto
@@ -134,11 +135,27 @@ class Engine:
 
     def check(self, ref: str) -> bool:
         """Resuelve condiciones requires.check (p. ej. soporte de HAGS). Se cachea."""
-        if ref not in self._check_cache:
-            func = resolve_handler(ref)
-            dummy = self.catalog.tweaks[0]
-            self._check_cache[ref] = bool(func(self._ctx(dummy, dry_run=True)))
-        return self._check_cache[ref]
+        with self._check_lock:
+            if ref not in self._check_cache:
+                func = resolve_handler(ref)
+                dummy = self.catalog.tweaks[0]
+                self._check_cache[ref] = bool(func(self._ctx(dummy, dry_run=True)))
+            return self._check_cache[ref]
+
+    def warm_checks(self) -> None:
+        """Ejecuta todas las comprobaciones de hardware del catálogo y las deja en caché.
+
+        Algunas son lentas (dxdiag tarda hasta 90 s): se llama desde el hilo de arranque para
+        que la interfaz nunca las dispare desde el hilo de Tk al evaluar un tweak.
+        """
+        refs = {t.requires["check"] for t in self.catalog.tweaks if t.requires.get("check")}
+        for ref in sorted(refs):
+            try:
+                self.check(ref)
+            except Exception as exc:  # noqa: BLE001 - un check roto equivale a "no soportado"
+                log.warning("check_failed", extra={"ref": ref, "err": str(exc)})
+                with self._check_lock:
+                    self._check_cache[ref] = False
 
     def evaluate(self, tweak: Tweak, level: int = 3) -> Applicability:
         return evaluate(tweak, self.env, level, self.check)
@@ -429,6 +446,8 @@ class Engine:
             ctx.plan(f"AppX {package}: eliminar para todos los usuarios{scope}")
             return "changed"
         removed = self.appx.remove(package, bool(op.get("provisioned")))
+        for note in self.appx.pop_notes():
+            ctx.note(note)
         ctx.record("appx", {"package": package}, "present", removed)
         return "changed"
 

@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
+import uuid
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 
-from core.constants import PROTECTED_APPX_PREFIXES, TIMEOUT_APPX, TIMEOUT_WINGET
+from core.constants import (
+    PROTECTED_APPX_PREFIXES,
+    TIMEOUT_APPX,
+    TIMEOUT_WINGET,
+    WINTUNE_TASK_FOLDER,
+)
 from core.logger import get_logger
 from core.process import CommandError, Runner, as_list, ps_quote
 
@@ -36,9 +43,27 @@ class AppxInventory:
 
 
 class AppxManager:
-    def __init__(self, runner: Runner) -> None:
+    """Gestión de AppX.
+
+    `user_sid`: SID del usuario interactivo, para el reintento por usuario al eliminar.
+    `run_as`: cuenta del usuario interactivo si NO es la que ejecuta WinTune elevado; en ese
+    caso la reinstalación con winget se lanza en su sesión (las apps de la Store son por
+    usuario: instalarlas desde la cuenta elevada las dejaría en el perfil equivocado).
+    """
+
+    def __init__(
+        self, runner: Runner, user_sid: str | None = None, run_as: str | None = None
+    ) -> None:
         self.runner = runner
+        self.user_sid = user_sid
+        self.run_as = run_as
         self._inventory: AppxInventory | None = None
+        self._notes: list[str] = []
+
+    def pop_notes(self) -> list[str]:
+        """Avisos de la última operación (p. ej. eliminación solo para un usuario)."""
+        notes, self._notes = self._notes, []
+        return notes
 
     def inventory(self, refresh: bool = False) -> AppxInventory:
         """Una sola consulta a PowerShell para todo el catálogo (Get-AppxPackage es lento)."""
@@ -81,8 +106,24 @@ class AppxManager:
             )
             if res.ok:
                 removed.append(full_name)
+                continue
+            # -AllUsers falla con algunos paquetes en Windows 10 (p. ej. 0x80070032, "la
+            # solicitud no es compatible"). Se reintenta solo para el usuario interactivo.
+            scope = f" -User {ps_quote(self.user_sid)}" if self.user_sid else ""
+            retry = self.runner.powershell(
+                f"Remove-AppxPackage -Package {ps_quote(full_name)}{scope}",
+                timeout=TIMEOUT_APPX,
+            )
+            if retry.ok:
+                removed.append(full_name)
+                self._notes.append(
+                    f"{name}: no se pudo eliminar para todos los usuarios "
+                    f"({res.error_text()}); eliminado solo para el usuario actual"
+                )
             else:
-                errors.append(f"{full_name}: {res.error_text()}")
+                errors.append(
+                    f"{full_name}: {res.error_text()} (reintento por usuario: {retry.error_text()})"
+                )
         if provisioned:
             for pkg in inv.provisioned.get(name.lower(), []):
                 res = self.runner.powershell(
@@ -109,15 +150,10 @@ class AppxManager:
         candidate = Path.home() / "AppData" / "Local" / "Microsoft" / "WindowsApps" / "winget.exe"
         return str(candidate) if candidate.exists() else None
 
-    def reinstall(self, package: str, store_id: str | None, store_name: str) -> None:
-        winget = self.winget_path
-        if winget is None:
-            raise AppxError(
-                "winget no está disponible; reinstala la app desde Microsoft Store: " + store_name
-            )
+    @staticmethod
+    def _winget_args(store_id: str | None, store_name: str) -> list[str]:
         selector = ["--id", store_id] if store_id else ["--name", store_name, "--exact"]
-        args = [
-            winget,
+        return [
             "install",
             *selector,
             "--source",
@@ -127,6 +163,17 @@ class AppxManager:
             "--silent",
             "--disable-interactivity",
         ]
+
+    def reinstall(self, package: str, store_id: str | None, store_name: str) -> None:
+        if self.run_as:
+            self._reinstall_as_user(package, store_id, store_name)
+            return
+        winget = self.winget_path
+        if winget is None:
+            raise AppxError(
+                "winget no está disponible; reinstala la app desde Microsoft Store: " + store_name
+            )
+        args = [winget, *self._winget_args(store_id, store_name)]
         try:
             result = self.runner.run(args, timeout=TIMEOUT_WINGET, encoding="utf-8")
         except CommandError as exc:
@@ -135,3 +182,50 @@ class AppxManager:
             raise AppxError(f"winget no pudo reinstalar {store_name}: {result.error_text()}")
         self.invalidate()
         log.info("appx_reinstalled", extra={"package": package, "store_id": store_id})
+
+    def _reinstall_as_user(self, package: str, store_id: str | None, store_name: str) -> None:
+        """Ejecuta winget en la sesión del usuario interactivo mediante una tarea temporal.
+
+        Con LogonType Interactive la tarea corre en la sesión ya abierta del usuario, sin
+        necesitar su contraseña. Se espera a que termine, se lee LastTaskResult y se elimina.
+        """
+        if self.run_as is None:
+            raise AppxError("No hay usuario interactivo para reinstalar en su sesión")
+        name = f"Reinstall-{uuid.uuid4().hex[:8]}"
+        winget_line = subprocess.list2cmdline(["winget", *self._winget_args(store_id, store_name)])
+        script = (
+            f"$path = {ps_quote(WINTUNE_TASK_FOLDER)}; $name = {ps_quote(name)};"
+            "$a = New-ScheduledTaskAction -Execute 'cmd.exe' "
+            f"-Argument {ps_quote('/c ' + winget_line)};"
+            f"$p = New-ScheduledTaskPrincipal -UserId {ps_quote(self.run_as)} "
+            "-LogonType Interactive -RunLevel Limited;"
+            "Register-ScheduledTask -TaskPath $path -TaskName $name -Action $a -Principal $p "
+            "-Force | Out-Null;"
+            "try {"
+            " Start-ScheduledTask -TaskPath $path -TaskName $name;"
+            f" $deadline = (Get-Date).AddSeconds({TIMEOUT_WINGET});"
+            " do { Start-Sleep -Seconds 2;"
+            "  $state = (Get-ScheduledTask -TaskPath $path -TaskName $name).State;"
+            "  $res = (Get-ScheduledTaskInfo -TaskPath $path -TaskName $name).LastTaskResult"
+            " } while (($state -eq 'Running' -or $res -eq 267011) -and (Get-Date) -lt $deadline);"
+            " @{state=[string]$state; result=[int64]$res} | ConvertTo-Json -Compress"
+            "} finally {"
+            " Unregister-ScheduledTask -TaskPath $path -TaskName $name -Confirm:$false"
+            "}"
+        )
+        try:
+            data = self.runner.powershell_json(script, timeout=TIMEOUT_WINGET + 60) or {}
+        except CommandError as exc:
+            raise AppxError(f"No se pudo lanzar winget en la sesión del usuario: {exc}") from exc
+        if data.get("state") == "Running":
+            raise AppxError(f"winget no terminó a tiempo al reinstalar {store_name}")
+        if int(data.get("result", -1)) != 0:
+            raise AppxError(
+                f"winget no pudo reinstalar {store_name} en la sesión de {self.run_as} "
+                f"(código {data.get('result')})"
+            )
+        self.invalidate()
+        log.info(
+            "appx_reinstalled",
+            extra={"package": package, "store_id": store_id, "as_user": self.run_as},
+        )

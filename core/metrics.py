@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -14,12 +15,15 @@ from core.constants import (
     BOOT_EVENT_ID,
     DIAG_PERF_LOG,
     METRICS_DIR,
+    POST_REBOOT_DELAY,
+    POST_REBOOT_TASK_NAME,
     RECOMMEND_HIGH_PROC_COUNT,
     RECOMMEND_LOW_RAM_GIB,
+    WINTUNE_TASK_FOLDER,
 )
 from core.environment import EnvironmentInfo
 from core.logger import get_logger
-from core.process import CommandError, Runner, ps_quote
+from core.process import CommandError, Runner, ps_quote, resolve_exe
 
 log = get_logger("metrics")
 
@@ -85,7 +89,8 @@ def last_boot(runner: Runner) -> BootInfo | None:
         "-ErrorAction SilentlyContinue;"
         "if ($e) { $x = [xml]$e.ToXml();"
         "$b = ($x.Event.EventData.Data | Where-Object { $_.Name -eq 'BootTime' }).'#text';"
-        "@{boot_ms=[int]$b; timestamp=$e.TimeCreated.ToString('o')} | ConvertTo-Json -Compress }"
+        "@{boot_ms=[int]$b; timestamp=$e.TimeCreated.ToUniversalTime()"
+        ".ToString('yyyy-MM-ddTHH:mm:ssZ')} | ConvertTo-Json -Compress }"
         " else { 'null' }"
     )
     try:
@@ -96,6 +101,28 @@ def last_boot(runner: Runner) -> BootInfo | None:
     if not data:
         return None
     return BootInfo(int(data["boot_ms"]), str(data["timestamp"]))
+
+
+def parse_timestamp(value: str) -> datetime:
+    """ISO 8601 → datetime con zona. Sin zona se interpreta como hora local."""
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.astimezone()
+
+
+def boot_after(boot: BootInfo, taken: str) -> bool:
+    """True si el arranque se registró después del instante `taken`."""
+    try:
+        return parse_timestamp(boot.timestamp) > parse_timestamp(taken)
+    except ValueError:
+        return False
+
+
+def local_time(value: str) -> str:
+    """Marca de tiempo para mostrar al usuario, en hora local."""
+    try:
+        return parse_timestamp(value).astimezone().strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return value[:16]
 
 
 @dataclass
@@ -164,9 +191,11 @@ class MetricsStore:
             return []
         captured = []
         for sid in self.pending_reboot_sessions():
-            before = self.get(sid, "before")
-            if before and before.boot and before.boot.timestamp == boot.timestamp:
-                continue  # todavía no se ha reiniciado desde esa sesión
+            after = self.get(sid, "after")
+            # Solo cuenta un arranque registrado DESPUÉS de aplicar la sesión. Comparar con el
+            # arranque previo fallaba si no había dato previo (capturaba sin reiniciar).
+            if after is None or not boot_after(boot, after.taken):
+                continue
             snap = take_snapshot(system_drive)
             snap.boot = boot
             self.save(sid, "after_reboot", snap)
@@ -195,3 +224,43 @@ def human_bytes(value: float) -> str:
             return f"{sign}{value:.1f} {unit}" if unit != "B" else f"{sign}{int(value)} B"
         value /= 1024
     return f"{sign}{value:.1f} TB"
+
+
+# --------------------------------------------------------------------------- tarea tras reinicio
+
+
+def schedule_post_reboot_capture(runner: Runner, command: list[str], home: Path) -> bool:
+    """Programa una medición automática tras el próximo reinicio.
+
+    Tarea de un uso como SYSTEM (leer el evento de arranque requiere privilegios), disparada
+    al iniciar sesión con retraso. `command` lanza WinTune con --capture-boot; WINTUNE_HOME
+    apunta al perfil del usuario porque SYSTEM tiene otro %LOCALAPPDATA%. La propia ejecución
+    elimina la tarea cuando ya no quedan sesiones pendientes de medir.
+    """
+    inner = f'set "WINTUNE_HOME={home}" && ' + subprocess.list2cmdline([*command, "--capture-boot"])
+    script = (
+        f"$a = New-ScheduledTaskAction -Execute {ps_quote(resolve_exe('cmd.exe'))} "
+        f"-Argument {ps_quote('/c ' + inner)};"
+        f"$t = New-ScheduledTaskTrigger -AtLogOn; $t.Delay = {ps_quote(POST_REBOOT_DELAY)};"
+        "$p = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount "
+        "-RunLevel Highest;"
+        "$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries "
+        "-ExecutionTimeLimit (New-TimeSpan -Minutes 5);"
+        f"Register-ScheduledTask -TaskPath {ps_quote(WINTUNE_TASK_FOLDER)} "
+        f"-TaskName {ps_quote(POST_REBOOT_TASK_NAME)} -Action $a -Trigger $t -Principal $p "
+        "-Settings $s -Force | Out-Null"
+    )
+    result = runner.powershell(script)
+    if not result.ok:
+        log.warning("post_reboot_task_failed", extra={"err": result.error_text()})
+        return False
+    log.info("post_reboot_task_scheduled")
+    return True
+
+
+def remove_post_reboot_task(runner: Runner) -> None:
+    runner.powershell(
+        f"Unregister-ScheduledTask -TaskPath {ps_quote(WINTUNE_TASK_FOLDER)} "
+        f"-TaskName {ps_quote(POST_REBOOT_TASK_NAME)} -Confirm:$false "
+        "-ErrorAction SilentlyContinue"
+    )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import threading
 from collections.abc import Callable
 from tkinter import messagebox
@@ -10,10 +11,16 @@ from typing import Any
 import customtkinter as ctk
 
 from core.app import AppContext
-from core.constants import APP_NAME, APP_VERSION
+from core.constants import APP_HOME, APP_NAME, APP_VERSION, ICON_FILE, self_command
 from core.engine import PlanItem
 from core.logger import get_logger, ui_log_queue
-from core.metrics import Comparison, compare, last_boot, take_snapshot
+from core.metrics import (
+    Comparison,
+    compare,
+    last_boot,
+    schedule_post_reboot_capture,
+    take_snapshot,
+)
 from core.session import Session
 from ui.dialogs import ReviewDialog, SummaryDialog
 from ui.pages.base import Page, show_error
@@ -68,6 +75,9 @@ class MainWindow(ctk.CTk):
         self.title(f"{WINDOW_TITLE} {APP_VERSION}")
         self.geometry(WINDOW_SIZE)
         self.minsize(*WINDOW_MIN)
+        if sys.platform == "win32" and ICON_FILE.exists():
+            # Llamarlo antes de 200 ms evita que CustomTkinter ponga su icono por defecto.
+            self.iconbitmap(str(ICON_FILE))
         # No se llama "state": CTk ya tiene un método state() (estado de la ventana).
         self.ui: UiState | None = None
         self.pages: dict[str, Page] = {}
@@ -306,6 +316,11 @@ class MainWindow(ctk.CTk):
             after.boot = before.boot
             app.metrics.save(session.id, "before", before)
             app.metrics.save(session.id, "after", after)
+            if app.settings.measure_boot_after_reboot and any(
+                r.status in ("applied", "partial") for r in session.results.values()
+            ):
+                progress(1.0, "Programando la medición tras reiniciar…")
+                schedule_post_reboot_capture(app.runner, self_command(), APP_HOME)
             return session, compare(before, after)
 
         def done(result: tuple[Session, Comparison]) -> None:

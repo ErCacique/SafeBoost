@@ -398,3 +398,46 @@ def test_appx_remove_and_reinstall(make_engine: EngineFactory, runner: FakeRunne
     winget = runner.calls[-1]
     assert winget[:4] == ["winget.exe", "install", "--id", "9WZDNCRFHVFW"]
     assert "--source" in winget and "msstore" in winget
+
+
+# --------------------------------------------------------------------------- correcciones 0.1.1
+
+
+def test_warm_checks_caches_and_isolates_failures(
+    make_engine: EngineFactory, runner: FakeRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+
+    def fake_hags(_ctx) -> bool:
+        calls.append("hags")
+        return True
+
+    monkeypatch.setattr("tweaks.gaming.hags_supported", fake_hags)
+    import core.context as context
+
+    context._cache.clear()
+    engine = make_engine()
+    engine.warm_checks()
+    assert calls == ["hags"]
+    # La UI evalúa después sin volver a ejecutar dxdiag.
+    assert engine.evaluate(engine.catalog.get("gaming.hags")).applicable
+    assert calls == ["hags"]
+
+    def broken(_ctx) -> bool:
+        raise RuntimeError("dxdiag roto")
+
+    monkeypatch.setattr("tweaks.gaming.hags_supported", broken)
+    context._cache.clear()
+    engine = make_engine()
+    engine.warm_checks()
+    assert not engine.evaluate(engine.catalog.get("gaming.hags")).applicable
+    context._cache.clear()
+
+
+def test_appx_fallback_note_reaches_session(make_engine: EngineFactory, runner: FakeRunner) -> None:
+    runner.appx_installed = ["Microsoft.BingNews"]
+    runner.fail_on.append("Remove-AppxPackage -AllUsers")
+    session = make_engine().apply(["bloatware.bing_news"])
+    result = session.results["bloatware.bing_news"]
+    assert result.status == "applied"
+    assert any("solo para el usuario actual" in d for d in result.details)

@@ -15,6 +15,7 @@ from core.metrics import (
     compare,
     human_bytes,
     last_boot,
+    local_time,
     recommend_profile,
     take_snapshot,
 )
@@ -220,7 +221,7 @@ class DashboardPage(Page):
         def done(boot: BootInfo | None) -> None:
             self.boot = boot
             if boot:
-                self.cards["boot"].set(f"{boot.boot_ms / 1000:.1f} s", boot.timestamp[:16])
+                self.cards["boot"].set(f"{boot.boot_ms / 1000:.1f} s", local_time(boot.timestamp))
             else:
                 self.cards["boot"].set("n/d", "Sin datos de diagnóstico")
             self.update_compare()
