@@ -33,6 +33,13 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
   PowerShell (antes, una por tarea).
 - El modo `--demo` simula también `sc config` y el estado de las tareas.
 
+### Fixed
+- Con una edición de Windows no reconocida (Server, algunas OEM/IoT) se aplicaban a la vez los
+  dos tweaks de telemetría, que son excluyentes (`AllowTelemetry` 1 y 0). Detectado por el
+  nuevo test E2E. Ahora los tweaks limitados por edición no se aplican si la edición es
+  desconocida, y un test del catálogo impide escrituras de registro en conflicto.
+- La precarga de tareas ya no deja como "desconocida" una tarea ausente en la respuesta.
+
 ## [0.1.2] - 2026-11-03
 
 ### Changed
