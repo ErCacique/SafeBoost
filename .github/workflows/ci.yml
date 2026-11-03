@@ -99,5 +99,6 @@ jobs:
       - name: Aplicar y revertir tweaks reales
         env:
           WINTUNE_E2E: "1"
+          PYTHONUTF8: "1"  # tildes legibles en el log del runner
           WINTUNE_HOME: ${{ runner.temp }}\wintune
         run: pytest -m e2e -rA -s
