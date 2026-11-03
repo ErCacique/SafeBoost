@@ -69,6 +69,7 @@ class TweaksPage(Page):
                         tweak.id in self.state.selected,
                         on_toggle=self.state.toggle,
                         on_param=self.state.set_param,
+                        env=self.state.app.env,
                     )
                     row.pack(fill="x", padx=PAD, pady=3)
                     self.rows[tweak.id] = row

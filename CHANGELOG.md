@@ -7,6 +7,17 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-03
+
+### Changed
+- Indexado por unidad: casillas con las unidades fijas detectadas (la del sistema aparece
+  desmarcada y señalada) en lugar de escribir las letras a mano.
+- Los parámetros configurables muestran etiquetas en español ("Proveedor DNS", "Unidades",
+  "Tamaño (MB)"); el campo `label` es obligatorio en el esquema del catálogo.
+
+### Fixed
+- README: las copias `.reg` se guardan en una subcarpeta por sesión de `backups`.
+
 ## [0.1.1] - 2026-11-03
 
 ### Fixed
@@ -48,6 +59,7 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
   validación del catálogo, bloqueo de commits a `main`).
 - Documentación de configuración de GitHub y de distribución/firma de código.
 
-[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/ErCacique/WinOpt/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ErCacique/WinOpt/releases/tag/v0.1.0

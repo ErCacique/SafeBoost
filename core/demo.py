@@ -55,6 +55,7 @@ def demo_environment() -> EnvironmentInfo:
         interactive_sid=DEMO_SID,
         elevated_user="DEMO\\usuario",
         is_admin=True,
+        fixed_drives=["C:", "D:"],
         warnings=["Modo demostración: ningún cambio afecta al sistema real."],
     )
 

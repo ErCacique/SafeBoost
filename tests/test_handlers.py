@@ -213,3 +213,31 @@ def test_hags_not_applicable_without_support(
     runner.fail_on.append("dxdiag")
     engine = make_engine()
     assert not engine.evaluate(engine.catalog.get("gaming.hags")).applicable
+
+
+def test_indexing_explicit_drive_selection(make_engine: EngineFactory, runner: FakeRunner) -> None:
+    runner.respond_json(
+        "Win32_Volume",
+        [
+            {"letter": "C:", "indexing": True},
+            {"letter": "D:", "indexing": True},
+            {"letter": "E:", "indexing": True},
+        ],
+    )
+    engine = make_engine()
+    session = engine.apply(
+        ["search.indexing_drives"], params={"search.indexing_drives": {"drives": ["E:"]}}
+    )
+    changed = [s for s in runner.scripts if "IndexingEnabled=$false" in s]
+    assert len(changed) == 1 and "'E:'" in changed[0]
+    assert session.handler_state["search.indexing_drives"] == {"previous": {"E:": True}}
+
+
+def test_indexing_empty_selection_is_skipped(
+    make_engine: EngineFactory, runner: FakeRunner
+) -> None:
+    runner.respond_json("Win32_Volume", [{"letter": "D:", "indexing": True}])
+    session = make_engine().apply(
+        ["search.indexing_drives"], params={"search.indexing_drives": {"drives": []}}
+    )
+    assert session.results["search.indexing_drives"].status == "skipped"

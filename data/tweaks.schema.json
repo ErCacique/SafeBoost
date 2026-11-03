@@ -50,8 +50,9 @@
     },
     "param": {
       "type": "object",
-      "required": ["type", "default"],
+      "required": ["label", "type", "default"],
       "properties": {
+        "label": { "type": "string", "minLength": 1 },
         "type": { "enum": ["choice", "int", "drives", "bool"] },
         "choices": { "type": "array", "items": { "type": "string" } },
         "default": {},

@@ -2663,6 +2663,7 @@
       "auto_when": {},
       "params": {
         "provider": {
+          "label": "Proveedor DNS",
           "type": "choice",
           "choices": [
             "cloudflare",
@@ -2890,6 +2891,7 @@
       "auto_when": {},
       "params": {
         "drives": {
+          "label": "Unidades",
           "type": "drives",
           "default": "non_system"
         }
@@ -3482,6 +3484,7 @@
       "auto_when": {},
       "params": {
         "size_mb": {
+          "label": "Tamaño (MB)",
           "type": "int",
           "default": "ram_x1_5",
           "min": 4096

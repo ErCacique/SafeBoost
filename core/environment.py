@@ -46,6 +46,7 @@ class EnvironmentInfo:
     entra_joined: bool = False
     mdm_enrolled: bool = False
     printers: list[str] = field(default_factory=list)
+    fixed_drives: list[str] = field(default_factory=list)
     interactive_user: str = ""
     interactive_sid: str | None = None
     elevated_user: str = ""
@@ -105,6 +106,7 @@ class EnvironmentDetector:
             self._domain,
             self._mdm,
             self._printers,
+            self._drives,
         ):
             try:
                 step(env)
@@ -224,3 +226,12 @@ class EnvironmentDetector:
             for n in names
             if not any(m.lower() in str(n).lower() for m in VIRTUAL_PRINTER_MARKERS)
         ]
+
+    def _drives(self, env: EnvironmentInfo) -> None:
+        """Unidades fijas con letra (C:, D:...). psutil es instantáneo: sin PowerShell."""
+        drives = []
+        for part in psutil.disk_partitions(all=False):
+            letter = part.mountpoint.rstrip("\\").upper()
+            if "fixed" in part.opts.split(",") and len(letter) == 2 and letter.endswith(":"):
+                drives.append(letter)
+        env.fixed_drives = sorted(set(drives))
