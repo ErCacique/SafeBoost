@@ -1,0 +1,5 @@
+# Falsos positivos revisados a mano (regla generic-api-key): la variable se llamaba "access"
+# y contenía máscaras de permisos de winreg (KEY_WOW64_64KEY | KEY_READ...), no secretos.
+# La variable se renombró en un commit posterior; estas huellas solo cubren el historial.
+49c6753cb1e3dfae67a805a0538067e6ee671b01:core/registry.py:generic-api-key:164
+49c6753cb1e3dfae67a805a0538067e6ee671b01:core/registry.py:generic-api-key:181

@@ -1,0 +1,3564 @@
+{
+  "$schema": "./tweaks.schema.json",
+  "schema_version": 1,
+  "tweaks": [
+    {
+      "id": "bloatware.candy_crush",
+      "name": "Eliminar Candy Crush Saga y Soda Saga",
+      "description": "Desinstala Candy Crush Saga y Soda Saga para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet. Sin ID de Store verificado: se busca por nombre.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "king.com.CandyCrushSaga",
+          "provisioned": true
+        },
+        {
+          "op": "appx_remove",
+          "package": "king.com.CandyCrushSodaSaga",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "king.com.CandyCrushSaga",
+          "store_id": null,
+          "store_name": "Candy Crush Saga"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.xbox_app",
+      "name": "Eliminar App Xbox",
+      "description": "Desinstala App Xbox para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.XboxApp",
+          "provisioned": true
+        },
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.GamingApp",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.XboxApp",
+          "store_id": "9MV0B5HZVK9Z",
+          "store_name": "Xbox"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.solitaire",
+      "name": "Eliminar Microsoft Solitaire Collection",
+      "description": "Desinstala Microsoft Solitaire Collection para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.MicrosoftSolitaireCollection",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.MicrosoftSolitaireCollection",
+          "store_id": "9WZDNCRFHWD2",
+          "store_name": "Microsoft Solitaire Collection"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.bing_news",
+      "name": "Eliminar Noticias (Bing News)",
+      "description": "Desinstala Noticias (Bing News) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.BingNews",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.BingNews",
+          "store_id": "9WZDNCRFHVFW",
+          "store_name": "Microsoft News"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.bing_weather",
+      "name": "Eliminar El Tiempo (Bing Weather)",
+      "description": "Desinstala El Tiempo (Bing Weather) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.BingWeather",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.BingWeather",
+          "store_id": "9WZDNCRFJ3Q2",
+          "store_name": "MSN Weather"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.clipchamp",
+      "name": "Eliminar Clipchamp",
+      "description": "Desinstala Clipchamp para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 22000,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Clipchamp.Clipchamp",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Clipchamp.Clipchamp",
+          "store_id": "9P1J8S7CCWWT",
+          "store_name": "Microsoft Clipchamp"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.teams_personal",
+      "name": "Eliminar Microsoft Teams (personal / Chat de Windows 11)",
+      "description": "Desinstala Microsoft Teams (personal / Chat de Windows 11) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 22000,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet. Sin ID de Store verificado: se busca por nombre.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "MicrosoftTeams",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "MicrosoftTeams",
+          "store_id": null,
+          "store_name": "Microsoft Teams (free)"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.cortana",
+      "name": "Eliminar Cortana",
+      "description": "Desinstala Cortana para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.549981C3F5F10",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.549981C3F5F10",
+          "store_id": "9NFFX4SZZ23L",
+          "store_name": "Cortana"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.get_help",
+      "name": "Eliminar Obtener ayuda",
+      "description": "Desinstala Obtener ayuda para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.GetHelp",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.GetHelp",
+          "store_id": "9PKDZBMV1H3T",
+          "store_name": "Get Help"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.tips",
+      "name": "Eliminar Sugerencias (Tips)",
+      "description": "Desinstala Sugerencias (Tips) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet. Sin ID de Store verificado: se busca por nombre.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.Getstarted",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.Getstarted",
+          "store_id": null,
+          "store_name": "Microsoft Tips"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.feedback_hub",
+      "name": "Eliminar Centro de opiniones (Feedback Hub)",
+      "description": "Desinstala Centro de opiniones (Feedback Hub) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.WindowsFeedbackHub",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.WindowsFeedbackHub",
+          "store_id": "9NBLGGH4R32N",
+          "store_name": "Feedback Hub"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.mixed_reality",
+      "name": "Eliminar Portal de realidad mixta",
+      "description": "Desinstala Portal de realidad mixta para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.MixedReality.Portal",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.MixedReality.Portal",
+          "store_id": "9NG1H8B3ZC7M",
+          "store_name": "Mixed Reality Portal"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.viewer_3d",
+      "name": "Eliminar Visor 3D",
+      "description": "Desinstala Visor 3D para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.Microsoft3DViewer",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.Microsoft3DViewer",
+          "store_id": "9NBLGGH42THS",
+          "store_name": "3D Viewer"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.paint_3d",
+      "name": "Eliminar Paint 3D",
+      "description": "Desinstala Paint 3D para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.MSPaint",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.MSPaint",
+          "store_id": "9NBLGGH5FV99",
+          "store_name": "Paint 3D"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.skype",
+      "name": "Eliminar Skype (retirado en 2025)",
+      "description": "Desinstala Skype (retirado en 2025) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet. Sin ID de Store verificado: se busca por nombre.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.SkypeApp",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.SkypeApp",
+          "store_id": null,
+          "store_name": "Skype"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.phone_link",
+      "name": "Eliminar Vincular al teléfono (Your Phone / Phone Link)",
+      "description": "Desinstala Vincular al teléfono (Your Phone / Phone Link) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.YourPhone",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.YourPhone",
+          "store_id": "9NMPJ99VJBWV",
+          "store_name": "Phone Link"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.widgets",
+      "name": "Eliminar Widgets (Windows Web Experience Pack)",
+      "description": "Desinstala Widgets (Windows Web Experience Pack) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 22000,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "MicrosoftWindows.Client.WebExperience",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "MicrosoftWindows.Client.WebExperience",
+          "store_id": "9MSSGKG348SP",
+          "store_name": "Windows Web Experience Pack"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.copilot",
+      "name": "Eliminar Copilot (app)",
+      "description": "Desinstala Copilot (app) para todos los usuarios y evita que se reinstale en cuentas nuevas.",
+      "rationale": "Se elimina el paquete AppX instalado y el paquete aprovisionado (provisioned) de la imagen; si solo se quita el instalado, Windows lo vuelve a desplegar en cada perfil nuevo.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 22000,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "revert_note": "Reversión por reinstalación desde Microsoft Store vía winget: requiere conexión a internet.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "appx_remove",
+          "package": "Microsoft.Copilot",
+          "provisioned": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "appx_reinstall",
+          "package": "Microsoft.Copilot",
+          "store_id": "9NHT9RB2F4HD",
+          "store_name": "Microsoft Copilot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.news_interests",
+      "name": "Desactivar Widgets / Noticias e intereses",
+      "description": "Oculta el panel de widgets (Windows 11) y 'Noticias e intereses' de la barra de tareas (Windows 10).",
+      "rationale": "Se usa la directiva y no el valor de usuario TaskbarDa porque en Windows 11 24H2 el driver UCPD bloquea la escritura de TaskbarDa desde procesos de terceros.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Dsh",
+          "name": "AllowNewsAndInterests",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds",
+          "name": "EnableFeeds",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "bloatware.copilot_policy",
+      "name": "Desactivar Copilot por directiva",
+      "description": "Oculta el botón de Copilot en builds de Windows 11 anteriores a 24H2.",
+      "rationale": "En 24H2+ Copilot es una app normal (se elimina con bloatware.copilot); esta directiva solo surte efecto en 23H2 y anteriores.",
+      "category": "bloatware",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 22000,
+        "max_build": 22631,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+          "name": "TurnOffWindowsCopilot",
+          "kind": "REG_DWORD",
+          "value": 1
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.diagtrack",
+      "name": "Desactivar servicio de telemetría (DiagTrack)",
+      "description": "Detiene y desactiva 'Experiencias del usuario y telemetría asociadas'.",
+      "rationale": "Aquí sí se usa Disabled y no Manual: DiagTrack tiene disparadores que lo arrancan de nuevo si queda en Manual, lo que anularía el cambio.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "DiagTrack",
+          "start": "disabled",
+          "stop": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.dmwappush",
+      "name": "Desactivar dmwappushservice",
+      "description": "Desactiva el servicio de enrutamiento de mensajes WAP push usado para telemetría.",
+      "rationale": "También lo usa la inscripción MDM/Intune; por eso se excluye en equipos gestionados.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "not_managed": true
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "dmwappushservice",
+          "start": "disabled",
+          "stop": true
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.telemetry_policy_required",
+      "name": "Telemetría al mínimo permitido (Home/Pro)",
+      "description": "Limita los datos de diagnóstico al nivel 'Requerido'.",
+      "rationale": "En Home y Pro el valor 0 (Seguridad) no se respeta y se trata como 1; se escribe 1 para que el estado detectado sea real.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+          "name": "AllowTelemetry",
+          "kind": "REG_DWORD",
+          "value": 1
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+          "name": "DoNotShowFeedbackNotifications",
+          "kind": "REG_DWORD",
+          "value": 1
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.telemetry_policy_security",
+      "name": "Telemetría a nivel Seguridad (Enterprise/Education)",
+      "description": "Desactiva la telemetría salvo los datos mínimos de seguridad.",
+      "rationale": "El nivel 0 solo lo honran las ediciones Enterprise, Education e IoT.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+          "name": "AllowTelemetry",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+          "name": "DoNotShowFeedbackNotifications",
+          "kind": "REG_DWORD",
+          "value": 1
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.advertising_id",
+      "name": "Desactivar ID de publicidad",
+      "description": "Impide que las apps usen un identificador de publicidad para mostrar anuncios personalizados.",
+      "rationale": "Se escribe el valor de usuario y la directiva de máquina para que no se reactive desde Configuración.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+          "name": "Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo",
+          "name": "DisabledByGroupPolicy",
+          "kind": "REG_DWORD",
+          "value": 1
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.tailored_experiences",
+      "name": "Desactivar experiencias personalizadas",
+      "description": "Evita que Microsoft use los datos de diagnóstico para ofrecer consejos y anuncios personalizados.",
+      "rationale": "Valor de usuario equivalente al interruptor de Configuración > Privacidad > Diagnóstico.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+          "name": "TailoredExperiencesWithDiagnosticDataEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.suggestions_start",
+      "name": "Quitar sugerencias del menú Inicio",
+      "description": "Desactiva apps sugeridas y recomendaciones promocionales en Inicio.",
+      "rationale": "SubscribedContent-338388 controla las sugerencias de Inicio; Start_IrisRecommendations las recomendaciones de Windows 11.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338388Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SystemPaneSuggestionsEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_IrisRecommendations",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.suggestions_settings",
+      "name": "Quitar sugerencias en Configuración y consejos",
+      "description": "Desactiva contenido sugerido en Configuración y notificaciones de 'consejos y trucos'.",
+      "rationale": "Claves de ContentDeliveryManager que alimentan los banners promocionales de Configuración.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338393Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353694Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353696Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338389Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SoftLandingEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.suggestions_lockscreen",
+      "name": "Quitar anuncios y datos curiosos de la pantalla de bloqueo",
+      "description": "Desactiva textos promocionales superpuestos en la pantalla de bloqueo.",
+      "rationale": "No desactiva Windows Spotlight como fondo, solo la capa de 'datos curiosos y sugerencias'.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "RotatingLockScreenOverlayEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338387Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.silent_app_install",
+      "name": "Impedir la reinstalación silenciosa de apps promocionadas",
+      "description": "Evita que Windows vuelva a instalar Candy Crush y similares por su cuenta.",
+      "rationale": "Sin este cambio, ContentDeliveryManager reinstala apps patrocinadas tras actualizaciones de características.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SilentInstalledAppsEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "PreInstalledAppsEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "OemPreInstalledAppsEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "ContentDeliveryAllowed",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+          "name": "DisableWindowsConsumerFeatures",
+          "kind": "REG_DWORD",
+          "value": 1
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.feedback_frequency",
+      "name": "No pedir opiniones (frecuencia de comentarios: nunca)",
+      "description": "Windows deja de mostrar encuestas de satisfacción.",
+      "rationale": "NumberOfSIUFInPeriod=0 equivale a 'Nunca' en Configuración > Privacidad > Diagnóstico.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Siuf\\Rules",
+          "name": "NumberOfSIUFInPeriod",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.task_compat_appraiser",
+      "name": "Desactivar tareas de telemetría: Compatibility Appraiser",
+      "description": "Deshabilita las tareas programadas de Compatibility Appraiser.",
+      "rationale": "Recopila inventario de apps para telemetría. Nota: también lo usa Windows Update para evaluar si el equipo puede recibir una actualización de características; si se desactiva, la oferta de una nueva versión puede retrasarse. Las tareas que no existen en la build actual se omiten.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser",
+          "enabled": false
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser Exp",
+          "enabled": false
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater",
+          "enabled": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser",
+          "enabled": true
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser Exp",
+          "enabled": true
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater",
+          "enabled": true
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.task_ceip",
+      "name": "Desactivar tareas de telemetría: Programa de mejora de la experiencia del cliente (CEIP)",
+      "description": "Deshabilita las tareas programadas de Programa de mejora de la experiencia del cliente (CEIP).",
+      "rationale": "Tareas que empaquetan y envían datos CEIP; no afectan al funcionamiento del sistema. Las tareas que no existen en la build actual se omiten.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator",
+          "enabled": false
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip",
+          "enabled": false
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Autochk\\Proxy",
+          "enabled": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator",
+          "enabled": true
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip",
+          "enabled": true
+        },
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\Autochk\\Proxy",
+          "enabled": true
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.task_disk_diag",
+      "name": "Desactivar tareas de telemetría: Recopilador de diagnóstico de disco",
+      "description": "Deshabilita las tareas programadas de Recopilador de diagnóstico de disco.",
+      "rationale": "Envía datos de diagnóstico de disco a Microsoft; las alertas SMART locales siguen funcionando. Las tareas que no existen en la build actual se omiten.",
+      "category": "privacy",
+      "level": 1,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector",
+          "enabled": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "task_state",
+          "path": "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector",
+          "enabled": true
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.fax",
+      "name": "Fax: pasar a Manual",
+      "description": "Cambia el inicio del servicio Fax a Manual.",
+      "rationale": "Manual y no Disabled: el servicio sigue disponible si una app lo solicita o un disparador lo necesita, y nunca se rompe una funcionalidad. Solo se usa con módems de fax.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "Fax",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.mapsbroker",
+      "name": "Administrador de mapas descargados: pasar a Manual",
+      "description": "Cambia el inicio del servicio MapsBroker a Manual.",
+      "rationale": "Manual y no Disabled: el servicio sigue disponible si una app lo solicita o un disparador lo necesita, y nunca se rompe una funcionalidad. Solo hace falta si se usan mapas sin conexión; en Manual arranca cuando la app Mapas lo pide.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "MapsBroker",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.retaildemo",
+      "name": "Servicio de demostración comercial: pasar a Manual",
+      "description": "Cambia el inicio del servicio RetailDemo a Manual.",
+      "rationale": "Manual y no Disabled: el servicio sigue disponible si una app lo solicita o un disparador lo necesita, y nunca se rompe una funcionalidad. Solo se usa en equipos de exposición en tiendas.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "RetailDemo",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.wersvc",
+      "name": "Informe de errores de Windows: pasar a Manual",
+      "description": "Cambia el inicio del servicio WerSvc a Manual.",
+      "rationale": "Manual y no Disabled: el servicio sigue disponible si una app lo solicita o un disparador lo necesita, y nunca se rompe una funcionalidad. En Manual sigue arrancando por disparador cuando una app falla, así que los volcados locales se conservan.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "WerSvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.sysmain",
+      "name": "SysMain (Superfetch): pasar a Manual",
+      "description": "Cambia el inicio del servicio SysMain a Manual.",
+      "rationale": "Manual y no Disabled: el servicio sigue disponible si una app lo solicita o un disparador lo necesita, y nunca se rompe una funcionalidad. En SSD el beneficio de precargar es mínimo y genera escrituras; en HDD se mantiene porque sí acelera el arranque de apps.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "disk": "ssd"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "SysMain",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "visual.best_performance",
+      "name": "Efectos visuales: mejor rendimiento (con suavizado de fuentes)",
+      "description": "Desactiva animaciones, sombras y transparencias, pero mantiene ClearType y las miniaturas.",
+      "rationale": "VisualFXSetting=3 (personalizado) + máscara UserPreferencesMask de 'mejor rendimiento'; el suavizado se controla aparte con FontSmoothing. Tras escribir se notifica WM_SETTINGCHANGE para aplicar sin cerrar sesión.",
+      "category": "visual",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects",
+          "name": "VisualFXSetting",
+          "kind": "REG_DWORD",
+          "value": 3
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Control Panel\\Desktop",
+          "name": "UserPreferencesMask",
+          "kind": "REG_BINARY",
+          "value": "9012038010000000"
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Control Panel\\Desktop",
+          "name": "FontSmoothing",
+          "kind": "REG_SZ",
+          "value": "2"
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Control Panel\\Desktop",
+          "name": "FontSmoothingType",
+          "kind": "REG_DWORD",
+          "value": 2
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Control Panel\\Desktop",
+          "name": "DragFullWindows",
+          "kind": "REG_SZ",
+          "value": "0"
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Control Panel\\Desktop\\WindowMetrics",
+          "name": "MinAnimate",
+          "kind": "REG_SZ",
+          "value": "0"
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarAnimations",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ListviewAlphaSelect",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ListviewShadow",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "IconsOnly",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\DWM",
+          "name": "EnableAeroPeek",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "EnableTransparency",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "handler",
+          "ref": "tweaks.visual:broadcast_settings_change"
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        },
+        {
+          "op": "handler",
+          "ref": "tweaks.visual:broadcast_settings_change"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.temp_user",
+      "name": "Limpiar: Temporales del usuario",
+      "description": "Borra %TEMP% del usuario interactivo (archivos con más de 24 h).",
+      "rationale": "Se respeta una antigüedad mínima para no romper instaladores o apps abiertas que usan sus temporales.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_temp_user"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_temp_user"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.temp_windows",
+      "name": "Limpiar: Temporales de Windows",
+      "description": "Borra C:\\Windows\\Temp (archivos con más de 24 h).",
+      "rationale": "Mismo criterio de antigüedad; los archivos bloqueados se omiten sin error.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_temp_windows"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_temp_windows"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.wu_cache",
+      "name": "Limpiar: Caché de descargas de Windows Update",
+      "description": "Borra paquetes ya descargados en SoftwareDistribution\\Download con más de 10 días.",
+      "rationale": "No se detiene el servicio wuauserv (está en la lista de protección): solo se borran archivos antiguos no bloqueados.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_wu_cache"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_wu_cache"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.prefetch_orphans",
+      "name": "Limpiar: Prefetch obsoleto",
+      "description": "Borra entradas de Prefetch que no se usan desde hace más de 90 días (normalmente de programas desinstalados).",
+      "rationale": "Vaciar Prefetch entero empeora el arranque; solo se eliminan .pf obsoletos. Windows los regenera si el programa vuelve a ejecutarse.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_prefetch_orphans"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_prefetch_orphans"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.recycle_bin",
+      "name": "Limpiar: Papelera de reciclaje",
+      "description": "Vacía la papelera de todas las unidades.",
+      "rationale": "Usa SHEmptyRecycleBinW, igual que Explorador.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_recycle_bin"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_recycle_bin"
+        }
+      ]
+    },
+    {
+      "id": "cleanup.thumbnails",
+      "name": "Limpiar: Caché de miniaturas",
+      "description": "Borra thumbcache_*.db; Windows las regenera al navegar.",
+      "rationale": "Los archivos en uso por Explorador se omiten.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: los archivos borrados no se recuperan. Requiere confirmación separada.",
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_thumbnails"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_thumbnails"
+        }
+      ]
+    },
+    {
+      "id": "power.hibernate_off",
+      "name": "Desactivar hibernación",
+      "description": "Elimina hiberfil.sys y libera tanto espacio como ~40 % de la RAM.",
+      "rationale": "Opcional y fuera del perfil: también desactiva el Inicio rápido (cambia la medición del arranque) y, en portátiles, elimina la protección ante batería agotada.",
+      "category": "power",
+      "level": 2,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "command",
+          "exe": "powercfg",
+          "args": [
+            "/hibernate",
+            "off"
+          ]
+        }
+      ],
+      "revert": [
+        {
+          "op": "command",
+          "exe": "powercfg",
+          "args": [
+            "/hibernate",
+            "on"
+          ]
+        }
+      ],
+      "detect": [
+        {
+          "op": "registry_equals",
+          "hive": "HKLM",
+          "path": "SYSTEM\\CurrentControlSet\\Control\\Power",
+          "name": "HibernateEnabled",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "power.high_performance",
+      "name": "Plan de energía: Alto rendimiento",
+      "description": "Activa el plan 'Alto rendimiento' (lo crea si no existe).",
+      "rationale": "En portátiles reduce la autonomía, por eso solo se preselecciona en sobremesa. En equipos con Modern Standby (S0) el plan puede no estar disponible; se crea duplicando el esquema base.",
+      "category": "power",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {
+        "chassis": "desktop"
+      },
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:set_scheme",
+          "params": {
+            "scheme": "high_performance"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:restore_scheme"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:detect_scheme",
+          "params": {
+            "scheme": "high_performance"
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.ultimate_performance",
+      "name": "Plan de energía: Máximo rendimiento",
+      "description": "Crea y activa el plan oculto 'Máximo rendimiento'.",
+      "rationale": "Elimina micro-latencias de gestión de energía; consumo notablemente mayor. Excluyente con Alto rendimiento.",
+      "category": "power",
+      "level": 2,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "chassis": "desktop"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:set_scheme",
+          "params": {
+            "scheme": "ultimate_performance"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:restore_scheme"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:detect_scheme",
+          "params": {
+            "scheme": "ultimate_performance"
+          }
+        }
+      ]
+    },
+    {
+      "id": "network.nagle_off",
+      "name": "Desactivar algoritmo de Nagle",
+      "description": "Envía paquetes TCP pequeños de inmediato (menos latencia en juegos y apps interactivas).",
+      "rationale": "Se escribe TcpAckFrequency=1 y TCPNoDelay=1 en cada interfaz con IP. Ganancia real solo en apps que no desactivan Nagle por sí mismas; coste: más paquetes en la red.",
+      "category": "network",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:set_nagle",
+          "params": {
+            "enabled": false
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:detect_nagle"
+        }
+      ]
+    },
+    {
+      "id": "network.autotuning_normal",
+      "name": "TCP autotuning en 'normal'",
+      "description": "Comprueba y restablece la ventana de recepción TCP al nivel recomendado.",
+      "rationale": "Desactivar el autotuning (consejo habitual) reduce el rendimiento en conexiones rápidas; lo correcto es asegurar que no esté en 'disabled' o 'highlyrestricted'.",
+      "category": "network",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:set_autotuning",
+          "params": {
+            "level": "normal"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:restore_autotuning"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:detect_autotuning",
+          "params": {
+            "level": "normal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "network.dns",
+      "name": "Cambiar servidores DNS",
+      "description": "Configura DNS públicos (Cloudflare, Quad9 o Google) en los adaptadores activos.",
+      "rationale": "Nunca automático: en equipos de dominio rompe la resolución de Active Directory. El proveedor lo elige el usuario.",
+      "category": "network",
+      "level": 3,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "not_domain": true
+      },
+      "auto_when": {},
+      "params": {
+        "provider": {
+          "type": "choice",
+          "choices": [
+            "cloudflare",
+            "quad9",
+            "google"
+          ],
+          "default": null
+        }
+      },
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:set_dns"
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:restore_dns"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.network:detect_dns"
+        }
+      ]
+    },
+    {
+      "id": "performance.foreground_priority",
+      "name": "Prioridad de CPU para la app en primer plano",
+      "description": "Da quantums más largos a la ventana activa.",
+      "rationale": "Win32PrioritySeparation=0x26 (38): quantum corto, variable y máximo impulso al primer plano.",
+      "category": "performance",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SYSTEM\\CurrentControlSet\\Control\\PriorityControl",
+          "name": "Win32PrioritySeparation",
+          "kind": "REG_DWORD",
+          "value": 38
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "gaming.gamedvr_off",
+      "name": "Desactivar Game DVR y Game Bar",
+      "description": "Desactiva la grabación en segundo plano y la superposición de Game Bar.",
+      "rationale": "La captura en segundo plano consume GPU y disco aunque no se use. No elimina los componentes Xbox de identidad.",
+      "category": "gaming",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "System\\GameConfigStore",
+          "name": "GameDVR_Enabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR",
+          "name": "AppCaptureEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\GameBar",
+          "name": "UseNexusForGameBarEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\GameBar",
+          "name": "ShowStartupPanel",
+          "kind": "REG_DWORD",
+          "value": 0
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+          "name": "AllowGameDVR",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "gaming.hags",
+      "name": "Programación de GPU acelerada por hardware (HAGS)",
+      "description": "Activa HAGS si la GPU y el driver lo soportan.",
+      "rationale": "Requiere WDDM 2.7+ y GPU compatible; se comprueba antes. Puede causar inestabilidad con drivers antiguos.",
+      "category": "gaming",
+      "level": 3,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": true,
+      "requires": {
+        "check": "tweaks.gaming:hags_supported"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+          "name": "HwSchMode",
+          "kind": "REG_DWORD",
+          "value": 2
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "search.indexing_drives",
+      "name": "Desactivar indexado en unidades seleccionadas",
+      "description": "Quita el atributo de indexado del contenido en las unidades que elijas.",
+      "rationale": "No se desactiva el servicio WSearch: rompería la búsqueda de Inicio y de Outlook. Por defecto propone solo unidades de datos, no la del sistema.",
+      "category": "search",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "params": {
+        "drives": {
+          "type": "drives",
+          "default": "non_system"
+        }
+      },
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.search:disable_indexing"
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.search:restore_indexing"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.search:detect_indexing"
+        }
+      ]
+    },
+    {
+      "id": "services.pcasvc",
+      "name": "Asistente de compatibilidad de programas: pasar a Manual",
+      "description": "Cambia el inicio del servicio PcaSvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Solo muestra avisos de compatibilidad tras instalar software antiguo.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "PcaSvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.trkwks",
+      "name": "Cliente de seguimiento de vínculos distribuidos: pasar a Manual",
+      "description": "Cambia el inicio del servicio TrkWks a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Mantiene accesos directos a archivos movidos entre volúmenes NTFS en red.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "TrkWks",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.wisvc",
+      "name": "Servicio de Windows Insider: pasar a Manual",
+      "description": "Cambia el inicio del servicio wisvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Solo necesario si el equipo está en el programa Insider.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "wisvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.phonesvc",
+      "name": "Servicio telefónico: pasar a Manual",
+      "description": "Cambia el inicio del servicio PhoneSvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Telefonía y SMS en equipos con módem.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "PhoneSvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.wmpnetworksvc",
+      "name": "Uso compartido de red del Reproductor de Windows Media: pasar a Manual",
+      "description": "Cambia el inicio del servicio WMPNetworkSvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Compartir biblioteca multimedia por DLNA.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "WMPNetworkSvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.xblauthmanager",
+      "name": "Administración de autenticación de Xbox Live: pasar a Manual",
+      "description": "Cambia el inicio del servicio XblAuthManager a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Arranca bajo demanda al abrir un juego de Xbox.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "XblAuthManager",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.xblgamesave",
+      "name": "Partida guardada en Xbox Live: pasar a Manual",
+      "description": "Cambia el inicio del servicio XblGameSave a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Arranca bajo demanda al sincronizar partidas.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "XblGameSave",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.xboxnetapisvc",
+      "name": "Servicio de red de Xbox Live: pasar a Manual",
+      "description": "Cambia el inicio del servicio XboxNetApiSvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Arranca bajo demanda en juegos online de Xbox.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "XboxNetApiSvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.lfsvc",
+      "name": "Servicio de geolocalización: pasar a Manual",
+      "description": "Cambia el inicio del servicio lfsvc a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. En sobremesa la ubicación rara vez aporta; en portátiles se mantiene.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "chassis": "desktop"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "lfsvc",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.spooler",
+      "name": "Cola de impresión: pasar a Manual",
+      "description": "Cambia el inicio del servicio Spooler a Manual.",
+      "rationale": "Manual y no Disabled para que arranque bajo demanda si algo lo necesita. Solo si no hay impresoras instaladas; con impresoras está en la lista de protección.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "no_printers": true
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "Spooler",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "privacy.background_apps",
+      "name": "Restringir apps en segundo plano",
+      "description": "Impide que las apps de la Store se ejecuten en segundo plano.",
+      "rationale": "GlobalUserDisabled es efectivo en Windows 10; en Windows 11 se usa la directiva LetAppsRunInBackground=2 (forzar denegar). Efecto secundario: notificaciones de apps de la Store (p. ej. Correo) pueden llegar con retraso.",
+      "category": "privacy",
+      "level": 3,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKCU",
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+          "name": "GlobalUserDisabled",
+          "kind": "REG_DWORD",
+          "value": 1
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+          "name": "LetAppsRunInBackground",
+          "kind": "REG_DWORD",
+          "value": 2
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "memory.pagefile_system_managed",
+      "name": "Archivo de paginación gestionado por el sistema",
+      "description": "Si la memoria virtual está desactivada o con tamaño fijo, la devuelve a 'gestionado por el sistema'.",
+      "rationale": "Un pagefile fijo o inexistente provoca errores de memoria insuficiente y pérdida de volcados de fallo.",
+      "category": "memory",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": true,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:set_system_managed"
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:restore_pagefile"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:detect_system_managed"
+        }
+      ]
+    },
+    {
+      "id": "memory.pagefile_fixed",
+      "name": "Archivo de paginación con tamaño fijo",
+      "description": "Fija el tamaño del pagefile en la unidad del sistema (mínimo = máximo).",
+      "rationale": "Solo para usuarios que lo necesitan (p. ej. evitar fragmentación en HDD). Un valor bajo provoca cierres por falta de memoria y puede impedir volcados de fallo completos.",
+      "category": "memory",
+      "level": 3,
+      "risk": "alto",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": true,
+      "requires": {},
+      "auto_when": {},
+      "params": {
+        "size_mb": {
+          "type": "int",
+          "default": "ram_x1_5",
+          "min": 4096
+        }
+      },
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:set_fixed"
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:restore_pagefile"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.memory:detect_fixed"
+        }
+      ]
+    },
+    {
+      "id": "security.cpu_mitigations_off",
+      "name": "Desactivar mitigaciones de CPU (Spectre/Meltdown)",
+      "description": "Desactiva mitigaciones de vulnerabilidades de ejecución especulativa para recuperar rendimiento.",
+      "rationale": "ADVERTENCIA DE SEGURIDAD: expone el equipo a ataques de canal lateral (lectura de memoria de otros procesos, incluido el navegador). Solo tiene sentido en máquinas aisladas o de pruebas. Requiere doble confirmación y nunca entra en un perfil automático.",
+      "category": "security",
+      "level": 3,
+      "risk": "alto",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": true,
+      "reboot_required": true,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
+          "name": "FeatureSettingsOverride",
+          "kind": "REG_DWORD",
+          "value": 3
+        },
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
+          "name": "FeatureSettingsOverrideMask",
+          "kind": "REG_DWORD",
+          "value": 3
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    }
+  ]
+}

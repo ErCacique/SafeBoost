@@ -1,0 +1,3 @@
+# Empaquetado del .exe (solo en Windows / release.yml).
+-r requirements.txt
+pyinstaller==6.22.3

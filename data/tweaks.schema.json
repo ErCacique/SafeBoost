@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ErCacique/WinOpt/data/tweaks.schema.json",
+  "title": "WinTune tweaks catalog",
+  "type": "object",
+  "required": ["schema_version", "tweaks"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "const": 1 },
+    "tweaks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tweak" }
+    }
+  },
+  "$defs": {
+    "hive": { "enum": ["HKLM", "HKCU"] },
+    "regKind": { "enum": ["REG_DWORD", "REG_QWORD", "REG_SZ", "REG_EXPAND_SZ", "REG_BINARY", "REG_MULTI_SZ"] },
+    "handlerRef": {
+      "type": "string",
+      "pattern": "^tweaks\\.[a-z_]+:[a-z_][a-z0-9_]*$"
+    },
+    "windows": {
+      "type": "object",
+      "required": ["min_build", "max_build", "editions"],
+      "additionalProperties": false,
+      "properties": {
+        "min_build": { "type": "integer", "minimum": 19041 },
+        "max_build": { "type": ["integer", "null"] },
+        "editions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["home", "pro", "enterprise", "education"] }
+        }
+      }
+    },
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disk": { "enum": ["ssd", "hdd"] },
+        "chassis": { "enum": ["desktop", "laptop"] },
+        "no_printers": { "const": true },
+        "not_domain": { "const": true },
+        "not_managed": { "const": true },
+        "check": { "$ref": "#/$defs/handlerRef" }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": ["type", "default"],
+      "properties": {
+        "type": { "enum": ["choice", "int", "drives", "bool"] },
+        "choices": { "type": "array", "items": { "type": "string" } },
+        "default": {},
+        "min": { "type": "integer" }
+      }
+    },
+    "opRegistrySet": {
+      "type": "object",
+      "required": ["op", "hive", "path", "name", "kind", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "registry_set" },
+        "hive": { "$ref": "#/$defs/hive" },
+        "path": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/regKind" },
+        "value": { "type": ["integer", "string", "array"] }
+      }
+    },
+    "opRegistryDelete": {
+      "type": "object",
+      "required": ["op", "hive", "path", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "registry_delete" },
+        "hive": { "$ref": "#/$defs/hive" },
+        "path": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" }
+      }
+    },
+    "opService": {
+      "type": "object",
+      "required": ["op", "name", "start", "stop"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "service_start" },
+        "name": { "type": "string", "minLength": 1 },
+        "start": { "enum": ["automatic", "automatic_delayed", "manual", "disabled"] },
+        "stop": { "type": "boolean" }
+      }
+    },
+    "opAppxRemove": {
+      "type": "object",
+      "required": ["op", "package", "provisioned"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "appx_remove" },
+        "package": { "type": "string", "pattern": "^[A-Za-z0-9.\\-]+$" },
+        "provisioned": { "type": "boolean" }
+      }
+    },
+    "opAppxReinstall": {
+      "type": "object",
+      "required": ["op", "package", "store_id", "store_name"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "appx_reinstall" },
+        "package": { "type": "string" },
+        "store_id": { "type": ["string", "null"], "pattern": "^[0-9A-Z]{12,14}$" },
+        "store_name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "opTask": {
+      "type": "object",
+      "required": ["op", "path", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "task_state" },
+        "path": { "type": "string", "pattern": "^\\\\" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "opCommand": {
+      "type": "object",
+      "required": ["op", "exe", "args"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "command" },
+        "exe": { "enum": ["powercfg", "netsh"] },
+        "args": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "opHandler": {
+      "type": "object",
+      "required": ["op", "ref"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "handler" },
+        "ref": { "$ref": "#/$defs/handlerRef" },
+        "params": { "type": "object" }
+      }
+    },
+    "opRestoreSnapshot": {
+      "type": "object",
+      "required": ["op"],
+      "additionalProperties": false,
+      "properties": { "op": { "const": "restore_snapshot" } }
+    },
+    "opNone": {
+      "type": "object",
+      "required": ["op", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "none" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "opMatchApply": {
+      "type": "object",
+      "required": ["op"],
+      "additionalProperties": false,
+      "properties": { "op": { "const": "match_apply" } }
+    },
+    "opRegistryEquals": {
+      "type": "object",
+      "required": ["op", "hive", "path", "name", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "const": "registry_equals" },
+        "hive": { "$ref": "#/$defs/hive" },
+        "path": { "type": "string" },
+        "name": { "type": "string" },
+        "value": { "type": ["integer", "string", "array"] }
+      }
+    },
+    "applyOp": {
+      "oneOf": [
+        { "$ref": "#/$defs/opRegistrySet" },
+        { "$ref": "#/$defs/opRegistryDelete" },
+        { "$ref": "#/$defs/opService" },
+        { "$ref": "#/$defs/opAppxRemove" },
+        { "$ref": "#/$defs/opTask" },
+        { "$ref": "#/$defs/opCommand" },
+        { "$ref": "#/$defs/opHandler" }
+      ]
+    },
+    "revertOp": {
+      "oneOf": [
+        { "$ref": "#/$defs/opRegistrySet" },
+        { "$ref": "#/$defs/opRegistryDelete" },
+        { "$ref": "#/$defs/opService" },
+        { "$ref": "#/$defs/opAppxReinstall" },
+        { "$ref": "#/$defs/opTask" },
+        { "$ref": "#/$defs/opCommand" },
+        { "$ref": "#/$defs/opHandler" },
+        { "$ref": "#/$defs/opRestoreSnapshot" },
+        { "$ref": "#/$defs/opNone" }
+      ]
+    },
+    "detectOp": {
+      "oneOf": [
+        { "$ref": "#/$defs/opMatchApply" },
+        { "$ref": "#/$defs/opRegistryEquals" },
+        { "$ref": "#/$defs/opHandler" }
+      ]
+    },
+    "tweak": {
+      "type": "object",
+      "required": [
+        "id", "name", "description", "rationale", "category", "level", "risk", "windows",
+        "kind", "reversible", "auto_profile", "confirm_double", "reboot_required",
+        "requires", "auto_when", "apply", "revert", "detect"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9_]+$" },
+        "name": { "type": "string", "minLength": 3 },
+        "description": { "type": "string", "minLength": 10 },
+        "rationale": { "type": "string", "minLength": 10 },
+        "category": {
+          "enum": [
+            "bloatware", "privacy", "services", "visual", "cleanup", "power",
+            "network", "performance", "gaming", "search", "memory", "security"
+          ]
+        },
+        "level": { "enum": [1, 2, 3] },
+        "risk": { "enum": ["bajo", "medio", "alto"] },
+        "windows": { "$ref": "#/$defs/windows" },
+        "kind": { "enum": ["tweak", "action"] },
+        "reversible": { "type": "boolean" },
+        "revert_note": { "type": "string" },
+        "auto_profile": { "type": "boolean" },
+        "confirm_double": { "type": "boolean" },
+        "reboot_required": { "type": "boolean" },
+        "requires": { "$ref": "#/$defs/conditions" },
+        "auto_when": { "$ref": "#/$defs/conditions" },
+        "params": { "type": "object", "additionalProperties": { "$ref": "#/$defs/param" } },
+        "apply": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/applyOp" } },
+        "revert": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/revertOp" } },
+        "detect": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/detectOp" } }
+      },
+      "allOf": [
+        {
+          "$comment": "Una acción (limpieza) es siempre irreversible y debe explicarlo.",
+          "if": { "properties": { "kind": { "const": "action" } } },
+          "then": { "properties": { "reversible": { "const": false } }, "required": ["revert_note"] }
+        },
+        {
+          "$comment": "Un tweak irreversible nunca entra en un perfil automático.",
+          "if": {
+            "properties": { "kind": { "const": "tweak" }, "reversible": { "const": false } }
+          },
+          "then": { "properties": { "auto_profile": { "const": false } }, "required": ["revert_note"] }
+        },
+        {
+          "$comment": "Riesgo alto: fuera de perfiles automáticos.",
+          "if": { "properties": { "risk": { "const": "alto" } } },
+          "then": { "properties": { "auto_profile": { "const": false } } }
+        },
+        {
+          "$comment": "La doble confirmación solo tiene sentido en riesgo alto.",
+          "if": { "properties": { "confirm_double": { "const": true } } },
+          "then": { "properties": { "risk": { "const": "alto" } } }
+        }
+      ]
+    }
+  }
+}

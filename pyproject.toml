@@ -1,0 +1,73 @@
+[project]
+name = "wintune"
+version = "0.1.0"
+description = "Eliminación de bloatware y optimización reversible de Windows 10/11"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "ErCacique" }]
+# Sin licencia pública por ahora (repo privado). Ver README > Pendiente si se hace público.
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+]
+dependencies = [
+    "customtkinter==5.2.2",
+    "psutil==7.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.3",
+    "jsonschema==4.26.0",
+    "pre-commit==4.7.0",
+]
+build = [
+    "pyinstaller==6.22.3",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "SIM",      # simplify
+    "ANN",      # type hints obligatorios
+    "RUF",
+    "PTH",      # pathlib en vez de os.path
+    "S",        # bandit (subprocess, etc.)
+    "BLE",      # except Exception sin control
+    "LOG", "G", # logging correcto
+]
+ignore = [
+    "ANN401",   # Any permitido en payloads JSON
+    "S603",     # subprocess sin shell=True: es el uso correcto
+    "S607",     # rutas parciales: se resuelven contra System32 en core
+    "RUF001", "RUF002", "RUF003",  # caracteres ambiguos en textos en español
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN", "S101", "S105", "PLR2004"]
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf"
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "windows: requiere Windows real (winreg nativo); se omite en Linux",
+]

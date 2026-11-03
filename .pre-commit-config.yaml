@@ -1,0 +1,42 @@
+# Instalar: pre-commit install && pre-commit install --hook-type pre-push
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      # Sustituto de la protección de rama si el plan de GitHub no la incluye (ver docs).
+      - id: no-commit-to-branch
+        args: [--branch, main]
+        stages: [pre-commit, pre-push]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: validate-tweaks
+        name: validar data/tweaks.json (esquema + handlers)
+        # language: system usa el Python del venv activo, que ya tiene jsonschema y psutil.
+        entry: python scripts/validate_tweaks.py
+        language: system
+        files: ^(data/tweaks(\.schema)?\.json|tweaks/.*\.py|core/(catalog|context)\.py)$
+        pass_filenames: false

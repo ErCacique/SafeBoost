@@ -1,0 +1,48 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- Entornos virtuales ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- PyInstaller ---
+build/
+dist/
+*.spec.bak
+# El .spec de WinTune SÍ se versiona (packaging/WinTune.spec); cualquier otro generado no.
+/*.spec
+
+# --- IDE / SO ---
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Datos locales de WinTune (por si se ejecuta con WINTUNE_HOME apuntando al repo) ---
+logs/
+backups/
+sessions/
+*.log
+*.reg
+
+# --- Secretos ---
+.env
+.env.*
+*.pfx
+*.p12
