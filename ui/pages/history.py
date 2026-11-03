@@ -126,7 +126,7 @@ class HistoryPage(Page):
             parent=self,
             title="Guardar informe",
             defaultextension=".html",
-            initialfile=f"WinTune-{session.id}.html",
+            initialfile=f"SafeTrim-{session.id}.html",
             filetypes=[("Informe HTML", "*.html")],
         )
         if not target:

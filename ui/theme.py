@@ -7,7 +7,7 @@ from typing import Final
 APPEARANCE: Final = "dark"
 COLOR_THEME: Final = "blue"
 
-WINDOW_TITLE: Final = "WinTune"
+WINDOW_TITLE: Final = "SafeTrim"
 WINDOW_SIZE: Final = "1280x820"
 WINDOW_MIN: Final = (1100, 700)
 SIDEBAR_WIDTH: Final = 210

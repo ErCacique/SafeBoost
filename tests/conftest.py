@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 # Debe fijarse ANTES de importar core: las rutas de datos se calculan al importar.
-os.environ.setdefault("WINTUNE_HOME", tempfile.mkdtemp(prefix="wintune-tests-"))
+os.environ.setdefault("SAFETRIM_HOME", tempfile.mkdtemp(prefix="safetrim-tests-"))
 
 import pytest
 

@@ -1,4 +1,4 @@
-"""Punto de entrada de WinTune.
+"""Punto de entrada de SafeTrim.
 
 Uso:
     python main.py           Windows, consola elevada (se autoeleva si hace falta)
@@ -12,10 +12,14 @@ import ctypes
 import logging
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 from core.constants import APP_NAME, APP_VERSION
 from core.environment import is_admin
 from core.logger import get_logger, setup_logging
+
+if TYPE_CHECKING:
+    from core.migration import MigrationResult
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -123,9 +127,12 @@ def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: 
             print("La CLI solo funciona en Windows (o con --demo).")
             return 2
         if not is_admin():
-            print("Ejecuta WinTune desde una consola abierta como administrador.")
+            print("Ejecuta SafeTrim desde una consola abierta como administrador.")
             return 1
+    migration = None if demo else _migrate_from_wintune()
     setup_logging()
+    if migration is not None and migration.migrated:
+        print(f"Datos de WinTune copiados a SafeTrim: {', '.join(migration.copied)}")
     settings = Settings.load()
     if demo:
         from core.demo import DemoRunner, demo_environment, demo_registry
@@ -186,6 +193,18 @@ def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: 
     return 3 if summary["failed"] or summary["partial"] else 0
 
 
+def _migrate_from_wintune() -> MigrationResult | None:
+    """Copia los datos de WinTune (nombre anterior) para poder seguir deshaciendo sesiones."""
+    from core.migration import migrate_legacy_data
+    from core.process import SubprocessRunner
+
+    try:
+        return migrate_legacy_data(SubprocessRunner() if sys.platform == "win32" else None)
+    except OSError:
+        # Nunca bloquear el arranque por la migración: los datos antiguos siguen intactos.
+        return None
+
+
 def capture_boot() -> int:
     """Medición tras reinicio (tarea programada como SYSTEM). Sin interfaz.
 
@@ -240,10 +259,16 @@ def main(argv: list[str] | None = None) -> int:
     from ui.app import MainWindow
     from ui.theme import COLOR_THEME
 
+    # Antes de leer los ajustes: la migración trae también settings.json de WinTune.
+    migration = None if args.demo else _migrate_from_wintune()
     settings = Settings.load()
     setup_logging(level=getattr(logging, settings.log_level, logging.INFO))
     log = get_logger("main")
     log.info("start", extra={"version": APP_VERSION, "demo": args.demo})
+    if migration is not None:
+        log.info(
+            "legacy_migration", extra={"migrated": migration.migrated, "reason": migration.reason}
+        )
 
     ctk.set_appearance_mode(settings.appearance)
     ctk.set_default_color_theme(COLOR_THEME)

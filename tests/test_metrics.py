@@ -100,11 +100,11 @@ def test_boot_after_handles_local_and_utc() -> None:
 
 
 def test_schedule_post_reboot_task(runner: FakeRunner, tmp_path) -> None:
-    assert schedule_post_reboot_capture(runner, [r"C:\Apps\WinTune.exe"], tmp_path)
+    assert schedule_post_reboot_capture(runner, [r"C:\Apps\SafeTrim.exe"], tmp_path)
     script = runner.scripts[-1]
     assert "-UserId 'SYSTEM'" in script
-    assert f"WINTUNE_HOME={tmp_path}" in script
-    assert "WinTune.exe --capture-boot" in script
-    assert "-TaskPath '\\WinTune\\'" in script
+    assert f"SAFETRIM_HOME={tmp_path}" in script
+    assert "SafeTrim.exe --capture-boot" in script
+    assert "-TaskPath '\\SafeTrim\\'" in script
     runner.fail_on.append("Register-ScheduledTask")
     assert not schedule_post_reboot_capture(runner, ["x.exe"], tmp_path)

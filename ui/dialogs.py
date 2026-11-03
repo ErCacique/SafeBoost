@@ -221,7 +221,7 @@ class SummaryDialog(_Modal):
             ctk.CTkLabel(
                 self,
                 text="Reinicia el equipo para completar algunos cambios. Tras reiniciar, "
-                "WinTune medirá el nuevo tiempo de arranque.",
+                "SafeTrim medirá el nuevo tiempo de arranque.",
                 font=FONT_BODY,
                 text_color=RISK_COLORS["medio"],
                 wraplength=800,

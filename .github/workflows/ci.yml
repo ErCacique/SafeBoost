@@ -98,7 +98,7 @@ jobs:
       # El runner es una VM desechable con administrador: aquí sí se toca el sistema.
       - name: Aplicar y revertir tweaks reales
         env:
-          WINTUNE_E2E: "1"
+          SAFETRIM_E2E: "1"
           PYTHONUTF8: "1"  # tildes legibles en el log del runner
-          WINTUNE_HOME: ${{ runner.temp }}\wintune
+          SAFETRIM_HOME: ${{ runner.temp }}\safetrim
         run: pytest -m e2e -rA -s

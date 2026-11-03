@@ -1,4 +1,4 @@
-"""Constantes globales de WinTune: rutas, listas de protección y valores de configuración.
+"""Constantes globales de SafeTrim: rutas, listas de protección y valores de configuración.
 
 Todo valor "mágico" del proyecto vive aquí o en data/tweaks.json.
 """
@@ -10,20 +10,28 @@ import sys
 from pathlib import Path
 from typing import Final
 
-APP_NAME: Final = "WinTune"
-APP_VERSION: Final = "0.2.0"
-APP_ID: Final = "ErCacique.WinTune"
+APP_NAME: Final = "SafeTrim"
+APP_VERSION: Final = "0.3.0"
+APP_ID: Final = "ErCacique.SafeTrim"
 
 # --------------------------------------------------------------------------- rutas
 
 
+def _home_override() -> str | None:
+    # WINTUNE_HOME es el nombre anterior de la variable (hasta 0.2.x): se sigue aceptando.
+    return os.environ.get("SAFETRIM_HOME") or os.environ.get("WINTUNE_HOME")
+
+
+def _local_appdata() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local"))
+
+
 def _app_home() -> Path:
-    """Raíz de datos locales. WINTUNE_HOME permite redirigirla (tests, portable)."""
-    override = os.environ.get("WINTUNE_HOME")
+    """Raíz de datos locales. SAFETRIM_HOME permite redirigirla (tests, portable)."""
+    override = _home_override()
     if override:
         return Path(override)
-    base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-    return Path(base) / APP_NAME
+    return _local_appdata() / APP_NAME
 
 
 def _resource_root() -> Path:
@@ -35,6 +43,16 @@ def _resource_root() -> Path:
 
 
 APP_HOME: Final = _app_home()
+HOME_OVERRIDDEN: Final = _home_override() is not None
+
+# Nombre anterior del programa (hasta 0.2.x). Se usa solo para migrar datos y tareas.
+LEGACY_APP_NAME: Final = "WinTune"
+LEGACY_HOME: Final = _local_appdata() / LEGACY_APP_NAME
+LEGACY_LOG_FILE_NAME: Final = "wintune.jsonl"
+LEGACY_TASK_FOLDER: Final = "\\WinTune\\"
+LEGACY_SELECTION_FORMATS: Final = ("wintune-selection",)
+# Marca que se deja en la carpeta antigua tras copiarla (no se borra nada).
+LEGACY_MIGRATED_MARKER: Final = "MIGRADO_A_SAFETRIM.txt"
 BACKUP_DIR: Final = APP_HOME / "backups"
 SESSIONS_DIR: Final = APP_HOME / "sessions"
 LOG_DIR: Final = APP_HOME / "logs"
@@ -43,11 +61,11 @@ SETTINGS_FILE: Final = APP_HOME / "settings.json"
 
 RESOURCE_ROOT: Final = _resource_root()
 TWEAKS_FILE: Final = RESOURCE_ROOT / "data" / "tweaks.json"
-ICON_FILE: Final = RESOURCE_ROOT / "assets" / "wintune.ico"
+ICON_FILE: Final = RESOURCE_ROOT / "assets" / "safetrim.ico"
 
 
 def self_command() -> list[str]:
-    """Orden para relanzar WinTune: el .exe empaquetado o `python main.py` en desarrollo."""
+    """Orden para relanzar SafeTrim: el .exe empaquetado o `python main.py` en desarrollo."""
     if getattr(sys, "frozen", False):
         return [sys.executable]
     return [sys.executable, str(RESOURCE_ROOT / "main.py")]
@@ -65,7 +83,7 @@ ALLOWED_COMMAND_EXES: Final[dict[str, Path]] = {
 
 # --------------------------------------------------------------------------- logging
 
-LOG_FILE_NAME: Final = "wintune.jsonl"
+LOG_FILE_NAME: Final = "safetrim.jsonl"
 LOG_MAX_BYTES: Final = 2 * 1024 * 1024
 LOG_BACKUP_COUNT: Final = 5
 
@@ -251,8 +269,8 @@ TIMEOUT_DXDIAG: Final = 90
 
 # --------------------------------------------------------------------------- tareas propias
 
-# Carpeta del Programador de tareas para las tareas temporales que crea WinTune.
-WINTUNE_TASK_FOLDER: Final = "\\WinTune\\"
+# Carpeta del Programador de tareas para las tareas temporales que crea SafeTrim.
+SAFETRIM_TASK_FOLDER: Final = "\\SafeTrim\\"
 POST_REBOOT_TASK_NAME: Final = "PostRebootMetrics"
 # Retraso tras el inicio de sesión: Windows registra el evento de arranque unos minutos
 # después de terminar el arranque.

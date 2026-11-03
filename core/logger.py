@@ -13,7 +13,7 @@ from typing import Any
 
 from core.constants import LOG_BACKUP_COUNT, LOG_DIR, LOG_FILE_NAME, LOG_MAX_BYTES
 
-ROOT_LOGGER_NAME = "wintune"
+ROOT_LOGGER_NAME = "safetrim"
 
 # Atributos estándar de LogRecord que no se vuelcan como campos estructurados.
 _RESERVED = frozenset(
@@ -72,7 +72,7 @@ _ui_queue: queue.Queue[str] = queue.Queue(maxsize=10_000)
 
 
 def setup_logging(log_dir: Path = LOG_DIR, level: int = logging.INFO) -> Path:
-    """Configura el logger raíz de WinTune. Idempotente. Devuelve la ruta del fichero de log."""
+    """Configura el logger raíz de SafeTrim. Idempotente. Devuelve la ruta del fichero de log."""
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / LOG_FILE_NAME
     root = logging.getLogger(ROOT_LOGGER_NAME)
@@ -90,7 +90,7 @@ def setup_logging(log_dir: Path = LOG_DIR, level: int = logging.INFO) -> Path:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Logger hijo de 'wintune'. Usar extra={...} para campos estructurados."""
+    """Logger hijo de 'safetrim'. Usar extra={...} para campos estructurados."""
     if name.startswith(ROOT_LOGGER_NAME):
         return logging.getLogger(name)
     return logging.getLogger(f"{ROOT_LOGGER_NAME}.{name}")
@@ -103,7 +103,7 @@ def ui_log_queue() -> queue.Queue[str]:
 def export_logs(destination: Path, log_dir: Path = LOG_DIR) -> Path:
     """Copia el log actual y sus rotaciones a destination (carpeta). Devuelve la carpeta creada."""
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    target = destination / f"WinTune-logs-{stamp}"
+    target = destination / f"SafeTrim-logs-{stamp}"
     target.mkdir(parents=True, exist_ok=True)
     for path in sorted(log_dir.glob(f"{LOG_FILE_NAME}*")):
         shutil.copy2(path, target / path.name)

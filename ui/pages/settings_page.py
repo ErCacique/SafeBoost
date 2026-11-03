@@ -1,4 +1,4 @@
-"""Ajustes de WinTune."""
+"""Ajustes de SafeTrim."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 class SettingsPage(Page):
     title = "Ajustes"
-    subtitle = f"WinTune {APP_VERSION} · Datos en {APP_HOME}"
+    subtitle = f"SafeTrim {APP_VERSION} · Datos en {APP_HOME}"
 
     def __init__(self, master: Any, main: MainWindow) -> None:
         super().__init__(master, main)
@@ -132,7 +132,7 @@ class SettingsPage(Page):
     def _toggle_no_restore(self) -> None:
         if self.no_restore.get() and not messagebox.askyesno(
             "Sin punto de restauración",
-            "Si el punto de restauración falla, WinTune seguirá aplicando cambios. Deshacer "
+            "Si el punto de restauración falla, SafeTrim seguirá aplicando cambios. Deshacer "
             "seguirá funcionando, pero no tendrás la red de seguridad de Windows. ¿Seguro?",
             icon="warning",
             parent=self,

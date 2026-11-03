@@ -85,7 +85,7 @@ def render_session_html(session: Session, catalog: Catalog, metrics: MetricsStor
 <body>
 <h1>{escape(APP_NAME)} · {escape(kind)}</h1>
 <p class="muted">Sesión <code>{escape(session.id)}</code> · {escape(session.created)} ·
-WinTune {escape(session.app_version)} (informe generado con {escape(APP_VERSION)})</p>
+SafeTrim {escape(session.app_version)} (informe generado con {escape(APP_VERSION)})</p>
 <p class="muted">{escape(os_label)} · edición {escape(edition)} · {escape(restore)}</p>
 <p><strong>{escape(summary or "Sin resultados")}</strong></p>
 {measures}

@@ -1,4 +1,8 @@
-# WinTune
+# SafeTrim
+
+> Antes se llamaba **WinTune** (hasta la 0.2.x). Al primer arranque, SafeTrim copia los datos de
+> `%LOCALAPPDATA%\WinTune` a `%LOCALAPPDATA%\SafeTrim`, así que las sesiones aplicadas con
+> WinTune se pueden seguir deshaciendo. La carpeta antigua no se borra.
 
 Herramienta de escritorio para eliminar bloatware y optimizar Windows 10/11 de forma
 **reversible**, con tres perfiles acumulativos (Conservador, Equilibrado, Máximo), modo
@@ -42,7 +46,7 @@ la validación del catálogo.
 ruff check . && ruff format --check .
 python scripts/validate_tweaks.py      # esquema + reglas + handlers resolubles
 pytest                                  # en Linux se omiten los tests marcados "windows"
-# El test e2e (tests/e2e) APLICA tweaks reales: solo corre con WINTUNE_E2E=1, como admin y
+# El test e2e (tests/e2e) APLICA tweaks reales: solo corre con SAFETRIM_E2E=1, como admin y
 # en Windows. Lo ejecuta el CI en una VM desechable; no lo lances en tu equipo.
 pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store del catálogo
 ```
@@ -51,9 +55,9 @@ pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store 
 
 ```powershell
 pip install -r requirements-build.txt   # PyInstaller 6.22.3
-pyinstaller --clean --noconfirm packaging/WinTune.spec
-.\dist\WinTune.exe --self-test           # catálogo y handlers dentro del binario
-(Get-FileHash .\dist\WinTune.exe -Algorithm SHA256).Hash.ToLower()
+pyinstaller --clean --noconfirm packaging/SafeTrim.spec
+.\dist\SafeTrim.exe --self-test           # catálogo y handlers dentro del binario
+(Get-FileHash .\dist\SafeTrim.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 El `.spec` genera un único `.exe` sin consola, con manifest `requireAdministrator`, sin UPX y
@@ -72,7 +76,7 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    (clave, valor actual → valor nuevo, servicio, paquete…) sin ejecutar nada.
 4. **Revisión**: lista final con riesgo por cambio. Las acciones irreversibles (limpieza)
    requieren una casilla de confirmación aparte; los tweaks de riesgo alto, doble confirmación.
-5. **Aplicar**: WinTune crea un punto de restauración, exporta las claves de registro
+5. **Aplicar**: SafeTrim crea un punto de restauración, exporta las claves de registro
    afectadas a `.reg` y aplica. Un fallo en un tweak no detiene el resto.
 6. **Resumen**: aplicados / omitidos / fallidos con la causa de cada uno, y medición antes/después.
 7. **Historial/Deshacer**: revierte cualquier sesión anterior y verifica que cada cambio volvió
@@ -85,14 +89,14 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 
 | Ruta | Contenido |
 |---|---|
-| `%LOCALAPPDATA%\WinTune\backups\<id de sesión>` | `.reg` de cada clave afectada (`YYYYMMDD-HHMMSS_<clave>.reg`), una carpeta por sesión |
-| `%LOCALAPPDATA%\WinTune\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
-| `%LOCALAPPDATA%\WinTune\logs` | Logs estructurados (JSON Lines) y logs exportados |
-| `%LOCALAPPDATA%\WinTune\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
+| `%LOCALAPPDATA%\SafeTrim\backups\<id de sesión>` | `.reg` de cada clave afectada (`YYYYMMDD-HHMMSS_<clave>.reg`), una carpeta por sesión |
+| `%LOCALAPPDATA%\SafeTrim\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
+| `%LOCALAPPDATA%\SafeTrim\logs` | Logs estructurados (JSON Lines) y logs exportados |
+| `%LOCALAPPDATA%\SafeTrim\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
 
 ### Deriva tras actualizaciones de Windows
 
-Al abrir WinTune, el Dashboard comprueba si alguno de los cambios aplicados (en sesiones no
+Al abrir SafeTrim, el Dashboard comprueba si alguno de los cambios aplicados (en sesiones no
 deshechas) ya no está en vigor. Las actualizaciones grandes de Windows suelen restablecer
 ajustes y reinstalar apps. Si hay deriva, se muestra la lista y un botón para revisarla y
 reaplicarla con el flujo normal de simulación y confirmación.
@@ -104,9 +108,9 @@ En otro equipo, *Importar selección…* los carga en la interfaz, o desde una c
 administrador:
 
 ```powershell
-.\WinTune.exe --apply-selection seleccion.json                 # solo simulación
-.\WinTune.exe --apply-selection seleccion.json --yes           # aplica
-.\WinTune.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
+.\SafeTrim.exe --apply-selection seleccion.json                 # solo simulación
+.\SafeTrim.exe --apply-selection seleccion.json --yes           # aplica
+.\SafeTrim.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
 ```
 
 Los tweaks de riesgo alto (mitigaciones de CPU) nunca se aplican por CLI. Códigos de salida:
@@ -259,7 +263,7 @@ Notas:
   muestran como "no aplicable" si no están instaladas.
 - En Home/Pro, `AllowTelemetry=0` no se respeta; por eso hay dos tweaks de telemetría según la edición.
 
-## Qué NO toca WinTune
+## Qué NO toca SafeTrim
 
 La lista de protección está en código (`core/constants.py`) y se comprueba en **cada**
 operación. Un `tweaks.json` editado por error no puede saltársela.
@@ -284,7 +288,7 @@ operación. Un `tweaks.json` editado por error no puede saltársela.
 ## Seguridad operativa
 
 - **Punto de restauración** obligatorio antes de aplicar. Si Protección del sistema está desactivada
-  o la creación falla, WinTune bloquea la aplicación salvo que en Ajustes se active
+  o la creación falla, SafeTrim bloquea la aplicación salvo que en Ajustes se active
   "Continuar sin punto de restauración". Durante la sesión se ajusta temporalmente
   `SystemRestorePointCreationFrequency` para saltar el límite de 24 h de Windows, y después se restaura.
 - **Copia `.reg`** de cada clave afectada, con timestamp, además del registro JSON de sesión.

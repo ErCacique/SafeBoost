@@ -257,7 +257,7 @@ class Location:
 class Registry:
     """Fachada sobre un backend. Resuelve HKCU contra el usuario interactivo.
 
-    Si WinTune se eleva con credenciales de otro administrador, el HKCU del proceso es el de
+    Si SafeTrim se eleva con credenciales de otro administrador, el HKCU del proceso es el de
     ese administrador; escribir ahí no afectaría al usuario que tiene la sesión abierta.
     """
 

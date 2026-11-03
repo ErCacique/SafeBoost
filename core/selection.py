@@ -1,7 +1,7 @@
 """Exportar e importar una selección de tweaks (y sus parámetros) a un archivo JSON.
 
 Permite replicar la misma configuración en varios equipos, desde la interfaz o con
-`WinTune --apply-selection archivo.json`.
+`SafeTrim --apply-selection archivo.json`.
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Any
 
 from core.catalog import Catalog
-from core.constants import APP_VERSION
+from core.constants import APP_VERSION, LEGACY_SELECTION_FORMATS
 
-SELECTION_FORMAT = "wintune-selection"
+SELECTION_FORMAT = "safetrim-selection"
 SELECTION_VERSION = 1
 
 
@@ -58,10 +58,11 @@ def load_selection(path: Path, catalog: Catalog) -> tuple[Selection, list[str]]:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise SelectionError(f"No se pudo leer {path}: {exc}") from exc
-    if not isinstance(raw, dict) or raw.get("format") != SELECTION_FORMAT:
-        raise SelectionError(f"{path.name} no es un archivo de selección de WinTune")
+    formats = (SELECTION_FORMAT, *LEGACY_SELECTION_FORMATS)
+    if not isinstance(raw, dict) or raw.get("format") not in formats:
+        raise SelectionError(f"{path.name} no es un archivo de selección de SafeTrim")
     if int(raw.get("version", 0)) > SELECTION_VERSION:
-        raise SelectionError("El archivo es de una versión de WinTune más nueva")
+        raise SelectionError("El archivo es de una versión de SafeTrim más nueva")
     tweaks = raw.get("tweaks")
     params = raw.get("params") or {}
     if not isinstance(tweaks, list) or not all(isinstance(t, str) for t in tweaks):

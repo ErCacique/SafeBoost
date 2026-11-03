@@ -45,7 +45,7 @@ class Page(ctk.CTkFrame):
 def open_path(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
-        os.startfile(path)  # type: ignore[attr-defined]  # noqa: S606 - ruta propia de WinTune
+        os.startfile(path)  # type: ignore[attr-defined]  # noqa: S606 - ruta propia de SafeTrim
     else:
         subprocess.Popen(["xdg-open", str(path)])
 

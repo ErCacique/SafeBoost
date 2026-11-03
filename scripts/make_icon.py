@@ -1,6 +1,6 @@
-"""Genera assets/wintune.ico (medidor azul sobre fondo oscuro).
+"""Genera assets/safetrim.ico (medidor azul sobre fondo oscuro).
 
-Uso: pip install pillow && python scripts/make_icon.py assets/wintune.ico preview.png
+Uso: pip install pillow && python scripts/make_icon.py assets/safetrim.ico preview.png
 """
 
 import math

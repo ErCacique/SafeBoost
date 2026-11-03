@@ -371,7 +371,7 @@ def test_revert_irreversible_action_is_reported(
 def test_revert_unknown_tweak_uses_snapshot(
     make_engine: EngineFactory, backend: MemoryRegistryBackend
 ) -> None:
-    tweak = make_tweak(id="test.gone", apply=[reg_op("HKLM", r"SOFTWARE\WinTuneTest", "X", 1)])
+    tweak = make_tweak(id="test.gone", apply=[reg_op("HKLM", r"SOFTWARE\SafeTrimTest", "X", 1)])
     engine = make_engine(Catalog([tweak]))
     session = engine.apply(["test.gone"])
     # Catálogo nuevo sin ese tweak: la reversión cae al snapshot registrado.
@@ -379,7 +379,7 @@ def test_revert_unknown_tweak_uses_snapshot(
     engine.catalog = Catalog([other])
     revert = engine.revert(session.id)
     assert revert.results["test.gone"].status == "reverted"
-    assert backend.read("HKLM", r"SOFTWARE\WinTuneTest", "X") is None
+    assert backend.read("HKLM", r"SOFTWARE\SafeTrimTest", "X") is None
 
 
 def test_appx_remove_and_reinstall(make_engine: EngineFactory, runner: FakeRunner) -> None:
@@ -505,7 +505,7 @@ def test_v1_session_from_0_1_x_still_reverts(
 def test_newer_session_format_is_rejected() -> None:
     from core.session import SESSION_SCHEMA_VERSION, Session, SessionVersionError
 
-    with pytest.raises(SessionVersionError, match="Actualiza WinTune"):
+    with pytest.raises(SessionVersionError, match="Actualiza SafeTrim"):
         Session.from_dict(
             {
                 "id": "x",

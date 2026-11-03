@@ -31,7 +31,7 @@ def parse_dxdiag(text: str) -> bool:
 def hags_supported(ctx: HandlerContext) -> bool:
     if ctx.env.build and ctx.env.build < MIN_BUILD_WIN10:
         return False
-    with tempfile.TemporaryDirectory(prefix="wintune-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="safetrim-") as tmp:
         report = Path(tmp) / "dxdiag.txt"
         try:
             result = ctx.runner.run(

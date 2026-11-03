@@ -48,7 +48,7 @@ def restore_scheme(ctx: HandlerContext) -> bool:
         return False
     run_tool(ctx, "powercfg", ["/setactive", previous], "Restaurar el plan de energía anterior")
     if created:
-        run_tool(ctx, "powercfg", ["/delete", created], "Eliminar el plan creado por WinTune")
+        run_tool(ctx, "powercfg", ["/delete", created], "Eliminar el plan creado por SafeTrim")
     return True
 
 

@@ -1,4 +1,4 @@
-"""Motor de WinTune: detección, simulación, aplicación por sesión y reversión.
+"""Motor de SafeTrim: detección, simulación, aplicación por sesión y reversión.
 
 Principios:
 - Un fallo en un tweak (o en una operación) no aborta el resto.
@@ -358,8 +358,8 @@ class Engine:
 
     def _preflight(self, session: Session, tweak_ids: list[str]) -> None:
         if not self.env.is_admin:
-            raise PreflightError("WinTune necesita ejecutarse como administrador")
-        result = self.restore.create(f"WinTune {session.id}")
+            raise PreflightError("SafeTrim necesita ejecutarse como administrador")
+        result = self.restore.create(f"SafeTrim {session.id}")
         session.restore_point = result.message
         if not result.ok:
             if not self.settings.allow_without_restore_point:
@@ -605,7 +605,7 @@ class Engine:
         if original.kind != "apply":
             raise PreflightError("Solo se pueden deshacer sesiones de aplicación")
         if not dry_run and not self.env.is_admin:
-            raise PreflightError("WinTune necesita ejecutarse como administrador")
+            raise PreflightError("SafeTrim necesita ejecutarse como administrador")
         session = Session.new("revert", parent_id=original.id, env=self.env.to_dict())
         targets = [
             tid
