@@ -4,15 +4,53 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from core.constants import BACKUP_DIR, SESSIONS_DIR
+from core.constants import APP_VERSION, BACKUP_DIR, SESSIONS_DIR
 from core.logger import get_logger
 
 log = get_logger("session")
+
+# Versión del formato JSON de las sesiones. Subirla exige añadir una migración en
+# MIGRATIONS: Deshacer tiene que seguir funcionando con sesiones creadas por versiones viejas.
+SESSION_SCHEMA_VERSION = 2
+
+
+class SessionVersionError(ValueError):
+    """La sesión la creó una versión de WinTune más nueva que la instalada."""
+
+
+def _migrate_1_to_2(data: dict[str, Any]) -> dict[str, Any]:
+    # v1 (WinTune 0.1.x) no guardaba versión ni la detección previa/verificación por tweak.
+    data["app_version"] = "0.1.x"
+    for result in data.get("results", {}).values():
+        result.setdefault("detect_before", None)
+        result.setdefault("verified", None)
+    return data
+
+
+MIGRATIONS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {1: _migrate_1_to_2}
+
+
+def migrate(data: dict[str, Any]) -> dict[str, Any]:
+    """Lleva un JSON de sesión de cualquier versión anterior a SESSION_SCHEMA_VERSION."""
+    data = dict(data)
+    version = int(data.get("schema_version", 1))
+    if version > SESSION_SCHEMA_VERSION:
+        raise SessionVersionError(
+            f"La sesión {data.get('id')} usa el formato v{version}; esta versión de WinTune "
+            f"solo entiende hasta v{SESSION_SCHEMA_VERSION}. Actualiza WinTune para deshacerla."
+        )
+    while version < SESSION_SCHEMA_VERSION:
+        data = MIGRATIONS[version](data)
+        version += 1
+        data["schema_version"] = version
+    return data
+
 
 ChangeKind = Literal["registry", "service", "task", "appx", "command", "handler"]
 TweakStatus = Literal["applied", "skipped", "failed", "partial", "reverted", "irreversible"]
@@ -36,6 +74,10 @@ class TweakResult:
     status: TweakStatus
     message: str = ""
     details: list[str] = field(default_factory=list)
+    # Estado detectado antes de aplicar (para verificar la reversión) y resultado de esa
+    # verificación al deshacer: True = volvió al estado previo, False = hay diferencias.
+    detect_before: str | None = None
+    verified: bool | None = None
 
 
 @dataclass
@@ -54,6 +96,8 @@ class Session:
     backups: list[str] = field(default_factory=list)
     reverted_by: str | None = None
     finished: str | None = None
+    schema_version: int = SESSION_SCHEMA_VERSION
+    app_version: str = APP_VERSION
 
     @classmethod
     def new(cls, kind: Literal["apply", "revert"], **kwargs: Any) -> Session:
@@ -88,7 +132,7 @@ class Session:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Session:
-        data = dict(data)
+        data = migrate(data)
         data["results"] = {k: TweakResult(**v) for k, v in data.get("results", {}).items()}
         data["changes"] = [Change(**c) for c in data.get("changes", [])]
         return cls(**data)
@@ -122,6 +166,6 @@ class SessionStore:
         for path in sorted(self.directory.glob("*.json"), reverse=True):
             try:
                 sessions.append(Session.from_dict(json.loads(path.read_text(encoding="utf-8"))))
-            except (OSError, json.JSONDecodeError, TypeError, KeyError) as exc:
+            except (OSError, json.JSONDecodeError, TypeError, KeyError, ValueError) as exc:
                 log.warning("session_unreadable", extra={"file": path.name, "err": str(exc)})
         return sessions

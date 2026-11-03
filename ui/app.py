@@ -330,6 +330,7 @@ class MainWindow(ctk.CTk):
             dashboard = self.pages.get("dashboard")
             if isinstance(dashboard, DashboardPage):
                 dashboard.update_compare()
+                dashboard.check_drift()
 
         self.run_long(work, done, "No se pudo aplicar")
 

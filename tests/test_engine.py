@@ -393,8 +393,17 @@ def test_appx_remove_and_reinstall(make_engine: EngineFactory, runner: FakeRunne
     )
     engine.appx.__dict__["winget_path"] = "winget.exe"
     runner.calls.clear()
+    original_run = runner.run
+
+    def run_and_reinstall(args, timeout=60, encoding=None):  # winget simulado: reinstala
+        if args[0] == "winget.exe":
+            runner.appx_installed.append("Microsoft.BingNews")
+        return original_run(args, timeout, encoding)
+
+    runner.run = run_and_reinstall
     revert = engine.revert(session.id)
     assert revert.results["bloatware.bing_news"].status == "reverted"
+    assert revert.results["bloatware.bing_news"].verified is True
     winget = runner.calls[-1]
     assert winget[:4] == ["winget.exe", "install", "--id", "9WZDNCRFHVFW"]
     assert "--source" in winget and "msstore" in winget
@@ -441,3 +450,67 @@ def test_appx_fallback_note_reaches_session(make_engine: EngineFactory, runner: 
     result = session.results["bloatware.bing_news"]
     assert result.status == "applied"
     assert any("solo para el usuario actual" in d for d in result.details)
+
+
+# --------------------------------------------------------------------------- 0.2.0
+
+
+def test_revert_is_verified(make_engine: EngineFactory) -> None:
+    engine = make_engine()
+    session = engine.apply(["privacy.feedback_frequency", "privacy.diagtrack", "privacy.task_ceip"])
+    assert session.results["privacy.diagtrack"].detect_before == "not_applied"
+    revert = engine.revert(session.id)
+    for result in revert.results.values():
+        assert result.status == "reverted", result
+        assert result.verified is True
+        assert result.message == "Revertido y verificado"
+
+
+def test_revert_verification_reports_differences(
+    make_engine: EngineFactory, runner: FakeRunner
+) -> None:
+    engine = make_engine()
+    session = engine.apply(["privacy.diagtrack"])
+    # sc.exe "funciona" pero el servicio no cambia (p. ej. otra herramienta lo revierte).
+    runner.backend = None
+    revert = engine.revert(session.id)
+    result = revert.results["privacy.diagtrack"]
+    assert result.status == "partial"
+    assert result.verified is False
+    assert any("Servicio DiagTrack: disabled (esperado automatic)" in d for d in result.details)
+
+
+def test_v1_session_from_0_1_x_still_reverts(
+    make_engine: EngineFactory, backend: MemoryRegistryBackend, runner: FakeRunner
+) -> None:
+    import json
+    from pathlib import Path
+
+    from core.session import SESSION_SCHEMA_VERSION, Session
+
+    raw = json.loads((Path(__file__).parent / "fixtures" / "session_v1.json").read_text("utf-8"))
+    assert "schema_version" not in raw
+    engine = make_engine()
+    # Estado del sistema tal como lo dejó aquella sesión.
+    backend.write("HKU", USER_SIUF, "NumberOfSIUFInPeriod", RegValue("REG_DWORD", 0))
+    session = Session.from_dict(raw)
+    assert session.schema_version == SESSION_SCHEMA_VERSION
+    assert session.app_version == "0.1.x"
+    engine.store.save(session)
+    revert = engine.revert(session.id)
+    assert revert.results["privacy.feedback_frequency"].status == "reverted"
+    assert backend.read("HKU", USER_SIUF, "NumberOfSIUFInPeriod") is None
+
+
+def test_newer_session_format_is_rejected() -> None:
+    from core.session import SESSION_SCHEMA_VERSION, Session, SessionVersionError
+
+    with pytest.raises(SessionVersionError, match="Actualiza WinTune"):
+        Session.from_dict(
+            {
+                "id": "x",
+                "kind": "apply",
+                "created": "",
+                "schema_version": SESSION_SCHEMA_VERSION + 1,
+            }
+        )

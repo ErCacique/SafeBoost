@@ -7,6 +7,32 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-03
+
+### Added
+- **Test de extremo a extremo en Windows real** (job `e2e` del CI): aplica de verdad todos los
+  tweaks seguros para un runner (registro, servicios, tareas, energía, red, directivas),
+  comprueba que quedan aplicados, los revierte y verifica el estado final. Solo se ejecuta con
+  `WINTUNE_E2E=1`, como administrador y en Windows.
+- **Verificación de la reversión:** tras Deshacer se comprueba cada valor de registro, servicio
+  y tarea contra su estado previo, y la detección contra la registrada antes de aplicar. El
+  resumen indica "Revertido y verificado" o "Revertido con diferencias" con el detalle.
+- **Detección de deriva:** el Dashboard avisa si Windows ha deshecho cambios aplicados (p. ej.
+  tras una actualización) y ofrece revisarlos y reaplicarlos.
+- **Exportar e importar la selección** (JSON) desde el Dashboard, y CLI
+  `WinTune --apply-selection archivo.json [--yes] [--include-irreversible]`: sin `--yes` solo
+  simula; los tweaks de riesgo alto nunca se aplican por CLI.
+- **Informe HTML** de cualquier sesión desde Historial.
+- **Búsqueda y filtros** (Todos / Pendientes / Aplicados / Seleccionados) en las páginas de tweaks.
+
+### Changed
+- Las sesiones guardan `schema_version` y `app_version`; las sesiones de 0.1.x se migran al
+  cargarlas y se siguen pudiendo deshacer. Una sesión de una versión más nueva se rechaza con
+  un mensaje claro en lugar de fallar.
+- La detección consulta todas las tareas programadas de una página en una sola llamada a
+  PowerShell (antes, una por tarea).
+- El modo `--demo` simula también `sc config` y el estado de las tareas.
+
 ## [0.1.2] - 2026-11-03
 
 ### Changed
@@ -59,7 +85,8 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
   validación del catálogo, bloqueo de commits a `main`).
 - Documentación de configuración de GitHub y de distribución/firma de código.
 
-[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/ErCacique/WinOpt/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ErCacique/WinOpt/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/ErCacique/WinOpt/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ErCacique/WinOpt/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ErCacique/WinOpt/releases/tag/v0.1.0

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import threading
-from tkinter import messagebox
+from pathlib import Path
+from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
 from core.constants import BACKUP_DIR
+from core.report import render_session_html
 from core.restore import RestoreManager
 from core.session import Session
 from ui.dialogs import SummaryDialog
@@ -88,6 +90,13 @@ class HistoryPage(Page):
                 self, s, self.state.app.engine.catalog, title=f"Sesión {s.id}"
             ),
         ).pack(side="right", padx=(PAD_S, 0))
+        ctk.CTkButton(
+            top,
+            text="Informe",
+            width=80,
+            **SECONDARY_BUTTON,
+            command=lambda s=session: self._export_report(s),
+        ).pack(side="right", padx=(PAD_S, 0))
         if session.kind == "apply":
             failed = revert is not None and any(
                 r.status in ("failed", "partial") for r in revert.results.values()
@@ -111,6 +120,26 @@ class HistoryPage(Page):
                 ctk.CTkButton(
                     top, text="Deshacer", width=90, command=lambda s=session: self._undo(s)
                 ).pack(side="right")
+
+    def _export_report(self, session: Session) -> None:
+        target = filedialog.asksaveasfilename(
+            parent=self,
+            title="Guardar informe",
+            defaultextension=".html",
+            initialfile=f"WinTune-{session.id}.html",
+            filetypes=[("Informe HTML", "*.html")],
+        )
+        if not target:
+            return
+        app = self.state.app
+        try:
+            Path(target).write_text(
+                render_session_html(session, app.engine.catalog, app.metrics), encoding="utf-8"
+            )
+        except OSError as exc:
+            show_error("Guardar informe", exc, self)
+            return
+        messagebox.showinfo("Informe", f"Informe guardado en:\n{target}", parent=self)
 
     def _undo(self, session: Session) -> None:
         engine = self.state.app.engine

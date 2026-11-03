@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import threading
+from pathlib import Path
+from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
 from core.catalog import LEVEL_LABELS
+from core.engine import DriftItem
 from core.metrics import (
     GIB,
     BootInfo,
@@ -19,7 +22,8 @@ from core.metrics import (
     recommend_profile,
     take_snapshot,
 )
-from ui.pages.base import Page
+from core.selection import Selection, SelectionError, load_selection
+from ui.pages.base import Page, show_error
 from ui.theme import (
     ACCENT,
     FONT_BODY,
@@ -29,6 +33,7 @@ from ui.theme import (
     PAD,
     PAD_S,
     RISK_COLORS,
+    SECONDARY_BUTTON,
     TEXT_MUTED,
 )
 from ui.widgets import Card, MetricCard
@@ -88,10 +93,12 @@ class DashboardPage(Page):
             body, text="", font=FONT_BODY, wraplength=950, justify="left", text_color=ACCENT
         )
         self.recommendation.pack(anchor="w", pady=PAD_S)
+        self._build_drift(body)
         self._build_profiles(body)
         self._build_compare(body)
         self._load_boot()
         self._refresh_metrics()
+        self.check_drift()
 
     # ------------------------------------------------------------------ secciones
 
@@ -153,7 +160,118 @@ class DashboardPage(Page):
             ).pack(anchor="w", padx=PAD, pady=(0, PAD))
         self.profile_summary = ctk.CTkLabel(parent, text="", font=FONT_SMALL, text_color=TEXT_MUTED)
         self.profile_summary.pack(anchor="w", pady=PAD_S)
+        actions = ctk.CTkFrame(parent, fg_color="transparent")
+        actions.pack(anchor="w")
+        ctk.CTkButton(
+            actions,
+            text="Exportar selección…",
+            width=160,
+            command=self._export_selection,
+            **SECONDARY_BUTTON,
+        ).pack(side="left")
+        ctk.CTkButton(
+            actions,
+            text="Importar selección…",
+            width=160,
+            command=self._import_selection,
+            **SECONDARY_BUTTON,
+        ).pack(side="left", padx=PAD_S)
         self.state.subscribe(self._update_summary)
+
+    def _build_drift(self, parent: Any) -> None:
+        """Tarjeta de deriva: solo visible si Windows ha deshecho algo de lo aplicado."""
+        self.drift_items: list[DriftItem] = []
+        self.drift_card = Card(parent)
+        self.drift_label = ctk.CTkLabel(
+            self.drift_card,
+            text="",
+            font=FONT_BODY,
+            justify="left",
+            wraplength=900,
+            text_color=RISK_COLORS["medio"],
+        )
+        self.drift_label.pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
+        ctk.CTkButton(
+            self.drift_card, text="Revisar y reaplicar", width=170, command=self._reapply_drift
+        ).pack(anchor="w", padx=PAD, pady=(0, PAD))
+        self._drift_anchor = self.recommendation
+
+    def check_drift(self) -> None:
+        engine = self.state.app.engine
+
+        def work(_p: ProgressFn, _c: threading.Event) -> list[DriftItem]:
+            return engine.drift()
+
+        def done(items: list[DriftItem]) -> None:
+            self.drift_items = items
+            if not items:
+                self.drift_card.pack_forget()
+                return
+            names = [engine.catalog.get(i.tweak_id).name for i in items]
+            shown = "\n".join(f"• {n}" for n in names[:8])
+            more = f"\n… y {len(names) - 8} más" if len(names) > 8 else ""
+            self.drift_label.configure(
+                text=f"Windows ha deshecho {len(items)} cambio(s) que aplicaste "
+                f"(suele ocurrir tras una actualización):\n{shown}{more}"
+            )
+            self.drift_card.pack(fill="x", pady=PAD_S, after=self._drift_anchor)
+
+        BackgroundTask(self, work, done, lambda _e: None).start()
+
+    def _reapply_drift(self) -> None:
+        self.state.selected = {i.tweak_id for i in self.drift_items}
+        self.state.notify()
+        self.main.review()
+
+    # ------------------------------------------------------------------ selección
+
+    def _export_selection(self) -> None:
+        if not self.state.selected:
+            messagebox.showinfo("Exportar selección", "No hay nada seleccionado.", parent=self)
+            return
+        target = filedialog.asksaveasfilename(
+            parent=self,
+            title="Exportar selección",
+            defaultextension=".json",
+            initialfile="wintune-seleccion.json",
+            filetypes=[("Selección WinTune", "*.json")],
+        )
+        if not target:
+            return
+        selection = Selection(
+            tweaks=self.state.ordered_selection(),
+            params={k: v for k, v in self.state.params.items() if k in self.state.selected},
+            profile=self.state.profile,
+        )
+        try:
+            selection.save(Path(target))
+        except OSError as exc:
+            show_error("Exportar selección", exc, self)
+            return
+        messagebox.showinfo(
+            "Exportar selección", f"{len(selection.tweaks)} cambios exportados.", parent=self
+        )
+
+    def _import_selection(self) -> None:
+        source = filedialog.askopenfilename(
+            parent=self, title="Importar selección", filetypes=[("Selección WinTune", "*.json")]
+        )
+        if not source:
+            return
+        try:
+            selection, warnings = load_selection(Path(source), self.state.app.engine.catalog)
+        except SelectionError as exc:
+            show_error("Importar selección", exc, self)
+            return
+        self.state.selected = set(selection.tweaks)
+        self.state.params = {k: dict(v) for k, v in selection.params.items()}
+        self.state.profile = selection.profile
+        self.profile_var.set(selection.profile or 0)
+        self.state.notify()
+        text = f"{len(selection.tweaks)} cambios importados."
+        if warnings:
+            text += "\n\nAvisos:\n" + "\n".join(warnings[:10])
+        messagebox.showinfo("Importar selección", text, parent=self)
 
     def _build_compare(self, parent: Any) -> None:
         ctk.CTkLabel(parent, text="Antes / después", font=FONT_H2).pack(
