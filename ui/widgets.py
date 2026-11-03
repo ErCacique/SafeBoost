@@ -10,6 +10,7 @@ import customtkinter as ctk
 
 from core.catalog import Applicability, Tweak
 from core.context import DETECT_LABELS, DetectResult
+from core.environment import EnvironmentInfo
 from ui.theme import (
     BG_CARD,
     FONT_BODY,
@@ -78,9 +79,11 @@ class TweakRow(ctk.CTkFrame):
         selected: bool,
         on_toggle: Callable[[str, bool], None],
         on_param: Callable[[str, str, Any], None] | None = None,
+        env: EnvironmentInfo | None = None,
     ) -> None:
         super().__init__(master, fg_color="transparent")
         self.tweak = tweak
+        self.env = env
         self._expanded = False
         self.var = ctk.BooleanVar(value=selected)
 
@@ -140,8 +143,10 @@ class TweakRow(ctk.CTkFrame):
         box = ctk.CTkFrame(self.detail, fg_color="transparent")
         box.pack(anchor="w", padx=(28, 0), pady=PAD_S)
         for name, spec in self.tweak.params.items():
-            ctk.CTkLabel(box, text=f"{name}:", font=FONT_SMALL).pack(side="left")
-            if spec["type"] == "choice":
+            ctk.CTkLabel(box, text=f"{spec.get('label', name)}:", font=FONT_SMALL).pack(side="left")
+            if spec["type"] == "drives" and self.env is not None and self.env.fixed_drives:
+                self._build_drives(box, name, on_param)
+            elif spec["type"] == "choice":
                 values = [str(c) for c in spec.get("choices", [])]
                 menu = ctk.CTkOptionMenu(
                     box,
@@ -160,6 +165,28 @@ class TweakRow(ctk.CTkFrame):
                         self.tweak.id, n, _parse_param(w.get(), t)
                     ),
                 )
+
+    def _build_drives(self, box: Any, name: str, on_param: Callable[[str, str, Any], None]) -> None:
+        """Una casilla por unidad fija. Por defecto, todas menos la del sistema."""
+        if self.env is None:
+            return
+        system = self.env.system_drive.upper()
+        variables: dict[str, ctk.BooleanVar] = {}
+
+        def changed() -> None:
+            on_param(self.tweak.id, name, [d for d, v in variables.items() if v.get()])
+
+        for drive in self.env.fixed_drives:
+            is_system = drive.upper() == system
+            variables[drive] = ctk.BooleanVar(value=not is_system)
+            ctk.CTkCheckBox(
+                box,
+                text=f"{drive} (sistema)" if is_system else drive,
+                variable=variables[drive],
+                font=FONT_SMALL,
+                width=24,
+                command=changed,
+            ).pack(side="left", padx=PAD_S)
 
     def _toggle_detail(self) -> None:
         self._expanded = not self._expanded

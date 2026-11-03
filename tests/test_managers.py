@@ -181,3 +181,21 @@ def test_run_as_only_when_accounts_differ() -> None:
     assert _run_as(same) is None
     assert _run_as(other) == "PC\\ana"
     assert _run_as(EnvironmentInfo()) is None
+
+
+def test_fixed_drives_detection(monkeypatch: pytest.MonkeyPatch, backend, runner) -> None:
+    from collections import namedtuple
+
+    from core.environment import EnvironmentDetector, EnvironmentInfo
+
+    Part = namedtuple("Part", "mountpoint opts")
+    parts = [
+        Part("C:\\", "rw,fixed"),
+        Part("E:\\", "rw,removable"),
+        Part("D:\\", "rw,fixed"),
+        Part("/", "rw"),
+    ]
+    monkeypatch.setattr("core.environment.psutil.disk_partitions", lambda all=False: parts)
+    env = EnvironmentInfo()
+    EnvironmentDetector(Registry(backend), runner)._drives(env)
+    assert env.fixed_drives == ["C:", "D:"]

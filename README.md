@@ -81,7 +81,7 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 
 | Ruta | Contenido |
 |---|---|
-| `%LOCALAPPDATA%\WinTune\backups` | `.reg` exportados por sesión (`YYYYMMDD-HHMMSS_<clave>.reg`) |
+| `%LOCALAPPDATA%\WinTune\backups\<id de sesión>` | `.reg` de cada clave afectada (`YYYYMMDD-HHMMSS_<clave>.reg`), una carpeta por sesión |
 | `%LOCALAPPDATA%\WinTune\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
 | `%LOCALAPPDATA%\WinTune\logs` | Logs estructurados (JSON Lines) y logs exportados |
 | `%LOCALAPPDATA%\WinTune\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
