@@ -12,7 +12,6 @@ import customtkinter as ctk
 from core.catalog import LEVEL_LABELS
 from core.engine import DriftItem
 from core.metrics import (
-    GIB,
     BootInfo,
     Snapshot,
     compare,
@@ -355,7 +354,7 @@ class DashboardPage(Page):
             self.snapshot = snap
             self.cards["ram"].set(
                 f"{snap.ram_percent:.0f} %",
-                f"{human_bytes(snap.ram_used)} de {snap.ram_total / GIB:.0f} GB",
+                f"{human_bytes(snap.ram_used)} de {human_bytes(snap.ram_total)}",
             )
             self.cards["cpu"].set(f"{snap.cpu_percent:.0f} %")
             used = snap.disk_total - snap.disk_free
@@ -364,7 +363,9 @@ class DashboardPage(Page):
             )
             self.cards["proc"].set(str(snap.process_count))
             level, why = recommend_profile(self.state.app.env, snap)
-            self.recommendation.configure(
-                text=f"Recomendación: perfil {level} · {LEVEL_LABELS[level]}. {why}"
-            )
+            if level is None:
+                text = f"Recomendación: {why}"
+            else:
+                text = f"Recomendación: perfil {level} · {LEVEL_LABELS[level]}. {why}"
+            self.recommendation.configure(text=text)
         self.after(METRICS_REFRESH_MS, self._refresh_metrics)

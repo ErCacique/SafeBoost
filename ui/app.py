@@ -202,17 +202,24 @@ class MainWindow(ctk.CTk):
             return
         app = self.ui.app
         count = len(self.ui.selected)
+        os_allowed = app.env.supported or app.settings.allow_unsupported_os
         self.selection_label.configure(text=f"{count} cambios seleccionados")
         if app.settings.dry_run:
             self.mode_label.configure(
                 text="MODO SIMULACIÓN\nno se cambia nada", text_color=RISK_COLORS["medio"]
+            )
+        elif not os_allowed:
+            self.mode_label.configure(
+                text="Windows no soportado\nsolo simulación", text_color=DANGER
             )
         elif not app.env.is_admin:
             self.mode_label.configure(text="Sin permisos de administrador", text_color=DANGER)
         else:
             self.mode_label.configure(text="Modo real", text_color=TEXT_MUTED)
         busy = self.ui.busy
-        can_apply = count > 0 and not busy and app.env.is_admin and not app.settings.dry_run
+        can_apply = (
+            count > 0 and not busy and app.env.is_admin and os_allowed and not app.settings.dry_run
+        )
         self.apply_btn.configure(state="normal" if can_apply else "disabled")
         self.sim_btn.configure(state="normal" if count > 0 and not busy else "disabled")
 

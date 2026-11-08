@@ -21,6 +21,9 @@ simulación, copias de seguridad automáticas y deshacer por sesión.
 | psutil | 7.2.2 |
 | PyInstaller | 6.22.3 |
 
+En un Windows fuera de esta tabla (por ejemplo, Windows 10 1909) SafeTrim abre en modo
+solo simulación: muestra el estado y simula, pero no aplica cambios hasta actualizar Windows.
+
 El ejecutable se ejecuta siempre con privilegios de administrador (manifest `requireAdministrator`).
 
 ## Instalación para desarrollo

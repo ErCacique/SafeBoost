@@ -108,3 +108,15 @@ def test_schedule_post_reboot_task(runner: FakeRunner, tmp_path) -> None:
     assert "-TaskPath '\\SafeTrim\\'" in script
     runner.fail_on.append("Register-ScheduledTask")
     assert not schedule_post_reboot_capture(runner, ["x.exe"], tmp_path)
+
+
+def test_no_profile_recommended_on_unsupported_windows(env: EnvironmentInfo) -> None:
+    env.build = 18363
+    level, why = recommend_profile(env, snap())
+    assert level is None
+    assert "Actualiza Windows" in why
+
+
+def test_ram_total_keeps_decimals() -> None:
+    # Un equipo de 3.4 GB no puede mostrarse como "3.1 GB de 3 GB".
+    assert human_bytes(int(3.4 * GIB)) == "3.4 GB"

@@ -203,7 +203,10 @@ class MetricsStore:
         return captured
 
 
-def recommend_profile(env: EnvironmentInfo, snap: Snapshot) -> tuple[int, str]:
+def recommend_profile(env: EnvironmentInfo, snap: Snapshot) -> tuple[int | None, str]:
+    """Perfil recomendado y motivo; None si en este Windows no se debe aplicar ninguno."""
+    if not env.supported:
+        return None, "Actualiza Windows antes de optimizar: esta versión no está soportada."
     if env.managed:
         return 1, "Equipo gestionado por la empresa: solo cambios conservadores."
     low_ram = snap.ram_total < RECOMMEND_LOW_RAM_GIB * GIB

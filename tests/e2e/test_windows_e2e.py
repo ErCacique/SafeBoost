@@ -58,6 +58,8 @@ def test_apply_and_revert_on_real_windows() -> None:
         allow_without_restore_point=True,
         export_reg_backups=True,
         measure_boot_after_reboot=False,
+        # El runner es Windows Server: edición no reconocida, que la app bloquearía.
+        allow_unsupported_os=True,
     )
     app = build_context(settings=settings)
     engine = app.engine
