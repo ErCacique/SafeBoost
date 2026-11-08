@@ -131,9 +131,14 @@ class EnvironmentDetector:
         env.edition_id = str(val("EditionID") or "")
         env.edition = EDITION_MAP.get(env.edition_id, "unknown")
         if env.build and env.build < MIN_BUILD_WIN10:
-            env.warnings.append(f"Build {env.build} no soportada (mínimo {MIN_BUILD_WIN10}).")
+            env.warnings.append(
+                f"Build {env.build} no soportada (mínimo {MIN_BUILD_WIN10}, Windows 10 22H2). "
+                "Actualiza Windows: hasta entonces SafeTrim solo puede simular."
+            )
         if env.edition == "unknown":
-            env.warnings.append(f"Edición no reconocida: {env.edition_id!r}")
+            env.warnings.append(
+                f"Edición no reconocida: {env.edition_id!r}. SafeTrim solo puede simular."
+            )
 
     def _interactive_user(self, env: EnvironmentInfo) -> None:
         """El dueño de explorer.exe es el usuario con sesión; su SID permite escribir en HKU."""

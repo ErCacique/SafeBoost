@@ -514,3 +514,36 @@ def test_newer_session_format_is_rejected() -> None:
                 "schema_version": SESSION_SCHEMA_VERSION + 1,
             }
         )
+
+
+def test_apply_blocked_on_unsupported_windows(
+    make_engine: EngineFactory, runner: FakeRunner, backend: MemoryRegistryBackend
+) -> None:
+    # Windows 10 1909: solo simular. Ni punto de restauración ni cambios en el registro.
+    engine = make_engine(build=18363)
+    with pytest.raises(PreflightError, match="no está soportado"):
+        engine.apply(["privacy.feedback_frequency"])
+    assert not any("Checkpoint-Computer" in " ".join(call) for call in runner.calls)
+    assert backend.read("HKU", USER_SIUF, "NumberOfSIUFInPeriod") is None
+    assert engine.store.list() == []
+
+
+def test_apply_blocked_on_unknown_edition(make_engine: EngineFactory) -> None:
+    with pytest.raises(PreflightError, match="no está soportado"):
+        make_engine(edition="unknown", edition_id="ServerDatacenter").apply(
+            ["privacy.feedback_frequency"]
+        )
+
+
+def test_simulation_still_works_on_unsupported_windows(make_engine: EngineFactory) -> None:
+    items = make_engine(build=18363).plan(["privacy.feedback_frequency"])
+    assert len(items) == 1
+
+
+def test_unsupported_windows_override_for_test_vms(
+    make_engine: EngineFactory, settings: Settings
+) -> None:
+    settings.allow_unsupported_os = True
+    engine = make_engine(edition="unknown", edition_id="ServerDatacenter")
+    session = engine.apply(["privacy.feedback_frequency"])
+    assert "privacy.feedback_frequency" in session.results

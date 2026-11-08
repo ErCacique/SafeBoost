@@ -18,6 +18,9 @@ simulación, copias de seguridad automáticas y deshacer por sesión.
 | Ediciones | Home, Pro, Enterprise, Education |
 | Python (desarrollo) | 3.12.x (el proyecto fija 3.12) |
 | CustomTkinter | 5.2.2 (la 6.0.0 existe pero es una versión mayor; no se adopta hasta probarla) |
+
+En un Windows fuera de esta tabla (por ejemplo, Windows 10 1909) SafeTrim abre en modo
+solo simulación: muestra el estado y simula, pero no aplica cambios hasta actualizar Windows.
 | psutil | 7.2.2 |
 | PyInstaller | 6.22.3 |
 

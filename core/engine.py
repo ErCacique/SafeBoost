@@ -357,6 +357,11 @@ class Engine:
         return session
 
     def _preflight(self, session: Session, tweak_ids: list[str]) -> None:
+        if not self.env.supported and not self.settings.allow_unsupported_os:
+            raise PreflightError(
+                f"{self.env.os_label} no está soportado: SafeTrim solo puede simular en este "
+                "equipo. Actualiza a Windows 10 22H2 o a Windows 11 para aplicar cambios."
+            )
         if not self.env.is_admin:
             raise PreflightError("SafeTrim necesita ejecutarse como administrador")
         result = self.restore.create(f"SafeTrim {session.id}")

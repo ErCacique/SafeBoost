@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeTrim"
-APP_VERSION: Final = "0.3.0"
+APP_VERSION: Final = "0.3.1"
 APP_ID: Final = "ErCacique.SafeTrim"
 
 # --------------------------------------------------------------------------- rutas

@@ -18,6 +18,8 @@ class Settings:
     allow_without_restore_point: bool = False
     export_reg_backups: bool = True
     measure_boot_after_reboot: bool = True
+    # Sin opción en la interfaz: solo para VMs de prueba y CI (Windows Server en el job e2e).
+    allow_unsupported_os: bool = False
     appearance: str = "dark"
     log_level: str = "INFO"
     first_run: bool = True

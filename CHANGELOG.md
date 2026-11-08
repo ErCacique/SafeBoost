@@ -7,6 +7,23 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-08
+
+### Fixed
+- **Windows no soportado ya no permite aplicar cambios.** En builds anteriores a la 19045
+  (Windows 10 22H2) o con una edición no reconocida, SafeTrim antes solo mostraba un aviso y
+  dejaba aplicar perfiles. Ahora entra en modo solo simulación: el motor rechaza aplicar antes
+  de crear el punto de restauración, el botón "Revisar y aplicar" queda desactivado y la barra
+  lateral indica "Windows no soportado". Deshacer sesiones anteriores sigue permitido.
+- La recomendación del Dashboard ya no propone un perfil en Windows no soportado: indica que
+  hay que actualizar Windows.
+- La RAM total se muestra con un decimal: un equipo de 3.4 GB aparecía como "3.1 GB de 3 GB".
+
+### Added
+- Test estático que impide que los handlers de `tweaks/` escriban en el registro o ejecuten
+  comandos sin pasar por `HandlerContext` (protección, snapshot y dry-run).
+- Ajuste `allow_unsupported_os` (sin opción en la interfaz), solo para VMs de prueba y CI.
+
 ## [0.3.0] - 2026-11-03
 
 ### Changed
