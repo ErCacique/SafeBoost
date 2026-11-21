@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import threading
+from tkinter import messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.constants import LOW_RAM_GIB
+from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
+from core.hardware import GIB, ram_purchase_advice
 from core.metrics import human_bytes
 from ui.pages.base import Page
 from ui.theme import (
@@ -19,6 +23,7 @@ from ui.theme import (
     PAD,
     PAD_S,
     RISK_COLORS,
+    SECONDARY_BUTTON,
     TEXT_MUTED,
     WRAP,
 )
@@ -41,6 +46,9 @@ REQ_MARK: dict[bool | None, tuple[str, tuple[str, str]]] = {
 }
 
 
+HEALTH_LABELS = {"healthy": "en buen estado", "warning": "con avisos", "unhealthy": "FALLANDO"}
+
+
 class DiagnosticsPage(Page):
     title = "Diagnóstico"
     subtitle = (
@@ -56,6 +64,14 @@ class DiagnosticsPage(Page):
         bar.pack(fill="x", padx=PAD, pady=(PAD, 0))
         self.run_btn = ctk.CTkButton(bar, text="Analizar ahora", width=150, command=self.analyze)
         self.run_btn.pack(side="left")
+        self.scan_btn = ctk.CTkButton(
+            bar,
+            text="Análisis rápido con Defender",
+            width=220,
+            **SECONDARY_BUTTON,
+            command=self.defender_scan,
+        )
+        self.scan_btn.pack(side="right")
         self.status = ctk.CTkLabel(
             bar,
             text="Mide el uso durante un par de segundos. Hazlo cuando notes el equipo lento.",
@@ -92,6 +108,31 @@ class DiagnosticsPage(Page):
             self._running = False
             self.run_btn.configure(state="normal")
             self.status.configure(text=f"No se pudo analizar: {exc}", text_color=DANGER)
+
+        BackgroundTask(self, work, done, failed).start()
+
+    def defender_scan(self) -> None:
+        if not messagebox.askyesno(
+            "Análisis rápido con Windows Defender",
+            "Windows Defender revisará las zonas donde suele esconderse el malware. Tarda entre 2 "
+            "y 15 minutos y puedes seguir usando el equipo. ¿Empezar?",
+            parent=self,
+        ):
+            return
+        runner = self.state.app.runner
+        self.scan_btn.configure(state="disabled", text="Analizando con Defender…")
+
+        def work(_p: ProgressFn, _c: threading.Event) -> ScanResult:
+            return quick_scan(runner)
+
+        def done(result: ScanResult) -> None:
+            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            show = messagebox.showwarning if result.threats else messagebox.showinfo
+            show("Windows Defender", result.message, parent=self)
+
+        def failed(exc: BaseException) -> None:
+            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            messagebox.showerror("Windows Defender", str(exc), parent=self)
 
         BackgroundTask(self, work, done, failed).start()
 
@@ -254,4 +295,41 @@ class DiagnosticsPage(Page):
         )
         if hw is None:
             lines.append("No se pudieron leer los detalles del hardware.")
+            return lines
+        details = hw.details
+        for i, mod in enumerate(details.memory, start=1):
+            kind = " ".join(p for p in (mod.type_name, mod.form_name) if p)
+            speed = f" a {mod.speed} MHz" if mod.speed else ""
+            maker = f" ({mod.maker} {mod.part})".rstrip() if mod.maker or mod.part else ""
+            lines.append(f"  Módulo {i}: {human_bytes(mod.capacity)} {kind}{speed}{maker}")
+        advice = ram_purchase_advice(
+            details.memory, hw.slots, hw.max_capacity, report.ram_installed
+        )
+        if advice:
+            label = "Ampliar" if report.ram_installed < LOW_RAM_GIB * GIB else "Si amplías"
+            lines.append(f"  {label}: {advice}")
+        for disk in details.disks:
+            parts = [disk.media or "disco", human_bytes(disk.size)]
+            if disk.health:
+                parts.append(HEALTH_LABELS.get(disk.health.lower(), disk.health))
+            if disk.wear is not None:
+                parts.append(f"{disk.wear} % de vida usada")
+            if disk.temp is not None:
+                parts.append(f"{disk.temp} °C")
+            if disk.hours is not None:
+                parts.append(f"{disk.hours} h encendido")
+            lines.append(f"Disco {disk.name}: " + ", ".join(parts))
+        if details.battery and details.battery.percent:
+            cycles = f", {details.battery.cycles} ciclos" if details.battery.cycles else ""
+            lines.append(f"Batería: {details.battery.percent} % de su capacidad original{cycles}")
+        if details.cpu_perf:
+            lines.append(
+                f"Procesador ahora: {details.cpu_perf.utility} % de uso, "
+                f"{details.cpu_perf.performance} % de su velocidad normal"
+            )
+        for gpu in details.gpus:
+            when = f" del {gpu.date}" if gpu.date else ""
+            lines.append(f"Gráfica: {gpu.name} (driver {gpu.version}{when})")
+        if not details.devices:
+            lines.append("Dispositivos: todos funcionan correctamente")
         return lines

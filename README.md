@@ -92,7 +92,11 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    lenguaje claro: RAM insuficiente (con ranuras libres y máximo admitido), procesos que
    acaparan CPU o memoria con explicación de los procesos de Windows conocidos, procesador
    modesto, disco duro mecánico, poco espacio, Windows Update pendiente o atrasado y, en
-   Windows 10, si el equipo cumple los requisitos de Windows 11. Solo lee.
+   Windows 10, si el equipo cumple los requisitos de Windows 11. Desde la v0.5.0 lista qué
+   programas, servicios y drivers retrasan el arranque (eventos 101-110 de Windows) y desde la
+   v0.6.0 revisa el hardware: qué módulo de RAM comprar exactamente, salud SMART y desgaste del
+   disco, batería, procesador frenado por calor, dispositivos con error y drivers de gráfica
+   antiguos. Incluye un botón de análisis rápido con Windows Defender. Solo lee.
 2. **Elegir perfil** (1, 2 o 3) y, si se quiere, marcar o desmarcar tweaks concretos en cada
    página (Bloatware, Inicio, Servicios, Limpieza, Optimización).
 3. **Simulación (dry-run)**: activada por defecto la primera vez. Muestra cada cambio exacto

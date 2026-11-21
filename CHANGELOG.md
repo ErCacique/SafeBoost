@@ -7,6 +7,29 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-21
+
+### Added
+- **Qué RAM comprar**: el Diagnóstico lee el tipo (DDR3/DDR4/DDR5), el formato (SO-DIMM de
+  portátil o DIMM de sobremesa), la velocidad, el fabricante y el modelo de cada módulo, y dice
+  exactamente qué comprar ("un módulo DDR4 SO-DIMM de 8 GB a 2400 MHz en la ranura libre"),
+  con aviso de doble canal y de memoria soldada (LPDDR) que no se puede ampliar.
+- **Salud del disco**: estado SMART, errores de lectura, desgaste del SSD, temperatura y horas de
+  uso. Un disco con avisos o errores aparece como hallazgo grave con consejo de copia de
+  seguridad.
+- **Salud de la batería**: capacidad actual frente a la original y ciclos de carga.
+- **Procesador frenado**: si está ocupado pero va por debajo del 60 % de su velocidad, avisa y
+  distingue entre ahorro de batería y calor (ventilador sucio).
+- **Dispositivos con problemas** (código de error del Administrador de dispositivos explicado) y
+  **driver de gráfica de más de 3 años**.
+- **Análisis rápido con Windows Defender** desde Diagnóstico. Si otro antivirus está activo,
+  lo indica en lugar de analizar; avisa si las definiciones están desactualizadas.
+
+### Changed
+- Todos los datos de hardware salen de una sola consulta de PowerShell con cada sección aislada.
+  El rendimiento del procesador se lee por CIM, no con contadores de rendimiento, cuyos nombres
+  están traducidos al idioma de Windows.
+
 ## [0.5.0] - 2026-11-21
 
 ### Added

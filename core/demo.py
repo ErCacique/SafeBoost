@@ -204,11 +204,44 @@ class DemoRunner:
                 "mhz": 1800,
                 "slots": 2,
                 "max_kb": 32 * 1024 * 1024,
-                "modules": [8 * 1024**3],
+                "modules": [
+                    {
+                        "cap": 8 * 1024**3,
+                        "type": 26,
+                        "form": 12,
+                        "speed": 2400,
+                        "maker": "Samsung",
+                        "part": "M471A1K43CB1-CTD",
+                    }
+                ],
+                "disks": [
+                    {
+                        "name": "WDC PC SN520 256GB",
+                        "media": "SSD",
+                        "size": 256 * 10**9,
+                        "health": "Healthy",
+                        "wear": 7,
+                        "temp": 38,
+                        "read_errors": 0,
+                        "hours": 6120,
+                    }
+                ],
+                "battery": {"design": 41000, "full": 29500, "cycles": 412},
+                "cpu_perf": {"performance": 92, "utility": 18},
+                "devices": [],
+                "gpus": [
+                    {
+                        "name": "Intel(R) UHD Graphics 620",
+                        "version": "26.20.100.7262",
+                        "date": "2019-09-25",
+                    }
+                ],
                 "tpm": "2.0, 0, 1.38",
                 "secure_boot": True,
                 "firmware": "UEFI",
             }
+        if "Start-MpScan" in script:
+            return {"enabled": True, "threats": [], "signature_age": 1}
         if "DegradationTime" in script:
             return {
                 "boots": 9,

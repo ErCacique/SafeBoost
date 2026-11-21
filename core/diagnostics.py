@@ -31,31 +31,22 @@ from core.constants import (
     WIN11_MIN_STORAGE_GIB,
 )
 from core.environment import EnvironmentInfo, UpdateStatus, read_update_status
+from core.hardware import (
+    HardwareDetails,
+    hardware_findings,
+    parse_details,
+    query_hardware,
+    ram_purchase_advice,
+)
 from core.logger import get_logger
 from core.metrics import GIB, Snapshot, human_bytes, take_snapshot
-from core.process import CommandError, Runner, as_list
+from core.process import Runner
 from core.registry import Registry
 
 log = get_logger("diagnostics")
 
 Level = Literal["critical", "warning", "info", "ok"]
 _LEVEL_ORDER: dict[str, int] = {"critical": 0, "warning": 1, "info": 2, "ok": 3}
-
-# Win32_PhysicalMemoryArray.Use = 3 → memoria del sistema (no caché ni vídeo).
-_HARDWARE_SCRIPT = (
-    "$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1;"
-    "$arr = @(Get-CimInstance Win32_PhysicalMemoryArray | Where-Object { $_.Use -eq 3 });"
-    "$mods = @(Get-CimInstance Win32_PhysicalMemory | ForEach-Object { [int64]$_.Capacity });"
-    "$tpm = try { [string](Get-CimInstance -Namespace root/cimv2/security/microsofttpm"
-    " -ClassName Win32_Tpm -ErrorAction Stop).SpecVersion } catch { $null };"
-    "$sb = try { [bool](Confirm-SecureBootUEFI -ErrorAction Stop) } catch { $null };"
-    "@{cpu=[string]$cpu.Name; cores=[int]$cpu.NumberOfCores;"
-    " threads=[int]$cpu.NumberOfLogicalProcessors; mhz=[int]$cpu.MaxClockSpeed;"
-    " slots=[int](($arr | Measure-Object -Property MemoryDevices -Sum).Sum);"
-    " max_kb=[int64](($arr | Measure-Object -Property MaxCapacityEx -Sum).Sum);"
-    " modules=$mods; tpm=$tpm; secure_boot=$sb; firmware=[string]$env:firmware_type}"
-    " | ConvertTo-Json -Compress"
-)
 
 
 @dataclass
@@ -70,6 +61,7 @@ class HardwareInfo:
     tpm_version: str = ""
     secure_boot: bool | None = None
     firmware: str = ""  # "UEFI" / "Legacy" / ""
+    details: HardwareDetails = field(default_factory=HardwareDetails)
 
     @property
     def installed_ram(self) -> int:
@@ -173,25 +165,23 @@ def sample_processes(
 
 
 def read_hardware(runner: Runner) -> HardwareInfo | None:
-    try:
-        data = runner.powershell_json(_HARDWARE_SCRIPT)
-    except CommandError as exc:
-        log.warning("hardware_query_failed", extra={"err": str(exc)})
-        return None
-    if not isinstance(data, dict):
+    data = query_hardware(runner)
+    if data is None:
         return None
     secure_boot = data.get("secure_boot")
+    details = parse_details(data)
     return HardwareInfo(
         cpu_name=str(data.get("cpu") or "").strip(),
         cores=int(data.get("cores") or 0),
         threads=int(data.get("threads") or 0),
         mhz=int(data.get("mhz") or 0),
         slots=int(data.get("slots") or 0),
-        modules=[int(m) for m in as_list(data.get("modules")) if m],
+        modules=[m.capacity for m in details.memory],
         max_capacity=int(data.get("max_kb") or 0) * 1024,
         tpm_version=str(data.get("tpm") or ""),
         secure_boot=secure_boot if isinstance(secure_boot, bool) else None,
         firmware=str(data.get("firmware") or ""),
+        details=details,
     )
 
 
@@ -363,6 +353,12 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
             )
         )
 
+    if hw is not None:
+        battery = psutil.sensors_battery() if hasattr(psutil, "sensors_battery") else None
+        plugged = None if battery is None else bool(battery.power_plugged)
+        for level, title, detail in hardware_findings(hw.details, plugged):
+            findings.append(Finding(level, title, detail))  # type: ignore[arg-type]
+
     if report.env.disk_type == "hdd":
         findings.append(
             Finding(
@@ -432,7 +428,8 @@ def _ram_advice(ram: int, hw: HardwareInfo | None) -> str:
         )
     if hw.max_capacity:
         text += f" La placa admite hasta {human_bytes(hw.max_capacity)}."
-    return text
+    advice = ram_purchase_advice(hw.details.memory, hw.slots, hw.max_capacity, ram)
+    return f"{text} {advice}" if advice else text
 
 
 def _describe(proc: ProcessUsage, memory: bool = False) -> str:
