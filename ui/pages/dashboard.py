@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+import tempfile
 import threading
 import webbrowser
 from pathlib import Path
@@ -11,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 import customtkinter as ctk
 
 from core.catalog import LEVEL_LABELS
-from core.constants import APP_VERSION
+from core.constants import APP_VERSION, PORTABLE_MODE
 from core.engine import DriftItem
 from core.fixplan import FIX_CLEANUPS, FixPlan, build_plan
 from core.gamemode import GameMode
@@ -26,7 +29,7 @@ from core.metrics import (
     take_snapshot,
 )
 from core.selection import Selection, SelectionError, load_selection
-from core.update_check import ReleaseInfo
+from core.update_check import ReleaseInfo, download_installer, installer_command
 from core.watch import MaintenanceReport, MaintenanceStore
 from tweaks.startup import executable_from_command
 from ui.dialogs import FixPlanDialog
@@ -154,10 +157,15 @@ class DashboardPage(Page):
         self.update_url = ""
         ctk.CTkButton(
             self.update_card,
-            text="Ver y descargar",
-            width=150,
+            text="Ver novedades",
+            width=130,
+            **SECONDARY_BUTTON,
             command=lambda: webbrowser.open(self.update_url),
         ).pack(side="right", padx=PAD, pady=PAD)
+        self.update_btn = ctk.CTkButton(
+            self.update_card, text="Actualizar ahora", width=150, command=self._install_update
+        )
+        self.update_info: ReleaseInfo | None = None
 
     def _build_watch(self, parent: Any) -> None:
         """Avisos de vigilancia (programas nuevos, arranque más lento, mantenimiento)."""
@@ -312,7 +320,38 @@ class DashboardPage(Page):
 
         self.main.run_long(work, done, "Modo juego")
 
+    def _install_update(self) -> None:
+        info = self.update_info
+        if info is None:
+            return
+        self.update_btn.configure(state="disabled", text="Descargando…")
+
+        def work(_p: ProgressFn, _c: threading.Event) -> Path:
+            return download_installer(info, Path(tempfile.gettempdir()) / "SafeTrim-update")
+
+        def done(installer: Path) -> None:
+            if not messagebox.askyesno(
+                "Actualizar SafeTrim",
+                f"Descargada y verificada la versión {info.version}. SafeTrim se cerrará, se "
+                "actualizará y volverá a abrirse. Tus datos se conservan. ¿Continuar?",
+                parent=self,
+            ):
+                self.update_btn.configure(state="normal", text="Actualizar ahora")
+                return
+            subprocess.Popen(installer_command(installer), close_fds=True)
+            self.main.destroy()
+
+        def failed(exc: BaseException) -> None:
+            self.update_btn.configure(state="normal", text="Actualizar ahora")
+            show_error("Actualizar SafeTrim", exc, self)
+
+        BackgroundTask(self, work, done, failed).start()
+
     def show_update(self, info: ReleaseInfo) -> None:
+        self.update_info = info
+        # En la versión portable no hay instalador que ejecutar: solo el enlace.
+        if info.setup_url and not PORTABLE_MODE and sys.platform == "win32":
+            self.update_btn.pack(side="right", pady=PAD)
         self.update_url = info.url
         self.update_label.configure(
             text=f"Hay una versión nueva de SafeTrim: {info.version} (tienes {APP_VERSION}). "
