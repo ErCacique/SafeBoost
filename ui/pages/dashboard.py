@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
@@ -10,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 import customtkinter as ctk
 
 from core.catalog import LEVEL_LABELS
+from core.constants import APP_VERSION
 from core.engine import DriftItem
 from core.metrics import (
     BootInfo,
@@ -22,6 +24,7 @@ from core.metrics import (
     take_snapshot,
 )
 from core.selection import Selection, SelectionError, load_selection
+from core.update_check import ReleaseInfo
 from ui.pages.base import Page, show_error
 from ui.theme import (
     ACCENT,
@@ -72,6 +75,7 @@ class DashboardPage(Page):
         body.pack(fill="both", expand=True, padx=PAD, pady=PAD)
 
         self._build_env(body)
+        self._build_update_banner(body)
         grid = ctk.CTkFrame(body, fg_color="transparent")
         grid.pack(fill="x", pady=PAD_S)
         self.cards = {
@@ -101,10 +105,34 @@ class DashboardPage(Page):
 
     # ------------------------------------------------------------------ secciones
 
+    def _build_update_banner(self, parent: Any) -> None:
+        """Oculto hasta que MainWindow encuentre una versión nueva (show_update)."""
+        self.update_card = Card(parent)
+        self.update_label = ctk.CTkLabel(
+            self.update_card, text="", font=FONT_BODY, text_color=ACCENT, justify="left"
+        )
+        self.update_label.pack(side="left", padx=PAD, pady=PAD)
+        self.update_url = ""
+        ctk.CTkButton(
+            self.update_card,
+            text="Ver y descargar",
+            width=150,
+            command=lambda: webbrowser.open(self.update_url),
+        ).pack(side="right", padx=PAD, pady=PAD)
+
+    def show_update(self, info: ReleaseInfo) -> None:
+        self.update_url = info.url
+        self.update_label.configure(
+            text=f"Hay una versión nueva de SafeTrim: {info.version} (tienes {APP_VERSION}). "
+            "Descárgala y sustituye este .exe; tus datos se conservan."
+        )
+        self.update_card.pack(fill="x", pady=(0, PAD_S), before=self.env_card)
+
     def _build_env(self, parent: Any) -> None:
         env = self.state.app.env
         card = Card(parent)
         card.pack(fill="x")
+        self.env_card = card
         disk = {"ssd": "SSD", "hdd": "HDD"}.get(env.disk_type, "desconocido")
         chassis = {"desktop": "Sobremesa", "laptop": "Portátil"}.get(env.chassis, "desconocido")
         lines = [

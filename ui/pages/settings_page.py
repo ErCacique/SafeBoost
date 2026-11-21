@@ -88,6 +88,25 @@ class SettingsPage(Page):
                 command=self._enable_protection,
             ).pack(side="left", padx=PAD)
 
+        other = self._section(body, "General")
+        self.check_updates = ctk.BooleanVar(value=settings.check_updates)
+        ctk.CTkSwitch(
+            other,
+            text="Avisar de versiones nuevas (consulta GitHub al arrancar; no envía datos tuyos)",
+            variable=self.check_updates,
+            font=FONT_BODY,
+            command=self._save,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        ctk.CTkButton(
+            other,
+            text="Ver la guía de primeros pasos",
+            width=240,
+            **SECONDARY_BUTTON,
+            command=lambda: self.main.show_welcome(
+                on_done=lambda: self.dry_run.set(self.state.app.settings.dry_run)
+            ),
+        ).pack(anchor="w", padx=PAD, pady=(PAD_S, PAD))
+
         look = self._section(body, "Apariencia")
         self.appearance = ctk.StringVar(value=settings.appearance)
         ctk.CTkSegmentedButton(
@@ -126,6 +145,7 @@ class SettingsPage(Page):
         settings.allow_without_restore_point = self.no_restore.get()
         settings.appearance = self.appearance.get()
         settings.log_level = self.level.get()
+        settings.check_updates = self.check_updates.get()
         settings.save()
         self.main.refresh_action_bar()
 

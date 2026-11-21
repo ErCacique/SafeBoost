@@ -70,9 +70,18 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 
 ## Uso
 
+0. **Primeros pasos**: la primera vez, una guía de tres pantallas explica el modo simulación,
+   la red de seguridad y cómo aplicar (se puede volver a abrir en Ajustes).
 1. **Dashboard**: muestra RAM, CPU, disco, procesos, último tiempo de arranque y el
    entorno detectado (build, edición, SSD/HDD, portátil/sobremesa, dominio/MDM). Recomienda
-   un perfil.
+   un perfil, o pide reiniciar o actualizar Windows antes si hay actualizaciones pendientes o
+   atrasadas. Con menos de 5 GB de RAM avisa de que lo que más se nota es ampliar memoria.
+   Si hay una versión nueva de SafeTrim publicada, muestra un aviso con el enlace.
+1. **Diagnóstico**: "¿por qué va lento?". Mide durante un par de segundos y da un veredicto en
+   lenguaje claro: RAM insuficiente (con ranuras libres y máximo admitido), procesos que
+   acaparan CPU o memoria con explicación de los procesos de Windows conocidos, procesador
+   modesto, disco duro mecánico, poco espacio, Windows Update pendiente o atrasado y, en
+   Windows 10, si el equipo cumple los requisitos de Windows 11. Solo lee.
 2. **Elegir perfil** (1, 2 o 3) y, si se quiere, marcar o desmarcar tweaks concretos en cada
    página (Bloatware, Inicio, Servicios, Limpieza, Optimización).
 3. **Simulación (dry-run)**: activada por defecto la primera vez. Muestra cada cambio exacto
@@ -228,6 +237,7 @@ Campos obligatorios: `id`, `name`, `description`, `rationale`, `category`, `leve
 | `cleanup.prefetch_orphans` | Limpiar: Prefetch obsoleto (>90 días) | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.recycle_bin` | Limpiar: Papelera de reciclaje | bajo | Sí | No (acción) | 10/11 |
 | `cleanup.thumbnails` | Limpiar: Caché de miniaturas | bajo | Sí | No (acción) | 10/11 |
+| `cleanup.windows_old` | Limpiar: Copia de la versión anterior de Windows (Windows.old), con el Liberador de espacio | medio | No · requiere que exista | No (acción) | 10/11 |
 | `power.hibernate_off` | Desactivar hibernación | medio | No | Sí | 10/11 |
 | `power.high_performance` | Plan de energía: Alto rendimiento | bajo | Sí (si chassis=desktop) | Sí | 10/11 |
 | `power.ultimate_performance` | Plan de energía: Máximo rendimiento | medio | No · requiere chassis=desktop | Sí | 10/11 |
@@ -298,6 +308,11 @@ operación. Un `tweaks.json` editado por error no puede saltársela.
   El JSON es el que usa Deshacer, porque un `.reg` no puede expresar "este valor no existía".
 - **Dominio / Entra ID / MDM** (detectado con `dsregcmd /status`): aviso permanente y directivas
   desactivadas. `dmwappushservice` no se toca.
+- **Procesos externos con prioridad baja** y PowerShell de uno en uno, para no saturar equipos
+  con poca CPU o RAM.
+- **Red**: la única conexión es la consulta de la última versión a la API de Releases de GitHub
+  al arrancar (desactivable en Ajustes). Con el repositorio privado responde 404 y SafeTrim no
+  muestra nada; el aviso solo funciona si las Releases son públicas.
 - **Valida siempre en una VM con snapshots** (Hyper-V o VirtualBox) antes de usar una versión
   nueva en un equipo real.
 

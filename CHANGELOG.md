@@ -7,6 +7,37 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-21
+
+### Added
+- **Página Diagnóstico** ("¿por qué va lento?"): mide procesos durante 1,5 s (agrupados por
+  ejecutable) y da un veredicto ordenado por gravedad: RAM insuficiente con ranuras libres y
+  máximo admitido, memoria casi llena con el mayor consumidor, proceso que acapara la CPU con
+  explicación de los procesos de Windows conocidos (Windows Update, Defender, indexado…),
+  procesador modesto, disco mecánico, poco espacio y estado de Windows Update. Solo lee.
+- **Windows Update**: se detecta un reinicio pendiente y los días desde la última
+  actualización instalada. El Dashboard lo avisa y, con un reinicio pendiente, no recomienda
+  ningún perfil hasta reiniciar.
+- **Windows.old**: nueva limpieza opcional (`cleanup.windows_old`) que muestra el tamaño y la
+  antigüedad de la copia de la versión anterior, avisa si aún se puede volver atrás y la borra
+  con el Liberador de espacio de Windows (`cleanmgr /sagerun`). Irreversible, con confirmación
+  aparte.
+- **Windows 10 sin soporte**: aviso del fin de soporte (14-10-2025) y comprobación de los
+  requisitos de Windows 11 que se pueden verificar (RAM, disco, TPM 2.0, UEFI con arranque
+  seguro); para el procesador remite a "Comprobación de estado del PC".
+- **Aviso de versión nueva**: consulta la última Release de GitHub al arrancar y muestra un
+  enlace si hay una más reciente. Desactivable en Ajustes; en silencio si no hay red o el
+  repositorio es privado.
+- **Guía de primeros pasos** de tres pantallas en el primer arranque, con opción de pasar a modo
+  real; se puede volver a abrir desde Ajustes.
+
+### Changed
+- La recomendación tiene en cuenta la RAM también en portátiles: con menos de 5 GB indica que
+  los perfiles ayudan poco y que lo que se nota es ampliar memoria.
+- Los procesos externos (PowerShell, sc, reg…) se lanzan con prioridad por debajo de lo normal y
+  las consultas de PowerShell de una en una, para que la interfaz no se atasque en equipos
+  flojos.
+
 ## [0.3.1] - 2026-11-08
 
 ### Fixed

@@ -2380,6 +2380,53 @@
       ]
     },
     {
+      "id": "cleanup.windows_old",
+      "name": "Limpiar: Copia de la versión anterior de Windows (Windows.old)",
+      "description": "Borra la carpeta Windows.old que deja una actualización grande de Windows (suele ocupar 10-30 GB) usando el Liberador de espacio de Windows.",
+      "rationale": "Windows la guarda 10 días para poder volver a la versión anterior. Pasado ese tiempo, o si todo funciona bien, solo ocupa espacio. Se usa la herramienta oficial porque la carpeta está protegida por TrustedInstaller.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "medio",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible: después ya no se puede volver a la versión anterior de Windows. Requiere confirmación separada.",
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.cleanup:windows_old_exists"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_windows_old"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_windows_old"
+        }
+      ]
+    },
+    {
       "id": "power.hibernate_off",
       "name": "Desactivar hibernación",
       "description": "Elimina hiberfil.sys y libera tanto espacio como ~40 % de la RAM.",

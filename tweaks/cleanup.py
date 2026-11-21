@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import os
 import sys
 import time
 from collections.abc import Callable, Iterator
@@ -16,12 +17,17 @@ from core.constants import (
     CLEAN_PREFETCH_MIN_AGE_DAYS,
     CLEAN_TEMP_MIN_AGE_HOURS,
     CLEAN_WU_MIN_AGE_DAYS,
+    CLEANMGR_PREVIOUS_INSTALLS_KEY,
+    CLEANMGR_PROFILE,
     SYSTEM_ROOT,
+    TIMEOUT_CLEANMGR,
+    WINDOWS_OLD_ROLLBACK_DAYS,
 )
 from core.context import DetectResult, DetectState, HandlerContext, SkipOperation
 from core.logger import get_logger
 from core.metrics import human_bytes
-from tweaks._common import user_local_appdata
+from core.registry import RegValue
+from tweaks._common import run_tool, user_local_appdata
 
 log = get_logger("tweaks.cleanup")
 
@@ -234,3 +240,92 @@ def estimate_recycle_bin(ctx: HandlerContext) -> DetectResult:
     if not targets:
         return DetectResult(DetectState.UNKNOWN, "No se pudo localizar la papelera del usuario")
     return _estimate(targets)
+
+
+# --------------------------------------------------------------------------- Windows.old
+
+
+def windows_old_path() -> Path:
+    return Path(SYSTEM_ROOT.anchor or "C:\\") / "Windows.old"
+
+
+def _dir_size(root: Path) -> tuple[int, int]:
+    """Bytes y archivos bajo root sin seguir enlaces ni uniones (Windows.old contiene uniones
+    como "Application Data" que apuntan a sí mismas)."""
+    total = files = 0
+    pending = [root]
+    while pending:
+        try:
+            entries = list(os.scandir(pending.pop()))
+        except OSError:
+            continue
+        for entry in entries:
+            try:
+                if entry.is_symlink() or getattr(entry, "is_junction", lambda: False)():
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(Path(entry.path))
+                else:
+                    total += entry.stat(follow_symlinks=False).st_size
+                    files += 1
+            except OSError:
+                continue
+    return total, files
+
+
+def _age_days(path: Path) -> int:
+    # En Windows st_ctime es la fecha de creación de la carpeta.
+    return max(int((time.time() - path.stat().st_ctime) / DAY), 0)
+
+
+def windows_old_exists(_ctx: HandlerContext) -> bool:
+    return windows_old_path().is_dir()
+
+
+def estimate_windows_old(_ctx: HandlerContext) -> DetectResult:
+    path = windows_old_path()
+    if not path.is_dir():
+        return DetectResult(DetectState.APPLIED, "No hay copia de una versión anterior")
+    size, files = _dir_size(path)
+    age = _age_days(path)
+    message = f"{human_bytes(size)} · creada hace {age} días"
+    if age < WINDOWS_OLD_ROLLBACK_DAYS:
+        message += " (aún puedes volver a la versión anterior de Windows)"
+    state = DetectState.NOT_APPLIED if size > CLEAN_NEGLIGIBLE_BYTES else DetectState.APPLIED
+    return DetectResult(state, message, {"bytes": size, "files": files, "age_days": age})
+
+
+def clean_windows_old(ctx: HandlerContext) -> bool:
+    """Borra Windows.old con el Liberador de espacio de Windows (cleanmgr /sagerun): es la vía
+    soportada; borrarla a mano choca con permisos de TrustedInstaller y uniones."""
+    path = windows_old_path()
+    if not path.is_dir():
+        raise SkipOperation("No hay Windows.old")
+    size, _files = _dir_size(path)
+    if ctx.dry_run:
+        ctx.plan(
+            f"Borrar Windows.old ({human_bytes(size)}) con el Liberador de espacio de Windows. "
+            "Después ya no se podrá volver a la versión anterior de Windows."
+        )
+        return True
+    flag = f"StateFlags{CLEANMGR_PROFILE:04d}"
+    # Marca "Instalaciones anteriores de Windows" para el perfil /sagerun; inocuo si se queda.
+    ctx.set_registry("HKLM", CLEANMGR_PREVIOUS_INSTALLS_KEY, flag, RegValue("REG_DWORD", 2))
+    run_tool(
+        ctx,
+        "cleanmgr",
+        [f"/sagerun:{CLEANMGR_PROFILE}"],
+        "Liberador de espacio (instalaciones anteriores de Windows)",
+        timeout=TIMEOUT_CLEANMGR,
+    )
+    remaining = _dir_size(path)[0] if path.is_dir() else 0
+    freed = max(size - remaining, 0)
+    ctx.state["freed_bytes"] = ctx.state.get("freed_bytes", 0) + freed
+    ctx.note(f"Windows.old: {human_bytes(freed)} liberados")
+    if remaining > CLEAN_NEGLIGIBLE_BYTES:
+        ctx.note(
+            f"Quedan {human_bytes(remaining)} en Windows.old (archivos en uso): reinicia y "
+            "vuelve a ejecutar la limpieza."
+        )
+    ctx.record("handler", {"action": "Windows.old"}, None, {"bytes": freed})
+    return freed > 0

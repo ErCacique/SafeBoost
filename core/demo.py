@@ -196,6 +196,21 @@ class DemoRunner:
             return [{"index": 12, "name": "Ethernet", "static": "", "servers": ["192.168.1.1"]}]
         if "Win32_PageFileSetting" in script:
             return {"auto": True, "settings": []}
+        if "Win32_PhysicalMemoryArray" in script:
+            return {
+                "cpu": "Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz",
+                "cores": 4,
+                "threads": 8,
+                "mhz": 1800,
+                "slots": 2,
+                "max_kb": 32 * 1024 * 1024,
+                "modules": [8 * 1024**3],
+                "tpm": "2.0, 0, 1.38",
+                "secure_boot": True,
+                "firmware": "UEFI",
+            }
+        if "Get-HotFix" in script:
+            return 12
         if "Win32_Volume" in script:
             return [{"letter": "C:", "indexing": True}, {"letter": "D:", "indexing": True}]
         if "EventID=100" in script:

@@ -264,3 +264,126 @@ class SummaryDialog(_Modal):
         ctk.CTkButton(self, text="Cerrar", command=self.destroy).pack(
             side="right", padx=PAD, pady=PAD
         )
+
+
+# Texto de cada paso: (título, párrafos). Se mantiene aquí para poder probarlo sin Tk.
+WELCOME_STEPS: list[tuple[str, list[str]]] = [
+    (
+        "Bienvenido a SafeTrim",
+        [
+            "SafeTrim quita apps preinstaladas, reduce la telemetría y ajusta servicios para "
+            "que Windows vaya más ligero.",
+            "Empieza en MODO SIMULACIÓN: puedes pulsar “Simular” todas las veces que "
+            "quieras para ver qué cambiaría, sin tocar nada.",
+            "Si el equipo va lento y no sabes por qué, empieza por la página Diagnóstico.",
+        ],
+    ),
+    (
+        "Tu red de seguridad",
+        [
+            "Antes de cambiar nada, SafeTrim crea un punto de restauración de Windows y copias "
+            ".reg de cada clave que toca. Si la Protección del sistema está apagada, se para y "
+            "te ofrece activarla en Ajustes.",
+            "Todo se puede deshacer desde “Historial / Deshacer”, salvo las limpiezas "
+            "de archivos, que te pide confirmar aparte.",
+            "Nunca toca Windows Defender, Windows Update, la Microsoft Store, la red ni los "
+            "drivers.",
+        ],
+    ),
+    (
+        "Cómo aplicar los cambios",
+        [
+            "1. En el Dashboard, elige un perfil. Empieza por el recomendado o por el 1.",
+            "2. Pulsa “Simular” y lee la lista de cambios.",
+            "3. Pasa a modo real: aquí abajo o en Ajustes → Modo simulación.",
+            "4. Pulsa “Revisar y aplicar”, confirma y reinicia el equipo.",
+        ],
+    ),
+]
+
+
+class WelcomeWizard(_Modal):
+    """Guía de primer arranque en tres pasos. Al terminar marca first_run=False."""
+
+    def __init__(
+        self,
+        master: Any,
+        can_go_real: bool,
+        why_not: str,
+        on_done: Callable[[bool], None],
+    ) -> None:
+        super().__init__(master, "Primeros pasos", "640x460")
+        self.on_done = on_done
+        self.step = 0
+        self.go_real = ctk.BooleanVar(value=False)
+        self.protocol("WM_DELETE_WINDOW", self._finish)
+
+        self.counter = ctk.CTkLabel(self, text="", font=FONT_SMALL, text_color=TEXT_MUTED)
+        self.counter.pack(anchor="w", padx=PAD * 2, pady=(PAD * 2, 0))
+        self.heading = ctk.CTkLabel(self, text="", font=FONT_H2)
+        self.heading.pack(anchor="w", padx=PAD * 2, pady=(0, PAD))
+        self.body = Card(self)
+        self.body.pack(fill="both", expand=True, padx=PAD * 2)
+
+        self.real_switch = ctk.CTkSwitch(
+            self,
+            text="Pasar a modo real ahora (podrás volver a simulación en Ajustes)",
+            variable=self.go_real,
+            font=FONT_BODY,
+        )
+        self.real_note = ctk.CTkLabel(
+            self, text=why_not, font=FONT_SMALL, text_color=RISK_COLORS["medio"], wraplength=560
+        )
+        if not can_go_real:
+            self.real_switch.configure(state="disabled")
+
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.pack(fill="x", side="bottom", padx=PAD * 2, pady=PAD * 2)
+        self.next_btn = ctk.CTkButton(footer, text="Siguiente", width=120, command=self._next)
+        self.next_btn.pack(side="right")
+        self.back_btn = ctk.CTkButton(
+            footer, text="Atrás", width=100, **SECONDARY_BUTTON, command=self._back
+        )
+        self.back_btn.pack(side="right", padx=PAD_S)
+        ctk.CTkButton(
+            footer, text="Saltar", width=90, **SECONDARY_BUTTON, command=self._finish
+        ).pack(side="left")
+        self._render()
+
+    def _render(self) -> None:
+        title, paragraphs = WELCOME_STEPS[self.step]
+        last = self.step == len(WELCOME_STEPS) - 1
+        self.counter.configure(text=f"Paso {self.step + 1} de {len(WELCOME_STEPS)}")
+        self.heading.configure(text=title)
+        for child in self.body.winfo_children():
+            child.destroy()
+        for text in paragraphs:
+            ctk.CTkLabel(self.body, text=text, font=FONT_BODY, wraplength=540, justify="left").pack(
+                anchor="w", padx=PAD, pady=PAD_S
+            )
+        self.back_btn.configure(state="normal" if self.step else "disabled")
+        self.next_btn.configure(text="Empezar" if last else "Siguiente")
+        if last:
+            self.real_switch.pack(anchor="w", padx=PAD * 2, pady=(PAD, 0))
+            if self.real_note.cget("text"):
+                self.real_note.pack(anchor="w", padx=PAD * 2)
+        else:
+            self.real_switch.pack_forget()
+            self.real_note.pack_forget()
+
+    def _next(self) -> None:
+        if self.step == len(WELCOME_STEPS) - 1:
+            self._finish()
+            return
+        self.step += 1
+        self._render()
+
+    def _back(self) -> None:
+        if self.step:
+            self.step -= 1
+            self._render()
+
+    def _finish(self) -> None:
+        go_real = bool(self.go_real.get()) and self.real_switch.cget("state") != "disabled"
+        self.destroy()
+        self.on_done(go_real)

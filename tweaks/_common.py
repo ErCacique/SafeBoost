@@ -29,10 +29,10 @@ def user_local_appdata(ctx: HandlerContext) -> Path:
     return user_profile_dir(ctx) / "AppData" / "Local"
 
 
-def run_tool(ctx: HandlerContext, exe: str, args: list[str], what: str) -> str:
-    """Ejecuta powercfg/netsh (lista blanca) o lo planifica en dry-run."""
+def run_tool(ctx: HandlerContext, exe: str, args: list[str], what: str, timeout: int = 60) -> str:
+    """Ejecuta una herramienta de la lista blanca (powercfg, netsh, cleanmgr) o la planifica."""
     ctx.guard.check_command(exe)
-    return ctx.run_checked([str(ALLOWED_COMMAND_EXES[exe]), *args], what)
+    return ctx.run_checked([str(ALLOWED_COMMAND_EXES[exe]), *args], what, timeout=timeout)
 
 
 def ps_json(ctx: HandlerContext, script: str) -> list[dict]:
