@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import threading
-from tkinter import messagebox
+from pathlib import Path
+from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.client_report import html_to_pdf, render_client_html
 from core.constants import LOW_RAM_GIB
 from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
@@ -72,6 +74,14 @@ class DiagnosticsPage(Page):
             command=self.defender_scan,
         )
         self.scan_btn.pack(side="right")
+        self.report_btn = ctk.CTkButton(
+            bar,
+            text="Informe para el cliente",
+            width=190,
+            **SECONDARY_BUTTON,
+            command=self.client_report,
+        )
+        self.report_btn.pack(side="right", padx=PAD_S)
         self.status = ctk.CTkLabel(
             bar,
             text="Mide el uso durante un par de segundos. Hazlo cuando notes el equipo lento.",
@@ -110,6 +120,38 @@ class DiagnosticsPage(Page):
             self.status.configure(text=f"No se pudo analizar: {exc}", text_color=DANGER)
 
         BackgroundTask(self, work, done, failed).start()
+
+    def client_report(self) -> None:
+        if self.report is None:
+            messagebox.showinfo("Informe", "Espera a que termine el análisis.", parent=self)
+            return
+        target = filedialog.asksaveasfilename(
+            parent=self,
+            title="Guardar informe para el cliente",
+            defaultextension=".pdf",
+            initialfile=f"Informe-equipo-{self.report.snapshot.taken[:10]}.pdf",
+            filetypes=[("PDF", "*.pdf"), ("HTML", "*.html")],
+        )
+        if not target:
+            return
+        app = self.state.app
+        report = self.report
+
+        def work(_p: ProgressFn, _c: threading.Event) -> Path:
+            html = render_client_html(report, app.store.list(), app.engine.catalog)
+            out = Path(target)
+            page = out.with_suffix(".html")
+            page.write_text(html, encoding="utf-8")
+            if out.suffix.lower() == ".pdf" and html_to_pdf(page, out, app.runner):
+                page.unlink(missing_ok=True)
+                return out
+            return page
+
+        def done(path: Path) -> None:
+            note = "" if path.suffix == ".pdf" else " (en HTML: ábrelo e imprímelo a PDF)"
+            messagebox.showinfo("Informe", f"Informe guardado{note}:\n{path}", parent=self)
+
+        self.main.run_long(work, done, "Informe para el cliente")
 
     def defender_scan(self) -> None:
         if not messagebox.askyesno(
