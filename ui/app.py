@@ -38,6 +38,7 @@ from ui.pages.evolution_page import EvolutionPage
 from ui.pages.history import HistoryPage
 from ui.pages.privacy_page import PrivacyPage
 from ui.pages.settings_page import SettingsPage
+from ui.pages.space_page import SpacePage
 from ui.pages.startup_page import StartupPage
 from ui.pages.tweaks_page import (
     BloatwarePage,
@@ -74,6 +75,7 @@ PAGES: list[tuple[str, str, type[Page]]] = [
     ("diagnostics", "Diagnóstico", DiagnosticsPage),
     ("evolution", "Evolución", EvolutionPage),
     ("privacy", "Privacidad", PrivacyPage),
+    ("space", "Espacio", SpacePage),
     ("bloatware", "Bloatware", BloatwarePage),
     ("startup", "Inicio", StartupPage),
     ("services", "Servicios", ServicesPage),
