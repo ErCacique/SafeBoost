@@ -13,6 +13,7 @@ from typing import Any
 
 from core.constants import SERVICES_KEY
 from core.environment import EnvironmentInfo
+from core.privacy import CONSENT_STORE
 from core.process import CommandResult
 from core.registry import MemoryRegistryBackend, RegValue
 
@@ -98,6 +99,20 @@ def demo_registry() -> MemoryRegistryBackend:
         "RPSessionInterval",
         RegValue("REG_DWORD", 1),
     )
+    consent = f"{DEMO_SID}\\{CONSENT_STORE}"
+    # FILETIME (100 ns desde 1601) de 2026-11-20 18:30 UTC y de unos minutos después.
+    used, stopped = 134396730000000000, 134396736000000000
+    for cap, app, start, stop in (
+        ("webcam", r"NonPackaged\C:#Program Files#Zoom#bin#Zoom.exe", used, stopped),
+        ("microphone", r"NonPackaged\C:#Program Files#Zoom#bin#Zoom.exe", used, stopped),
+        ("microphone", "Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe", used + 10**9, 0),
+        ("location", "Microsoft.WindowsMaps_8wekyb3d8bbwe", used - 10**12, used - 10**11),
+    ):
+        backend.seed("HKU", f"{consent}\\{cap}", "Value", RegValue("REG_SZ", "Allow"))
+        key = f"{consent}\\{cap}\\{app}"
+        backend.seed("HKU", key, "LastUsedTimeStart", RegValue("REG_QWORD", start))
+        backend.seed("HKU", key, "LastUsedTimeStop", RegValue("REG_QWORD", stop))
+        backend.seed("HKU", key, "Value", RegValue("REG_SZ", "Allow"))
     return backend
 
 
@@ -204,11 +219,44 @@ class DemoRunner:
                 "mhz": 1800,
                 "slots": 2,
                 "max_kb": 32 * 1024 * 1024,
-                "modules": [8 * 1024**3],
+                "modules": [
+                    {
+                        "cap": 8 * 1024**3,
+                        "type": 26,
+                        "form": 12,
+                        "speed": 2400,
+                        "maker": "Samsung",
+                        "part": "M471A1K43CB1-CTD",
+                    }
+                ],
+                "disks": [
+                    {
+                        "name": "WDC PC SN520 256GB",
+                        "media": "SSD",
+                        "size": 256 * 10**9,
+                        "health": "Healthy",
+                        "wear": 7,
+                        "temp": 38,
+                        "read_errors": 0,
+                        "hours": 6120,
+                    }
+                ],
+                "battery": {"design": 41000, "full": 29500, "cycles": 412},
+                "cpu_perf": {"performance": 92, "utility": 18},
+                "devices": [],
+                "gpus": [
+                    {
+                        "name": "Intel(R) UHD Graphics 620",
+                        "version": "26.20.100.7262",
+                        "date": "2019-09-25",
+                    }
+                ],
                 "tpm": "2.0, 0, 1.38",
                 "secure_boot": True,
                 "firmware": "UEFI",
             }
+        if "Start-MpScan" in script:
+            return {"enabled": True, "threats": [], "signature_age": 1}
         if "DegradationTime" in script:
             return {
                 "boots": 9,

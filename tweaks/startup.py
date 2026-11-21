@@ -195,12 +195,15 @@ class StartupManager:
 
     def _degradation_by_file(self) -> dict[str, int]:
         """Eventos 101: apps que retrasaron el arranque. Nombre de archivo → peor retraso (ms)."""
+        # try/catch: sin el registro o sin eventos, Get-WinEvent aborta el script (ver core.boot).
         script = (
-            f"Get-WinEvent -LogName {ps_quote(DIAG_PERF_LOG)} "
+            f"$ev = try {{ @(Get-WinEvent -LogName {ps_quote(DIAG_PERF_LOG)} "
             f"-FilterXPath '*[System[EventID={BOOT_DEGRADATION_EVENT_ID}]]' -MaxEvents 200 "
-            "-ErrorAction SilentlyContinue | ForEach-Object { $x = [xml]$_.ToXml();"
+            "-ErrorAction Stop) } catch { @() };"
+            "@($ev | ForEach-Object { $x = [xml]$_.ToXml();"
             "$d = @{}; $x.Event.EventData.Data | ForEach-Object { $d[$_.Name] = $_.'#text' };"
-            "@{file=$d['FileName']; ms=[int]$d['DegradationTime']} } | ConvertTo-Json -Compress"
+            "@{file=$(if ($d['FileName']) { $d['FileName'] } else { $d['Name'] });"
+            " ms=[int]$d['DegradationTime']} }) | ConvertTo-Json -Compress"
         )
         try:
             rows = as_list(self.runner.powershell_json(script))

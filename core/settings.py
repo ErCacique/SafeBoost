@@ -25,6 +25,8 @@ class Settings:
     first_run: bool = True
     # Una petición a la API de Releases de GitHub al arrancar; nada más sale del equipo.
     check_updates: bool = True
+    # Tarea \SafeTrim\Maintenance cada 4 semanas (Ajustes → General).
+    maintenance: bool = False
 
     @classmethod
     def load(cls, path: Path = SETTINGS_FILE) -> Settings:

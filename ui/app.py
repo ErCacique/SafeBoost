@@ -34,7 +34,9 @@ from ui.dialogs import ReviewDialog, SummaryDialog, WelcomeWizard
 from ui.pages.base import Page, show_error
 from ui.pages.dashboard import DashboardPage
 from ui.pages.diagnostics_page import DiagnosticsPage
+from ui.pages.evolution_page import EvolutionPage
 from ui.pages.history import HistoryPage
+from ui.pages.privacy_page import PrivacyPage
 from ui.pages.settings_page import SettingsPage
 from ui.pages.startup_page import StartupPage
 from ui.pages.tweaks_page import (
@@ -70,6 +72,8 @@ log = get_logger("ui")
 PAGES: list[tuple[str, str, type[Page]]] = [
     ("dashboard", "Dashboard", DashboardPage),
     ("diagnostics", "Diagnóstico", DiagnosticsPage),
+    ("evolution", "Evolución", EvolutionPage),
+    ("privacy", "Privacidad", PrivacyPage),
     ("bloatware", "Bloatware", BloatwarePage),
     ("startup", "Inicio", StartupPage),
     ("services", "Servicios", ServicesPage),
@@ -171,13 +175,14 @@ class MainWindow(ctk.CTk):
                 sidebar,
                 text=label,
                 anchor="w",
-                height=36,
+                # 32 px: con 11 páginas el menú cabe en un portátil de 1366x768 al 125 %.
+                height=32,
                 fg_color="transparent",
                 text_color=("gray10", "gray90"),
                 hover_color=("gray75", "gray25"),
                 command=lambda k=key: self.show(k),
             )
-            btn.pack(fill="x", padx=PAD_S, pady=2)
+            btn.pack(fill="x", padx=PAD_S, pady=1)
             self.nav[key] = btn
         self.mode_label = ctk.CTkLabel(sidebar, text="", font=FONT_SMALL, wraplength=180)
         self.mode_label.pack(side="bottom", pady=PAD)
@@ -198,6 +203,25 @@ class MainWindow(ctk.CTk):
             self.after(400, self.show_welcome)
         self._check_updates()
         self._run_slow_checks()
+        self._run_watch()
+
+    def _run_watch(self) -> None:
+        """Vigilancia al abrir: programas nuevos, registro de salud e informe de mantenimiento."""
+        if self.ui is None:
+            return
+        app = self.ui.app
+
+        def work(_p: ProgressFn, _c: threading.Event) -> Any:
+            from core.monitor import refresh  # carga los handlers de inicio: fuera del arranque
+
+            return refresh(app)
+
+        def done(result: Any) -> None:
+            page = self.pages.get("dashboard")
+            if isinstance(page, DashboardPage):
+                page.show_watch(result)
+
+        BackgroundTask(self, work, done, lambda _e: None).start()
 
     def _run_slow_checks(self) -> None:
         """Comprobaciones lentas (dxdiag para HAGS) con la ventana ya abierta; al terminar se

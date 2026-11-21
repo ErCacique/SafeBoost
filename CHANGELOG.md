@@ -7,6 +7,53 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-21
+
+### Added
+- **Avisos de programas nuevos al inicio**: al abrir SafeTrim compara los programas que arrancan
+  con Windows con los de la última vez y avisa en el Dashboard de los nuevos, con acceso directo
+  a la página Inicio. También anota los programas instalados desde la última vez.
+- **Página Evolución**: gráfica del tiempo de arranque de los últimos 30 arranques medidos,
+  detección de empeoramiento ("desde el día 14 arranca 28 s más lento; coincide con: Spotify")
+  y lista de lo que ha cambiado (programas instalados, añadidos al inicio, mantenimientos).
+- **Qué instala un programa**: foto del sistema antes de instalar (servicios y su tipo de inicio,
+  tareas programadas, programas de inicio e instalados) y comparación después, para ver lo que
+  el instalador añadió sin avisar.
+- **Mantenimiento mensual** (opcional, en Ajustes): tarea programada cada 4 semanas que
+  comprueba si Windows ha deshecho cambios, limpia temporales y miniaturas con las mismas reglas
+  de antigüedad y registra programas nuevos. El informe aparece en el Dashboard.
+- **Página Privacidad**: qué programas han usado la cámara, el micrófono y la ubicación, cuándo,
+  y cuáles los están usando ahora mismo, con acceso a la página de Configuración de Windows para
+  quitar permisos.
+
+### Changed
+- `Engine.apply(..., restore_point=False)` solo se admite para limpiezas, que un punto de
+  restauración no recupera; lo usa el mantenimiento mensual.
+- Menú lateral más compacto para que quepan las 11 páginas en pantallas pequeñas.
+
+## [0.6.0] - 2026-11-21
+
+### Added
+- **Qué RAM comprar**: el Diagnóstico lee el tipo (DDR3/DDR4/DDR5), el formato (SO-DIMM de
+  portátil o DIMM de sobremesa), la velocidad, el fabricante y el modelo de cada módulo, y dice
+  exactamente qué comprar ("un módulo DDR4 SO-DIMM de 8 GB a 2400 MHz en la ranura libre"),
+  con aviso de doble canal y de memoria soldada (LPDDR) que no se puede ampliar.
+- **Salud del disco**: estado SMART, errores de lectura, desgaste del SSD, temperatura y horas de
+  uso. Un disco con avisos o errores aparece como hallazgo grave con consejo de copia de
+  seguridad.
+- **Salud de la batería**: capacidad actual frente a la original y ciclos de carga.
+- **Procesador frenado**: si está ocupado pero va por debajo del 60 % de su velocidad, avisa y
+  distingue entre ahorro de batería y calor (ventilador sucio).
+- **Dispositivos con problemas** (código de error del Administrador de dispositivos explicado) y
+  **driver de gráfica de más de 3 años**.
+- **Análisis rápido con Windows Defender** desde Diagnóstico. Si otro antivirus está activo,
+  lo indica en lugar de analizar; avisa si las definiciones están desactualizadas.
+
+### Changed
+- Todos los datos de hardware salen de una sola consulta de PowerShell con cada sección aislada.
+  El rendimiento del procesador se lee por CIM, no con contadores de rendimiento, cuyos nombres
+  están traducidos al idioma de Windows.
+
 ## [0.5.0] - 2026-11-21
 
 ### Added

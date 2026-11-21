@@ -99,3 +99,37 @@ def test_apply_and_revert_on_real_windows() -> None:
     }
     assert not bad, _report("Reversión incompleta o no verificada", bad)
     assert not engine.drift(), "tras deshacer no debería quedar deriva"
+
+
+def test_read_only_queries_on_real_windows() -> None:
+    """Los scripts de PowerShell de solo lectura (hardware, arranque, actualizaciones) funcionan
+    en Windows real: un error de sintaxis los dejaría vacíos sin que ningún test lo notase."""
+    from core.boot import read_boot_culprits
+    from core.diagnostics import read_hardware
+    from core.environment import read_update_status
+    from core.process import SubprocessRunner
+    from core.registry import Registry, WinRegBackend
+
+    runner = SubprocessRunner()
+    hardware = read_hardware(runner)
+    assert hardware is not None, "la consulta de hardware falló"
+    print(
+        f"\nHardware: {hardware.cpu_name} · {hardware.threads} hilos · "
+        f"{len(hardware.details.memory)} módulos · {len(hardware.details.disks)} discos · "
+        f"rendimiento={hardware.details.cpu_perf} · gráficas={len(hardware.details.gpus)}"
+    )
+    assert hardware.cpu_name and hardware.threads > 0
+    assert hardware.details.disks, "Get-PhysicalDisk no devolvió discos"
+    assert hardware.details.cpu_perf is not None, "la clase de rendimiento del procesador falló"
+
+    boot = read_boot_culprits(runner)
+    print(
+        f"Arranque: disponible={boot.available} · {boot.boots} arranques · "
+        f"{len(boot.culprits)} causantes · error={boot.error!r}"
+    )
+    # En el runner (Windows Server) el registro puede no existir o estar vacío; lo que no puede
+    # pasar es que el script falle.
+    assert boot.error == "", f"el script de eventos de arranque falló: {boot.error}"
+
+    updates = read_update_status(Registry(WinRegBackend()), runner)
+    print(f"Windows Update: reinicio={updates.reboot_pending} · días={updates.last_update_days}")

@@ -66,23 +66,31 @@ class BootCulprit:
 class BootReport:
     boots: int = 0  # arranques registrados en el periodo
     culprits: list[BootCulprit] = field(default_factory=list)
-    available: bool = True  # False si el registro de eventos no se pudo leer
+    available: bool = True  # False si el registro no existe, está desactivado o falló la consulta
+    error: str = ""  # texto del error si la consulta de PowerShell falló
 
 
 def _script(days: int) -> str:
+    """Get-WinEvent -FilterHashtable lanza un error que -ErrorAction SilentlyContinue no frena
+    cuando el registro no existe o no hay eventos; con $ErrorActionPreference='Stop' abortaba el
+    script entero. Cada consulta va en su try/catch y se informa si el registro está disponible."""
     ids = ",".join(str(i) for i in EVENT_KINDS)
     log_name = ps_quote(DIAG_PERF_LOG)
     since = f"(Get-Date).AddDays(-{days})"
     return (
-        f"$ev = @(Get-WinEvent -FilterHashtable @{{LogName={log_name}; Id={ids};"
-        f" StartTime={since}}} -MaxEvents 500 -ErrorAction SilentlyContinue);"
-        f"$boots = @(Get-WinEvent -FilterHashtable @{{LogName={log_name}; Id={BOOT_EVENT_ID};"
-        f" StartTime={since}}} -ErrorAction SilentlyContinue).Count;"
-        "$items = foreach ($e in $ev) { $x = [xml]$e.ToXml(); $d = @{};"
+        f"$log = Get-WinEvent -ListLog {log_name} -ErrorAction SilentlyContinue;"
+        "if (-not $log -or -not $log.IsEnabled) {"
+        " @{available=$false; boots=0; items=@()} | ConvertTo-Json -Compress } else {"
+        f" $ev = try {{ @(Get-WinEvent -FilterHashtable @{{LogName={log_name}; Id={ids};"
+        f" StartTime={since}}} -MaxEvents 500 -ErrorAction Stop) }} catch {{ @() }};"
+        f" $boots = try {{ @(Get-WinEvent -FilterHashtable @{{LogName={log_name};"
+        f" Id={BOOT_EVENT_ID}; StartTime={since}}} -ErrorAction Stop).Count }} catch {{ 0 }};"
+        " $items = foreach ($e in $ev) { $x = [xml]$e.ToXml(); $d = @{};"
         " foreach ($n in $x.Event.EventData.Data) { $d[[string]$n.Name] = [string]$n.'#text' };"
-        " @{id=$e.Id; name=$d['Name']; friendly=$d['FriendlyName']; company=$d['CompanyName'];"
-        " total=$d['TotalTime']; degradation=$d['DegradationTime']} };"
-        "@{boots=$boots; items=@($items)} | ConvertTo-Json -Compress -Depth 4"
+        # El nombre del archivo aparece como Name o como FileName según el evento.
+        " @{id=$e.Id; name=$d['Name']; file_name=$d['FileName']; friendly=$d['FriendlyName'];"
+        " company=$d['CompanyName']; total=$d['TotalTime']; degradation=$d['DegradationTime']} };"
+        " @{available=$true; boots=$boots; items=@($items)} | ConvertTo-Json -Compress -Depth 4 }"
     )
 
 
@@ -95,7 +103,7 @@ def _ms(value: object) -> int:
 
 def aggregate(data: dict, top: int = BOOT_CULPRIT_TOP) -> BootReport:
     """Agrupa los eventos por elemento y ordena por retraso acumulado. Función pura."""
-    report = BootReport(boots=_ms(data.get("boots")))
+    report = BootReport(boots=_ms(data.get("boots")), available=data.get("available") is not False)
     grouped: dict[tuple[str, str], BootCulprit] = {}
     for item in as_list(data.get("items")):
         if not isinstance(item, dict):
@@ -103,7 +111,8 @@ def aggregate(data: dict, top: int = BOOT_CULPRIT_TOP) -> BootReport:
         kind = EVENT_KINDS.get(_ms(item.get("id")))
         if kind is None:
             continue
-        file = str(item.get("name") or "").strip()
+        file = str(item.get("name") or item.get("file_name") or "").strip()
+        file = file.replace("/", "\\").rsplit("\\", 1)[-1]  # a veces es la ruta completa
         name = str(item.get("friendly") or "").strip() or file or kind
         # DegradationTime es lo que se pasó de lo normal; si falta, el tiempo total.
         delay = _ms(item.get("degradation")) or _ms(item.get("total"))
@@ -125,7 +134,7 @@ def read_boot_culprits(runner: Runner, days: int = BOOT_CULPRIT_DAYS) -> BootRep
         data = runner.powershell_json(_script(days))
     except CommandError as exc:
         log.warning("boot_culprits_unavailable", extra={"err": str(exc)})
-        return BootReport(available=False)
+        return BootReport(available=False, error=str(exc))
     if not isinstance(data, dict):
         return BootReport()
     return aggregate(data)

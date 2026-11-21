@@ -9,9 +9,10 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
-from core.constants import APP_HOME, APP_VERSION, LOG_DIR
+from core.constants import APP_HOME, APP_VERSION, LOG_DIR, self_command
 from core.logger import ROOT_LOGGER_NAME, export_logs
 from core.restore import RestoreResult
+from core.watch import remove_maintenance, schedule_maintenance
 from ui.pages.base import Page, open_path, show_error
 from ui.theme import (
     FONT_BODY,
@@ -97,6 +98,15 @@ class SettingsPage(Page):
             font=FONT_BODY,
             command=self._save,
         ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.maintenance = ctk.BooleanVar(value=settings.maintenance)
+        ctk.CTkSwitch(
+            other,
+            text="Mantenimiento mensual: limpiar temporales, comprobar cambios deshechos y "
+            "avisar de programas nuevos (tarea programada cada 4 semanas)",
+            variable=self.maintenance,
+            font=FONT_BODY,
+            command=self._toggle_maintenance,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
         ctk.CTkButton(
             other,
             text="Ver la guía de primeros pasos",
@@ -146,8 +156,32 @@ class SettingsPage(Page):
         settings.appearance = self.appearance.get()
         settings.log_level = self.level.get()
         settings.check_updates = self.check_updates.get()
+        settings.maintenance = self.maintenance.get()
         settings.save()
         self.main.refresh_action_bar()
+
+    def _toggle_maintenance(self) -> None:
+        app = self.state.app
+        enabled = self.maintenance.get()
+        user = app.env.interactive_user
+
+        def work(_p: Any, _c: Any) -> bool:
+            if not enabled:
+                remove_maintenance(app.runner)
+                return True
+            return bool(user) and schedule_maintenance(app.runner, self_command(), user)
+
+        def done(ok: bool) -> None:
+            if not ok:
+                self.maintenance.set(False)
+                messagebox.showerror(
+                    "Mantenimiento mensual",
+                    "No se pudo programar la tarea. Revisa el log para ver el motivo.",
+                    parent=self,
+                )
+            self._save()
+
+        self.main.run_long(work, done, "Mantenimiento mensual")
 
     def _toggle_no_restore(self) -> None:
         if self.no_restore.get() and not messagebox.askyesno(

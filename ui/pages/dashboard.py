@@ -25,6 +25,7 @@ from core.metrics import (
 )
 from core.selection import Selection, SelectionError, load_selection
 from core.update_check import ReleaseInfo
+from core.watch import MaintenanceReport, MaintenanceStore
 from ui.pages.base import Page, show_error
 from ui.theme import (
     ACCENT,
@@ -70,6 +71,16 @@ def _fit_wrap(label: ctk.CTkLabel, card_width: int) -> None:
     label.configure(wraplength=max(int(card_width / scaling) - 2 * PAD - 8, 120))
 
 
+def describe_maintenance(report: MaintenanceReport) -> str:
+    when = report.when[:10]
+    if report.error:
+        return f"El mantenimiento del {when} no pudo limpiar: {report.error}"
+    text = f"Mantenimiento del {when}: {human_bytes(report.freed_bytes)} liberados."
+    if report.drift:
+        text += f" Windows ha deshecho {len(report.drift)} cambio(s): revísalos abajo."
+    return text
+
+
 class DashboardPage(Page):
     title = "Dashboard"
     subtitle = "Estado del equipo, recomendación y selección de perfil."
@@ -83,6 +94,7 @@ class DashboardPage(Page):
 
         self._build_env(body)
         self._build_update_banner(body)
+        self._build_watch(body)
         grid = ctk.CTkFrame(body, fg_color="transparent")
         grid.pack(fill="x", pady=PAD_S)
         self.cards = {
@@ -126,6 +138,69 @@ class DashboardPage(Page):
             width=150,
             command=lambda: webbrowser.open(self.update_url),
         ).pack(side="right", padx=PAD, pady=PAD)
+
+    def _build_watch(self, parent: Any) -> None:
+        """Avisos de vigilancia (programas nuevos, arranque más lento, mantenimiento)."""
+        self.watch_card = Card(parent)
+        self.watch_label = ctk.CTkLabel(
+            self.watch_card,
+            text="",
+            font=FONT_BODY,
+            wraplength=WRAP,
+            justify="left",
+            text_color=RISK_COLORS["medio"],
+        )
+        self.watch_label.pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
+        buttons = ctk.CTkFrame(self.watch_card, fg_color="transparent")
+        buttons.pack(anchor="w", padx=PAD, pady=(0, PAD))
+        self.watch_startup_btn = ctk.CTkButton(
+            buttons, text="Revisar en Inicio", width=160, command=lambda: self.main.show("startup")
+        )
+        ctk.CTkButton(
+            buttons,
+            text="Ver evolución",
+            width=140,
+            **SECONDARY_BUTTON,
+            command=lambda: self.main.show("evolution"),
+        ).pack(side="left", padx=(0, PAD_S))
+        ctk.CTkButton(
+            buttons, text="Entendido", width=110, **SECONDARY_BUTTON, command=self._dismiss_watch
+        ).pack(side="left")
+        report = MaintenanceStore().load()
+        if report and not report.seen:
+            self._show_watch_lines([describe_maintenance(report)], startup=bool(report.new_startup))
+
+    def show_watch(self, result: Any) -> None:
+        lines = []
+        if result.new_startup:
+            names = ", ".join(i.name for i in result.new_startup[:5])
+            lines.append(
+                f"Desde la última vez se han añadido al inicio de Windows: {names}. Cada programa "
+                "que arranca solo retrasa el encendido y ocupa memoria."
+            )
+        if result.trend:
+            trend = result.trend
+            cause = f" Coincide con: {', '.join(trend.causes[:3])}." if trend.causes else ""
+            lines.append(
+                f"El equipo arranca unos {trend.delta_ms / 1000:.0f} s más lento desde el "
+                f"{trend.since}.{cause}"
+            )
+        if lines:
+            current = self.watch_label.cget("text")
+            self._show_watch_lines(
+                ([current] if current else []) + lines, startup=bool(result.new_startup)
+            )
+
+    def _show_watch_lines(self, lines: list[str], startup: bool) -> None:
+        self.watch_label.configure(text="\n\n".join(lines))
+        if startup:
+            self.watch_startup_btn.pack(side="left", padx=(0, PAD_S))
+        self.watch_card.pack(fill="x", pady=(PAD_S, 0), after=self.env_card)
+
+    def _dismiss_watch(self) -> None:
+        MaintenanceStore().mark_seen()
+        self.watch_label.configure(text="")
+        self.watch_card.pack_forget()
 
     def show_update(self, info: ReleaseInfo) -> None:
         self.update_url = info.url
