@@ -89,7 +89,15 @@ def resolve_exe(name: str) -> str:
 
 
 class SubprocessRunner:
-    """Implementación real basada en subprocess."""
+    """Implementación real basada en subprocess.
+
+    `low_priority` lanza los procesos hijos por debajo de lo normal. Durante la detección del
+    arranque se desactiva: con la CPU ocupada (p. ej. Windows Update), una prioridad baja deja
+    esas consultas al final de la cola y el usuario espera más.
+    """
+
+    def __init__(self, low_priority: bool = True) -> None:
+        self.low_priority = low_priority
 
     def run(
         self, args: list[str], timeout: int = TIMEOUT_DEFAULT, encoding: str | None = None
@@ -99,7 +107,9 @@ class SubprocessRunner:
         log.debug("exec", extra={"cmd": args[0], "argv": args[1:]})
         kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
-            kwargs["creationflags"] = CREATE_NO_WINDOW | BELOW_NORMAL_PRIORITY_CLASS
+            kwargs["creationflags"] = CREATE_NO_WINDOW | (
+                BELOW_NORMAL_PRIORITY_CLASS if self.low_priority else 0
+            )
         try:
             proc = subprocess.run(
                 args,

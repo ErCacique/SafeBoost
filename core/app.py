@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from core.appx import AppxManager
@@ -37,16 +38,27 @@ def build_context(
     env: EnvironmentInfo | None = None,
     catalog: Catalog | None = None,
     warm_checks: bool = True,
+    defer_slow_checks: bool = False,
+    progress: Callable[[str], None] | None = None,
 ) -> AppContext:
     """Construye el contexto completo. Llamar desde un hilo de trabajo, nunca desde Tk:
-    detecta el entorno y ejecuta las comprobaciones de hardware (lentas)."""
+    detecta el entorno y ejecuta las comprobaciones de hardware.
+
+    La interfaz pasa defer_slow_checks=True y resuelve después las lentas con
+    engine.run_slow_checks(); la CLI y los tests las resuelven aquí, de forma síncrona.
+    """
+    say = progress or (lambda _m: None)
     settings = settings or Settings.load()
     runner = runner or SubprocessRunner()
+    # Prioridad normal mientras el usuario espera la ventana; baja después.
+    low = getattr(runner, "low_priority", None)
+    if low is not None:
+        runner.low_priority = False  # type: ignore[attr-defined]
     if backend is None:
         backend = WinRegBackend() if sys.platform == "win32" else MemoryRegistryBackend()
     base_registry = Registry(backend)
     if env is None:
-        env = EnvironmentDetector(base_registry, runner).detect()
+        env = EnvironmentDetector(base_registry, runner).detect(say)
     registry = Registry(backend, env.interactive_sid)
     services = ServiceManager(registry, runner)
     store = SessionStore()
@@ -62,8 +74,12 @@ def build_context(
         store=store,
         settings=settings,
     )
+    engine.defer_slow_checks = defer_slow_checks
     if warm_checks:
+        say("Comprobaciones de hardware")
         engine.warm_checks()
+    if low is not None:
+        runner.low_priority = low  # type: ignore[attr-defined]
     return AppContext(engine, env, runner, registry, settings, MetricsStore(), store)
 
 

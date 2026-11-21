@@ -174,7 +174,8 @@ class Catalog:
 
 # --------------------------------------------------------------------------- condiciones
 
-CheckResolver = Callable[[str], bool]
+# None = comprobación lenta aún en curso (la interfaz la resuelve en segundo plano).
+CheckResolver = Callable[[str], bool | None]
 
 
 def windows_reasons(tweak: Tweak, env: EnvironmentInfo) -> list[str]:
@@ -220,7 +221,9 @@ def condition_reasons(
         except Exception as exc:  # noqa: BLE001 - una comprobación rota no debe tumbar la UI
             reasons.append(f"comprobación {ref} falló: {exc}")
         else:
-            if not ok:
+            if ok is None:
+                reasons.append("comprobando compatibilidad (unos segundos)…")
+            elif not ok:
                 reasons.append("hardware o driver no compatible")
     return reasons
 

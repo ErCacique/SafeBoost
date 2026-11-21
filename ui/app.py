@@ -73,7 +73,7 @@ PAGES: list[tuple[str, str, type[Page]]] = [
 
 
 class MainWindow(ctk.CTk):
-    def __init__(self, builder: Callable[[], AppContext]) -> None:
+    def __init__(self, builder: Callable[[Callable[[str], None]], AppContext]) -> None:
         super().__init__()
         self.title(f"{WINDOW_TITLE} {APP_VERSION}")
         self.geometry(WINDOW_SIZE)
@@ -94,7 +94,19 @@ class MainWindow(ctk.CTk):
             font=FONT_H2,
         )
         self.loading.pack(expand=True)
-        BackgroundTask(self, lambda _p, _c: builder(), self._build, self._fatal).start()
+        self.loading_step = ctk.CTkLabel(self, text="", font=FONT_BODY, text_color=TEXT_MUTED)
+        self.loading_step.pack(pady=(0, PAD * 4))
+        BackgroundTask(
+            self,
+            lambda progress, _c: builder(lambda step: progress(0.0, step)),
+            self._build,
+            self._fatal,
+            self._loading_progress,
+        ).start()
+
+    def _loading_progress(self, _fraction: float, step: str) -> None:
+        if self.loading_step.winfo_exists():
+            self.loading_step.configure(text=f"{step}…")
 
     # ================================================================== construcción
 
@@ -105,6 +117,7 @@ class MainWindow(ctk.CTk):
 
     def _build(self, app: AppContext) -> None:
         self.loading.destroy()
+        self.loading_step.destroy()
         self.ui = UiState(app)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -147,6 +160,20 @@ class MainWindow(ctk.CTk):
         if app.settings.first_run:
             self.after(400, self.show_welcome)
         self._check_updates()
+        self._run_slow_checks()
+
+    def _run_slow_checks(self) -> None:
+        """Comprobaciones lentas (dxdiag para HAGS) con la ventana ya abierta; al terminar se
+        refrescan las páginas para que el tweak afectado aparezca con su estado real."""
+        if self.ui is None:
+            return
+        engine = self.ui.app.engine
+
+        def done(resolved: list[str]) -> None:
+            if resolved:
+                self.invalidate_detections()
+
+        BackgroundTask(self, lambda _p, _c: engine.run_slow_checks(), done, lambda _e: None).start()
 
     def show_welcome(self, on_done: Callable[[], None] | None = None) -> None:
         if self.ui is None:

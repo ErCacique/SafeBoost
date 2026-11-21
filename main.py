@@ -12,6 +12,7 @@ import ctypes
 import logging
 import subprocess
 import sys
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from core.constants import APP_NAME, APP_VERSION
@@ -273,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
     ctk.set_appearance_mode(settings.appearance)
     ctk.set_default_color_theme(COLOR_THEME)
 
-    def builder() -> AppContext:
+    def builder(progress: Callable[[str], None]) -> AppContext:
         if args.demo:
             from core.demo import DemoRunner, demo_environment, demo_registry
 
@@ -282,8 +283,10 @@ def main(argv: list[str] | None = None) -> int:
                 backend=(demo_backend := demo_registry()),
                 runner=DemoRunner(demo_backend),
                 env=demo_environment(),
+                defer_slow_checks=True,
+                progress=progress,
             )
-        return build_context(settings=settings)
+        return build_context(settings=settings, defer_slow_checks=True, progress=progress)
 
     window = MainWindow(builder)
     window.mainloop()
