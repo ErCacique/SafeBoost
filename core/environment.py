@@ -15,7 +15,10 @@ from core.constants import (
     LAPTOP_CHASSIS_TYPES,
     MIN_BUILD_WIN10,
     MIN_BUILD_WIN11,
+    UPDATE_STALE_DAYS,
     VIRTUAL_PRINTER_MARKERS,
+    WIN10_END_OF_SUPPORT,
+    WU_REBOOT_KEYS,
 )
 from core.logger import get_logger
 from core.process import CommandError, Runner, as_list, ps_quote, resolve_exe
@@ -51,6 +54,8 @@ class EnvironmentInfo:
     interactive_sid: str | None = None
     elevated_user: str = ""
     is_admin: bool = False
+    reboot_pending: bool = False
+    last_update_days: int | None = None
     warnings: list[str] = field(default_factory=list)
 
     @property
@@ -107,6 +112,7 @@ class EnvironmentDetector:
             self._mdm,
             self._printers,
             self._drives,
+            self._updates,
         ):
             try:
                 step(env)
@@ -134,6 +140,12 @@ class EnvironmentDetector:
             env.warnings.append(
                 f"Build {env.build} no soportada (mínimo {MIN_BUILD_WIN10}, Windows 10 22H2). "
                 "Actualiza Windows: hasta entonces SafeTrim solo puede simular."
+            )
+        if MIN_BUILD_WIN10 <= env.build < MIN_BUILD_WIN11:
+            env.warnings.append(
+                f"Windows 10 dejó de recibir parches de seguridad gratuitos el "
+                f"{WIN10_END_OF_SUPPORT}. Mira en Diagnóstico si este equipo puede pasar a "
+                "Windows 11."
             )
         if env.edition == "unknown":
             env.warnings.append(
@@ -240,3 +252,50 @@ class EnvironmentDetector:
             if "fixed" in part.opts.split(",") and len(letter) == 2 and letter.endswith(":"):
                 drives.append(letter)
         env.fixed_drives = sorted(set(drives))
+
+    def _updates(self, env: EnvironmentInfo) -> None:
+        status = read_update_status(self.registry, self.runner)
+        env.reboot_pending = status.reboot_pending
+        env.last_update_days = status.last_update_days
+        env.warnings.extend(status.warnings())
+
+
+@dataclass
+class UpdateStatus:
+    reboot_pending: bool = False
+    last_update_days: int | None = None
+
+    @property
+    def stale(self) -> bool:
+        return self.last_update_days is not None and self.last_update_days > UPDATE_STALE_DAYS
+
+    def warnings(self) -> list[str]:
+        out = []
+        if self.reboot_pending:
+            out.append("Windows Update tiene un reinicio pendiente: reinicia antes de optimizar.")
+        if self.stale:
+            out.append(
+                f"La última actualización de Windows se instaló hace {self.last_update_days} "
+                "días: ejecuta Windows Update antes de optimizar."
+            )
+        return out
+
+
+def read_update_status(registry: Registry, runner: Runner) -> UpdateStatus:
+    """Reinicio pendiente (claves del registro) y días desde la última actualización instalada."""
+    status = UpdateStatus(
+        reboot_pending=any(registry.key_exists("HKLM", key) for key in WU_REBOOT_KEYS)
+    )
+    try:
+        days = runner.powershell_json(
+            "$h = Get-HotFix | Where-Object InstalledOn | Sort-Object InstalledOn -Descending"
+            " | Select-Object -First 1;"
+            "$d = if ($h) { [int]((Get-Date) - $h.InstalledOn).TotalDays } else { $null };"
+            "$d | ConvertTo-Json -Compress"
+        )
+    except CommandError as exc:
+        log.warning("hotfix_query_failed", extra={"err": str(exc)})
+        days = None
+    if isinstance(days, int | float) and days >= 0:
+        status.last_update_days = int(days)
+    return status

@@ -22,9 +22,11 @@ from core.metrics import (
     take_snapshot,
 )
 from core.session import Session
-from ui.dialogs import ReviewDialog, SummaryDialog
+from core.update_check import ReleaseInfo, check_latest
+from ui.dialogs import ReviewDialog, SummaryDialog, WelcomeWizard
 from ui.pages.base import Page, show_error
 from ui.pages.dashboard import DashboardPage
+from ui.pages.diagnostics_page import DiagnosticsPage
 from ui.pages.history import HistoryPage
 from ui.pages.settings_page import SettingsPage
 from ui.pages.startup_page import StartupPage
@@ -59,6 +61,7 @@ log = get_logger("ui")
 
 PAGES: list[tuple[str, str, type[Page]]] = [
     ("dashboard", "Dashboard", DashboardPage),
+    ("diagnostics", "Diagnóstico", DiagnosticsPage),
     ("bloatware", "Bloatware", BloatwarePage),
     ("startup", "Inicio", StartupPage),
     ("services", "Servicios", ServicesPage),
@@ -141,6 +144,45 @@ class MainWindow(ctk.CTk):
         self.ui.subscribe(self.refresh_action_bar)
         self.refresh_action_bar()
         self.show("dashboard")
+        if app.settings.first_run:
+            self.after(400, self.show_welcome)
+        self._check_updates()
+
+    def show_welcome(self, on_done: Callable[[], None] | None = None) -> None:
+        if self.ui is None:
+            return
+        app = self.ui.app
+        if not app.env.supported:
+            why = "Este Windows no está soportado: SafeTrim solo puede simular."
+        elif not app.env.is_admin:
+            why = "Sin permisos de administrador: solo se puede simular."
+        else:
+            why = ""
+
+        def done(go_real: bool) -> None:
+            app.settings.first_run = False
+            if go_real:
+                app.settings.dry_run = False
+            try:
+                app.settings.save()
+            except OSError as exc:
+                log.warning("settings_save_failed", extra={"err": str(exc)})
+            self.refresh_action_bar()
+            if on_done is not None:
+                on_done()
+
+        WelcomeWizard(self, can_go_real=not why, why_not=why, on_done=done)
+
+    def _check_updates(self) -> None:
+        if self.ui is None or not self.ui.app.settings.check_updates:
+            return
+
+        def done(info: ReleaseInfo | None) -> None:
+            page = self.pages.get("dashboard")
+            if info is not None and isinstance(page, DashboardPage):
+                page.show_update(info)
+
+        BackgroundTask(self, lambda _p, _c: check_latest(), done, lambda _e: None).start()
 
     def _build_action_bar(self) -> None:
         bar = ctk.CTkFrame(self, corner_radius=0)

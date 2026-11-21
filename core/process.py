@@ -6,16 +6,29 @@ import json
 import shutil
 import subprocess
 import sys
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from core.constants import POWERSHELL_EXE, SYSTEM32, TIMEOUT_DEFAULT, TIMEOUT_POWERSHELL
+from core.constants import (
+    POWERSHELL_EXE,
+    POWERSHELL_MAX_CONCURRENT,
+    SYSTEM32,
+    TIMEOUT_DEFAULT,
+    TIMEOUT_POWERSHELL,
+)
 from core.logger import get_logger
 
 log = get_logger("process")
 
 CREATE_NO_WINDOW = 0x08000000
+# Los procesos hijos (PowerShell, sc, reg...) no compiten con la interfaz ni con lo que el
+# usuario esté haciendo: en un equipo flojo, la diferencia entre "va a tirones" y "va bien".
+BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
+
+# Compartido por todos los SubprocessRunner: el límite es del equipo, no de cada instancia.
+_POWERSHELL_SLOTS = threading.BoundedSemaphore(POWERSHELL_MAX_CONCURRENT)
 
 # Las herramientas de consola de Windows escriben en la página de códigos OEM (p. ej. cp850).
 _CONSOLE_ENCODING = "oem" if sys.platform == "win32" else "utf-8"
@@ -86,7 +99,7 @@ class SubprocessRunner:
         log.debug("exec", extra={"cmd": args[0], "argv": args[1:]})
         kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
-            kwargs["creationflags"] = CREATE_NO_WINDOW
+            kwargs["creationflags"] = CREATE_NO_WINDOW | BELOW_NORMAL_PRIORITY_CLASS
         try:
             proc = subprocess.run(
                 args,
@@ -120,7 +133,8 @@ class SubprocessRunner:
             "-Command",
             _PS_PRELUDE + script,
         ]
-        return self.run(args, timeout=timeout, encoding="utf-8")
+        with _POWERSHELL_SLOTS:
+            return self.run(args, timeout=timeout, encoding="utf-8")
 
     def powershell_json(self, script: str, timeout: int = TIMEOUT_POWERSHELL) -> Any:
         """Ejecuta script y parsea la salida como JSON (el script debe acabar en ConvertTo-Json)."""

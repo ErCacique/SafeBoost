@@ -14,6 +14,7 @@ import psutil
 from core.constants import (
     BOOT_EVENT_ID,
     DIAG_PERF_LOG,
+    LOW_RAM_GIB,
     METRICS_DIR,
     POST_REBOOT_DELAY,
     POST_REBOOT_TASK_NAME,
@@ -207,6 +208,18 @@ def recommend_profile(env: EnvironmentInfo, snap: Snapshot) -> tuple[int | None,
     """Perfil recomendado y motivo; None si en este Windows no se debe aplicar ninguno."""
     if not env.supported:
         return None, "Actualiza Windows antes de optimizar: esta versión no está soportada."
+    if env.reboot_pending:
+        return None, "Windows Update tiene un reinicio pendiente: reinicia antes de optimizar."
+    level, why = _base_recommendation(env, snap)
+    if snap.ram_total < LOW_RAM_GIB * GIB:
+        why += (
+            f" Con {human_bytes(snap.ram_total)} de RAM los perfiles ayudan poco: lo que más se "
+            "nota es ampliar memoria (mira Diagnóstico)."
+        )
+    return level, why
+
+
+def _base_recommendation(env: EnvironmentInfo, snap: Snapshot) -> tuple[int, str]:
     if env.managed:
         return 1, "Equipo gestionado por la empresa: solo cambios conservadores."
     low_ram = snap.ram_total < RECOMMEND_LOW_RAM_GIB * GIB

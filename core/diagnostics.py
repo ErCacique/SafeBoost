@@ -1,0 +1,421 @@
+"""Diagnóstico de "¿por qué va lento?": procesos, hardware, actualizaciones y Windows 11.
+
+Solo lee. El veredicto (`analyze`) es una función pura sobre el informe para poder probarlo sin
+Windows; la recogida de datos (`collect`) usa psutil y una única consulta de PowerShell.
+"""
+
+from __future__ import annotations
+
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Literal
+
+import psutil
+
+from core.constants import (
+    DIAG_CPU_BUSY_PERCENT,
+    DIAG_LOW_DISK_FREE_PERCENT,
+    DIAG_PROCESS_HOG_PERCENT,
+    DIAG_RAM_PRESSURE_PERCENT,
+    DIAG_SAMPLE_SECONDS,
+    DIAG_TOP_PROCESSES,
+    DIAG_WEAK_CPU_THREADS,
+    KNOWN_PROCESSES,
+    LOW_RAM_GIB,
+    MIN_BUILD_WIN11,
+    WIN10_END_OF_SUPPORT,
+    WIN11_MIN_RAM_GIB,
+    WIN11_MIN_STORAGE_GIB,
+)
+from core.environment import EnvironmentInfo, UpdateStatus, read_update_status
+from core.logger import get_logger
+from core.metrics import GIB, Snapshot, human_bytes, take_snapshot
+from core.process import CommandError, Runner, as_list
+from core.registry import Registry
+
+log = get_logger("diagnostics")
+
+Level = Literal["critical", "warning", "info", "ok"]
+_LEVEL_ORDER: dict[str, int] = {"critical": 0, "warning": 1, "info": 2, "ok": 3}
+
+# Win32_PhysicalMemoryArray.Use = 3 → memoria del sistema (no caché ni vídeo).
+_HARDWARE_SCRIPT = (
+    "$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1;"
+    "$arr = @(Get-CimInstance Win32_PhysicalMemoryArray | Where-Object { $_.Use -eq 3 });"
+    "$mods = @(Get-CimInstance Win32_PhysicalMemory | ForEach-Object { [int64]$_.Capacity });"
+    "$tpm = try { [string](Get-CimInstance -Namespace root/cimv2/security/microsofttpm"
+    " -ClassName Win32_Tpm -ErrorAction Stop).SpecVersion } catch { $null };"
+    "$sb = try { [bool](Confirm-SecureBootUEFI -ErrorAction Stop) } catch { $null };"
+    "@{cpu=[string]$cpu.Name; cores=[int]$cpu.NumberOfCores;"
+    " threads=[int]$cpu.NumberOfLogicalProcessors; mhz=[int]$cpu.MaxClockSpeed;"
+    " slots=[int](($arr | Measure-Object -Property MemoryDevices -Sum).Sum);"
+    " max_kb=[int64](($arr | Measure-Object -Property MaxCapacityEx -Sum).Sum);"
+    " modules=$mods; tpm=$tpm; secure_boot=$sb; firmware=[string]$env:firmware_type}"
+    " | ConvertTo-Json -Compress"
+)
+
+
+@dataclass
+class HardwareInfo:
+    cpu_name: str = ""
+    cores: int = 0
+    threads: int = 0
+    mhz: int = 0
+    slots: int = 0
+    modules: list[int] = field(default_factory=list)  # bytes por módulo instalado
+    max_capacity: int = 0  # bytes; 0 = desconocido
+    tpm_version: str = ""
+    secure_boot: bool | None = None
+    firmware: str = ""  # "UEFI" / "Legacy" / ""
+
+    @property
+    def installed_ram(self) -> int:
+        return sum(self.modules)
+
+    @property
+    def free_slots(self) -> int | None:
+        if not self.slots or not self.modules:
+            return None
+        return max(self.slots - len(self.modules), 0)
+
+    @property
+    def tpm2(self) -> bool | None:
+        if not self.tpm_version:
+            return None
+        return self.tpm_version.strip().startswith("2.")
+
+
+@dataclass
+class ProcessUsage:
+    name: str
+    cpu_percent: float  # porcentaje del total del equipo (todas las CPU = 100 %)
+    memory: int
+    count: int = 1
+
+    @property
+    def hint(self) -> str:
+        return KNOWN_PROCESSES.get(self.name.lower(), "")
+
+
+@dataclass
+class Requirement:
+    name: str
+    ok: bool | None  # None = no se pudo comprobar
+    detail: str
+
+
+@dataclass
+class Finding:
+    level: Level
+    title: str
+    detail: str
+
+
+@dataclass
+class DiagnosticReport:
+    env: EnvironmentInfo
+    snapshot: Snapshot
+    disk_total: int
+    top_cpu: list[ProcessUsage]
+    top_memory: list[ProcessUsage]
+    hardware: HardwareInfo | None
+    updates: UpdateStatus
+    win11: list[Requirement] = field(default_factory=list)
+    findings: list[Finding] = field(default_factory=list)
+
+    @property
+    def ram_installed(self) -> int:
+        """RAM física instalada si se conoce; si no, la que ve Windows (algo menor)."""
+        if self.hardware and self.hardware.installed_ram:
+            return self.hardware.installed_ram
+        return self.snapshot.ram_total
+
+
+# --------------------------------------------------------------------------- recogida
+
+
+def sample_processes(
+    interval: float = DIAG_SAMPLE_SECONDS, sleep: Callable[[float], None] = time.sleep
+) -> list[ProcessUsage]:
+    """Uso de CPU medido durante `interval` y memoria, agrupados por nombre de ejecutable
+    (un navegador con 15 procesos cuenta como uno)."""
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.pid == 0:  # "System Idle Process"
+            continue
+        try:
+            proc.cpu_percent(None)
+            procs.append(proc)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    sleep(interval)
+    cpus = psutil.cpu_count() or 1
+    grouped: dict[str, ProcessUsage] = {}
+    for proc in procs:
+        try:
+            name = proc.info.get("name") or f"pid {proc.pid}"
+            cpu = proc.cpu_percent(None) / cpus
+            mem = proc.memory_info().rss
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+        usage = grouped.get(name.lower())
+        if usage is None:
+            grouped[name.lower()] = ProcessUsage(name, cpu, mem)
+        else:
+            usage.cpu_percent += cpu
+            usage.memory += mem
+            usage.count += 1
+    return list(grouped.values())
+
+
+def read_hardware(runner: Runner) -> HardwareInfo | None:
+    try:
+        data = runner.powershell_json(_HARDWARE_SCRIPT)
+    except CommandError as exc:
+        log.warning("hardware_query_failed", extra={"err": str(exc)})
+        return None
+    if not isinstance(data, dict):
+        return None
+    secure_boot = data.get("secure_boot")
+    return HardwareInfo(
+        cpu_name=str(data.get("cpu") or "").strip(),
+        cores=int(data.get("cores") or 0),
+        threads=int(data.get("threads") or 0),
+        mhz=int(data.get("mhz") or 0),
+        slots=int(data.get("slots") or 0),
+        modules=[int(m) for m in as_list(data.get("modules")) if m],
+        max_capacity=int(data.get("max_kb") or 0) * 1024,
+        tpm_version=str(data.get("tpm") or ""),
+        secure_boot=secure_boot if isinstance(secure_boot, bool) else None,
+        firmware=str(data.get("firmware") or ""),
+    )
+
+
+def collect(
+    env: EnvironmentInfo,
+    registry: Registry,
+    runner: Runner,
+    sampler: Callable[[], list[ProcessUsage]] = sample_processes,
+) -> DiagnosticReport:
+    """Recoge todo el informe (~2-5 s). Llamar desde un hilo de trabajo."""
+    processes = sampler()
+    snapshot = take_snapshot(env.system_drive, cpu_interval=0)
+    # La CPU del equipo durante el muestreo: la suma por proceso es más fiable que una
+    # lectura instantánea, que justo después de muestrear tiende a dar 0.
+    snapshot.cpu_percent = min(100.0, sum(p.cpu_percent for p in processes))
+    hardware = read_hardware(runner)
+    report = DiagnosticReport(
+        env=env,
+        snapshot=snapshot,
+        disk_total=snapshot.disk_total,
+        top_cpu=sorted(processes, key=lambda p: p.cpu_percent, reverse=True)[:DIAG_TOP_PROCESSES],
+        top_memory=sorted(processes, key=lambda p: p.memory, reverse=True)[:DIAG_TOP_PROCESSES],
+        hardware=hardware,
+        updates=read_update_status(registry, runner),
+    )
+    report.win11 = win11_requirements(report)
+    report.findings = analyze(report)
+    return report
+
+
+# --------------------------------------------------------------------------- Windows 11
+
+
+def win11_requirements(report: DiagnosticReport) -> list[Requirement]:
+    """Requisitos mínimos de Windows 11 que se pueden comprobar sin herramientas de Microsoft."""
+    hw = report.hardware
+    ram_gib = report.ram_installed / GIB
+    # Con los módulos leídos la cifra es exacta. Sin ellos solo se sabe lo que ve Windows, que
+    # descuenta la memoria reservada (un equipo de 4 GB muestra ~3.8 GiB): margen de 0.5 GiB.
+    margin = 0.01 if hw and hw.installed_ram else 0.5
+    reqs = [
+        Requirement(
+            "Memoria RAM",
+            ram_gib >= WIN11_MIN_RAM_GIB - margin,
+            f"{human_bytes(report.ram_installed)} (mínimo {WIN11_MIN_RAM_GIB} GB)",
+        ),
+        Requirement(
+            "Disco del sistema",
+            report.disk_total / GIB >= WIN11_MIN_STORAGE_GIB * 0.93,  # 64 GB ≈ 59.6 GiB
+            f"{human_bytes(report.disk_total)} (mínimo {WIN11_MIN_STORAGE_GIB} GB)",
+        ),
+    ]
+    if hw is None:
+        reqs.append(Requirement("TPM 2.0 y arranque seguro", None, "No se pudo consultar"))
+    else:
+        reqs.append(
+            Requirement(
+                "TPM 2.0",
+                hw.tpm2,
+                f"Versión {hw.tpm_version.split(',')[0]}" if hw.tpm_version else "No detectado",
+            )
+        )
+        uefi = hw.firmware.upper() == "UEFI" if hw.firmware else None
+        reqs.append(
+            Requirement(
+                "Arranque UEFI con arranque seguro",
+                uefi,  # Windows 11 exige UEFI con arranque seguro "disponible", no activado
+                "BIOS antigua (Legacy)"
+                if uefi is False
+                else "UEFI, arranque seguro "
+                + {True: "activado", False: "desactivado (se puede activar en la BIOS)", None: "?"}[
+                    hw.secure_boot
+                ],
+            )
+        )
+    reqs.append(
+        Requirement(
+            "Procesador compatible",
+            None,
+            "Microsoft mantiene una lista de modelos: compruébalo con la app "
+            "“Comprobación de estado del PC”.",
+        )
+    )
+    return reqs
+
+
+# --------------------------------------------------------------------------- veredicto
+
+
+def analyze(report: DiagnosticReport) -> list[Finding]:
+    """Convierte las medidas en hallazgos ordenados por gravedad, en lenguaje claro."""
+    findings: list[Finding] = []
+    snap = report.snapshot
+    hw = report.hardware
+    ram = report.ram_installed
+
+    if ram < LOW_RAM_GIB * GIB:
+        findings.append(Finding("critical", "Poca memoria RAM", _ram_advice(ram, hw)))
+    elif snap.ram_percent >= DIAG_RAM_PRESSURE_PERCENT:
+        hog = report.top_memory[0] if report.top_memory else None
+        detail = (
+            f"La RAM está al {snap.ram_percent:.0f} %. Windows usa el disco como memoria y "
+            "va a tirones."
+        )
+        if hog:
+            detail += f" Lo que más ocupa: {_describe(hog, memory=True)}."
+        findings.append(Finding("warning", "Memoria casi llena", detail))
+
+    if report.updates.reboot_pending:
+        findings.append(
+            Finding(
+                "warning",
+                "Reinicio pendiente de Windows Update",
+                "Windows tiene actualizaciones a medio instalar. Reinicia antes de optimizar o "
+                "de medir el rendimiento.",
+            )
+        )
+    elif report.updates.stale:
+        findings.append(
+            Finding(
+                "warning",
+                "Windows sin actualizar",
+                f"La última actualización se instaló hace {report.updates.last_update_days} "
+                "días. Ejecuta Windows Update hasta que diga “Estás al día”.",
+            )
+        )
+
+    busy = snap.cpu_percent >= DIAG_CPU_BUSY_PERCENT
+    top = report.top_cpu[0] if report.top_cpu else None
+    if top and top.cpu_percent >= DIAG_PROCESS_HOG_PERCENT:
+        detail = f"{_describe(top)} está usando el {top.cpu_percent:.0f} % del procesador."
+        if top.hint:
+            detail += f" {top.hint}"
+        findings.append(Finding("warning" if busy else "info", "Proceso acaparando la CPU", detail))
+    elif busy:
+        findings.append(
+            Finding(
+                "warning",
+                "Procesador saturado",
+                f"La CPU está al {snap.cpu_percent:.0f} % repartida entre muchos procesos.",
+            )
+        )
+
+    if hw and 0 < hw.threads <= DIAG_WEAK_CPU_THREADS:
+        findings.append(
+            Finding(
+                "info",
+                "Procesador modesto",
+                f"{hw.cpu_name or 'El procesador'} tiene {hw.threads} hilos: con varias cosas "
+                "abiertas a la vez se queda corto. No se puede mejorar con ajustes.",
+            )
+        )
+
+    if report.env.disk_type == "hdd":
+        findings.append(
+            Finding(
+                "warning",
+                "Disco mecánico (HDD)",
+                "Cambiar el disco del sistema por un SSD es la mejora más notable en un equipo "
+                "con disco duro: arranque y apertura de programas varias veces más rápidos.",
+            )
+        )
+    free_pct = snap.disk_free / snap.disk_total * 100 if snap.disk_total else 100
+    if free_pct < DIAG_LOW_DISK_FREE_PERCENT:
+        findings.append(
+            Finding(
+                "warning",
+                "Poco espacio en disco",
+                f"Quedan {human_bytes(snap.disk_free)} libres ({free_pct:.0f} %). Windows "
+                "necesita espacio para actualizarse y para la memoria virtual: usa Limpieza.",
+            )
+        )
+
+    if MIN_BUILD_WIN11 > report.env.build >= 1:
+        ready = [r.ok for r in report.win11]
+        verdict = (
+            "No cumple los requisitos de Windows 11"
+            if False in ready
+            else "Puede que admita Windows 11 (revisa la lista de requisitos)"
+        )
+        findings.append(
+            Finding(
+                "info",
+                "Windows 10 sin soporte",
+                f"Windows 10 dejó de recibir parches gratuitos el {WIN10_END_OF_SUPPORT}. "
+                f"{verdict}.",
+            )
+        )
+
+    if not any(f.level in ("critical", "warning") for f in findings):
+        findings.insert(
+            0,
+            Finding(
+                "ok",
+                "No hay un cuello de botella claro",
+                "Memoria, procesador y disco tienen margen. Si notas lentitud en un momento "
+                "concreto, vuelve a analizar justo entonces.",
+            ),
+        )
+    findings.sort(key=lambda f: _LEVEL_ORDER[f.level])
+    return findings
+
+
+def _ram_advice(ram: int, hw: HardwareInfo | None) -> str:
+    text = (
+        f"El equipo tiene {human_bytes(ram)}. Windows y un navegador ya la llenan, y entonces "
+        "usa el disco como memoria. Ningún perfil de SafeTrim sustituye a ampliar memoria."
+    )
+    if hw is None or hw.free_slots is None:
+        return text + " Ampliar a 8 GB es la mejora que más se notaría."
+    if hw.free_slots > 0:
+        text += (
+            f" Tiene {hw.free_slots} ranura(s) libre(s): añadir un módulo de 4 u 8 GB es la "
+            "mejora que más se notaría."
+        )
+    else:
+        text += (
+            f" Las {hw.slots} ranura(s) están ocupadas: habría que sustituir un módulo por "
+            "otro mayor."
+        )
+    if hw.max_capacity:
+        text += f" La placa admite hasta {human_bytes(hw.max_capacity)}."
+    return text
+
+
+def _describe(proc: ProcessUsage, memory: bool = False) -> str:
+    many = f" ({proc.count} procesos)" if proc.count > 1 else ""
+    if memory:
+        return f"{proc.name}{many}, {human_bytes(proc.memory)}"
+    return f"{proc.name}{many}"

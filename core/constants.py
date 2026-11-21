@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeTrim"
-APP_VERSION: Final = "0.3.1"
+APP_VERSION: Final = "0.4.0"
 APP_ID: Final = "ErCacique.SafeTrim"
 
 # --------------------------------------------------------------------------- rutas
@@ -79,6 +79,8 @@ POWERSHELL_EXE: Final = SYSTEM32 / "WindowsPowerShell" / "v1.0" / "powershell.ex
 ALLOWED_COMMAND_EXES: Final[dict[str, Path]] = {
     "powercfg": SYSTEM32 / "powercfg.exe",
     "netsh": SYSTEM32 / "netsh.exe",
+    # Liberador de espacio: solo con el perfil /sagerun que prepara tweaks.cleanup (Windows.old).
+    "cleanmgr": SYSTEM32 / "cleanmgr.exe",
 }
 
 # --------------------------------------------------------------------------- logging
@@ -283,6 +285,13 @@ CLEAN_WU_MIN_AGE_DAYS: Final = 10
 CLEAN_PREFETCH_MIN_AGE_DAYS: Final = 90
 # Por debajo de este tamaño una limpieza se considera ya hecha.
 CLEAN_NEGLIGIBLE_BYTES: Final = 1024 * 1024
+# Windows permite volver a la versión anterior durante 10 días tras una actualización grande.
+WINDOWS_OLD_ROLLBACK_DAYS: Final = 10
+CLEANMGR_PROFILE: Final = 42  # /sagerun:42 → valor StateFlags0042
+CLEANMGR_PREVIOUS_INSTALLS_KEY: Final = (
+    r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Previous Installations"
+)
+TIMEOUT_CLEANMGR: Final = 1800
 
 # --------------------------------------------------------------------------- energía
 
@@ -324,3 +333,78 @@ BOOT_DEGRADATION_EVENT_ID: Final = 101
 # Umbrales para recomendar perfil (RAM en GiB).
 RECOMMEND_LOW_RAM_GIB: Final = 8
 RECOMMEND_HIGH_PROC_COUNT: Final = 200
+# Por debajo de esta RAM (GiB) ningún perfil sustituye a ampliar memoria. 5 deja dentro los
+# equipos de 4 GB, que psutil ve como ~3.8 GiB, y fuera los de 6 GB.
+LOW_RAM_GIB: Final = 5
+
+# --------------------------------------------------------------------------- diagnóstico
+
+DIAG_SAMPLE_SECONDS: Final = 1.5
+DIAG_TOP_PROCESSES: Final = 5
+DIAG_RAM_PRESSURE_PERCENT: Final = 85
+DIAG_CPU_BUSY_PERCENT: Final = 80
+DIAG_PROCESS_HOG_PERCENT: Final = 25
+DIAG_LOW_DISK_FREE_PERCENT: Final = 10
+DIAG_WEAK_CPU_THREADS: Final = 2
+
+# Procesos de Windows y programas comunes → explicación en lenguaje claro (nombre en minúsculas).
+_WU_HINT = "Windows Update instalando o preparando actualizaciones: déjalo terminar y reinicia."
+_SEARCH_HINT = "La búsqueda de Windows indexando archivos. Se calma sola al terminar."
+_DEFENDER_HINT = "Windows Defender analizando archivos. Es normal unos minutos; no lo desactives."
+_BROWSER_HINT = "Navegador: cada pestaña abierta consume memoria. Cierra las que no uses."
+KNOWN_PROCESSES: Final[dict[str, str]] = {
+    "msmpeng.exe": _DEFENDER_HINT,
+    "mpdefendercoreservice.exe": _DEFENDER_HINT,
+    "tiworker.exe": _WU_HINT,
+    "trustedinstaller.exe": _WU_HINT,
+    "mousocoreworker.exe": _WU_HINT,
+    "wuauclt.exe": _WU_HINT,
+    "usoclient.exe": _WU_HINT,
+    "sihclient.exe": _WU_HINT,
+    "searchindexer.exe": _SEARCH_HINT,
+    "searchprotocolhost.exe": _SEARCH_HINT,
+    "searchfilterhost.exe": _SEARCH_HINT,
+    "compattelrunner.exe": (
+        "Telemetría de compatibilidad de Windows. El perfil 1 desactiva su tarea."
+    ),
+    "memory compression": (
+        "Windows está comprimiendo memoria porque se queda sin RAM: síntoma de RAM insuficiente."
+    ),
+    "svchost.exe": (
+        "Servicios de Windows agrupados. Si es alto mucho rato, suele ser Windows Update."
+    ),
+    "dwm.exe": "Gestor de ventanas de Windows (dibuja la pantalla).",
+    "onedrive.exe": "OneDrive sincronizando archivos.",
+    "chrome.exe": _BROWSER_HINT,
+    "msedge.exe": _BROWSER_HINT,
+    "firefox.exe": _BROWSER_HINT,
+    "opera.exe": _BROWSER_HINT,
+    "brave.exe": _BROWSER_HINT,
+    "safetrim.exe": "SafeTrim (este programa).",
+}
+
+# --------------------------------------------------------------------------- Windows Update
+
+# Cualquiera de estas claves presente = hay un reinicio pendiente de actualizaciones.
+WU_REBOOT_KEYS: Final = (
+    r"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired",
+    r"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending",
+)
+UPDATE_STALE_DAYS: Final = 60
+
+# --------------------------------------------------------------------------- Windows 10/11
+
+WIN10_END_OF_SUPPORT: Final = "14 de octubre de 2025"
+WIN11_MIN_RAM_GIB: Final = 4
+WIN11_MIN_STORAGE_GIB: Final = 64
+
+# --------------------------------------------------------------------------- versión nueva
+
+UPDATE_REPO: Final = "ErCacique/WinOpt"
+UPDATE_API_URL: Final = f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"
+UPDATE_CHECK_TIMEOUT: Final = 5
+
+# --------------------------------------------------------------------------- procesos externos
+
+# En equipos flojos, varias PowerShell a la vez saturan la CPU: se lanzan de una en una.
+POWERSHELL_MAX_CONCURRENT: Final = 1

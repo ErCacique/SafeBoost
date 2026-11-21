@@ -23,6 +23,8 @@ class Settings:
     appearance: str = "dark"
     log_level: str = "INFO"
     first_run: bool = True
+    # Una petición a la API de Releases de GitHub al arrancar; nada más sale del equipo.
+    check_updates: bool = True
 
     @classmethod
     def load(cls, path: Path = SETTINGS_FILE) -> Settings:
