@@ -253,3 +253,38 @@ def test_undo_all_flag_is_parsed() -> None:
     import main
 
     assert main._parse_args(["--undo-all", "--yes"]).undo_all is True
+
+
+def test_boot_log_missing_is_reported_as_unavailable() -> None:
+    boot = aggregate({"available": False, "boots": 0, "items": []})
+    assert boot.available is False and boot.error == ""
+
+
+def test_boot_culprit_accepts_file_name_field_and_full_paths() -> None:
+    boot = aggregate(
+        {
+            "boots": 2,
+            "items": [
+                {"id": 101, "file_name": r"C:\Apps\Lento.exe", "degradation": "5000"},
+                {"id": 101, "name": r"C:\Apps\lento.exe", "degradation": "3000"},
+            ],
+        }
+    )
+    assert len(boot.culprits) == 1
+    assert boot.culprits[0].file == "Lento.exe" and boot.culprits[0].count == 2
+
+
+def test_boot_script_survives_missing_log() -> None:
+    from core.boot import _script
+
+    script = _script(60)
+    assert "-ListLog" in script and "IsEnabled" in script
+    assert script.count("catch") >= 2  # cada Get-WinEvent en su try/catch
+
+
+def test_boot_query_failure_keeps_error_text() -> None:
+    class Broken(FakeRunner):
+        def powershell_json(self, script: str, timeout: int = 120) -> Any:
+            raise CommandError("PowerShell falló: algo")
+
+    assert "algo" in read_boot_culprits(Broken()).error

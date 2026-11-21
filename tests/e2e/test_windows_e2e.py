@@ -123,8 +123,13 @@ def test_read_only_queries_on_real_windows() -> None:
     assert hardware.details.cpu_perf is not None, "la clase de rendimiento del procesador falló"
 
     boot = read_boot_culprits(runner)
-    print(f"Arranque: disponible={boot.available} · {boot.boots} arranques · {len(boot.culprits)}")
-    assert boot.available, "no se pudo leer el registro Diagnostics-Performance"
+    print(
+        f"Arranque: disponible={boot.available} · {boot.boots} arranques · "
+        f"{len(boot.culprits)} causantes · error={boot.error!r}"
+    )
+    # En el runner (Windows Server) el registro puede no existir o estar vacío; lo que no puede
+    # pasar es que el script falle.
+    assert boot.error == "", f"el script de eventos de arranque falló: {boot.error}"
 
     updates = read_update_status(Registry(WinRegBackend()), runner)
     print(f"Windows Update: reinicio={updates.reboot_pending} · días={updates.last_update_days}")
