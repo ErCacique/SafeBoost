@@ -1,0 +1,70 @@
+"""Inventario de programas instalados (claves Uninstall del registro). Solo lee.
+
+Lo usan la foto antes/después de instalar y la lista de programas por tamaño.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+
+from core.registry import Registry
+
+UNINSTALL_KEYS: tuple[tuple[str, str], ...] = (
+    ("HKLM", r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+    ("HKLM", r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+    ("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+)
+
+
+@dataclass(frozen=True)
+class Program:
+    key: str  # hive\ruta\subclave: identifica la entrada aunque se repita el nombre
+    name: str
+    version: str = ""
+    publisher: str = ""
+    size_kb: int = 0  # EstimatedSize: lo declara el instalador, puede faltar o ser inexacto
+    install_date: str = ""  # YYYYMMDD
+    system_component: bool = False
+
+    @property
+    def installed_on(self) -> date | None:
+        try:
+            return date(
+                int(self.install_date[:4]), int(self.install_date[4:6]), int(self.install_date[6:8])
+            )
+        except (ValueError, IndexError):
+            return None
+
+
+def _text(registry: Registry, hive: str, path: str, name: str) -> str:
+    value = registry.read(hive, path, name)
+    return str(value.data).strip() if value and value.data is not None else ""
+
+
+def list_programs(registry: Registry, include_system: bool = False) -> list[Program]:
+    """Programas con nombre visible. Las actualizaciones y componentes de sistema se omiten."""
+    seen: dict[str, Program] = {}
+    for hive, root in UNINSTALL_KEYS:
+        for sub in registry.subkeys(hive, root):
+            path = f"{root}\\{sub}"
+            name = _text(registry, hive, path, "DisplayName")
+            if not name:
+                continue
+            system = _text(registry, hive, path, "SystemComponent") == "1"
+            parent = _text(registry, hive, path, "ParentKeyName")  # parches de otro programa
+            if (system or parent) and not include_system:
+                continue
+            size = _text(registry, hive, path, "EstimatedSize")
+            program = Program(
+                key=f"{hive}\\{path}",
+                name=name,
+                version=_text(registry, hive, path, "DisplayVersion"),
+                publisher=_text(registry, hive, path, "Publisher"),
+                size_kb=int(size) if size.isdigit() else 0,
+                install_date=_text(registry, hive, path, "InstallDate"),
+                system_component=system,
+            )
+            # El mismo programa puede aparecer en HKLM y WOW6432Node: se queda el primero.
+            seen.setdefault(name.lower(), program)
+    return sorted(seen.values(), key=lambda p: p.name.lower())

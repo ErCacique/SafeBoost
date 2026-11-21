@@ -97,6 +97,10 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    v0.6.0 revisa el hardware: qué módulo de RAM comprar exactamente, salud SMART y desgaste del
    disco, batería, procesador frenado por calor, dispositivos con error y drivers de gráfica
    antiguos. Incluye un botón de análisis rápido con Windows Defender. Solo lee.
+1. **Evolución**: gráfica del tiempo de arranque, aviso si empeora y con qué coincide, lista de
+   cambios (programas instalados o añadidos al inicio) y foto del sistema antes y después de
+   instalar un programa para ver qué servicios, tareas e inicios añadió.
+1. **Privacidad**: qué programas han usado la cámara, el micrófono y la ubicación, y cuándo.
 2. **Elegir perfil** (1, 2 o 3) y, si se quiere, marcar o desmarcar tweaks concretos en cada
    página (Bloatware, Inicio, Servicios, Limpieza, Optimización).
 3. **Simulación (dry-run)**: activada por defecto la primera vez. Muestra cada cambio exacto

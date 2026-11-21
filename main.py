@@ -13,7 +13,7 @@ import logging
 import subprocess
 import sys
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from core.constants import APP_NAME, APP_VERSION
 from core.environment import is_admin
@@ -50,6 +50,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="kit de rescate: deshace todas las sesiones aplicadas, sin interfaz (pide "
         "confirmación salvo con --yes); funciona también en modo seguro",
     )
+    # Uso interno: lo lanza la tarea mensual de mantenimiento (Ajustes → Mantenimiento mensual).
+    parser.add_argument("--maintenance", action="store_true", help=argparse.SUPPRESS)
     # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
     parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
@@ -300,6 +302,53 @@ def _migrate_from_wintune() -> MigrationResult | None:
         return None
 
 
+def maintenance(build: Callable[..., Any] | None = None) -> int:
+    """Mantenimiento mensual sin interfaz: deriva, limpieza segura y vigilancia, con informe.
+
+    Solo limpia temporales y miniaturas (las mismas reglas de antigüedad que la interfaz), sin
+    punto de restauración porque no recupera archivos. El informe aparece en el Dashboard la
+    próxima vez que se abra SafeTrim.
+    """
+    from datetime import datetime
+
+    from core.engine import PreflightError
+    from core.metrics import human_bytes
+    from core.monitor import refresh
+    from core.settings import Settings
+    from core.watch import MAINTENANCE_CLEANUPS, EventLog, MaintenanceReport, MaintenanceStore
+
+    setup_logging()
+    log = get_logger("maintenance")
+    if build is None:
+        from core.app import build_context as build
+    app = build(settings=Settings.load(), warm_checks=False)
+    engine = app.engine
+    report = MaintenanceReport(when=datetime.now().isoformat(timespec="seconds"))
+    try:
+        report.drift = [engine.catalog.get(d.tweak_id).name for d in engine.drift()]
+    except Exception as exc:  # noqa: BLE001 - cada parte del mantenimiento es independiente
+        log.warning("maintenance_drift_failed", extra={"err": str(exc)})
+    ids = [
+        tid
+        for tid in MAINTENANCE_CLEANUPS
+        if tid in engine.catalog and engine.evaluate(engine.catalog.get(tid)).applicable
+    ]
+    if ids:
+        try:
+            session = engine.apply(ids, confirmed=set(ids), restore_point=False)
+            report.freed_bytes = sum(
+                int(state.get("freed_bytes", 0)) for state in session.handler_state.values()
+            )
+        except PreflightError as exc:
+            report.error = str(exc)
+    watch = refresh(app)
+    report.new_startup = [i.name for i in watch.new_startup]
+    MaintenanceStore().save(report)
+    EventLog().add("maintenance", f"Mantenimiento: {human_bytes(report.freed_bytes)} liberados")
+    log.info("maintenance_done", extra={"report": report.__dict__})
+    return 1 if report.error else 0
+
+
 def capture_boot() -> int:
     """Medición tras reinicio (tarea programada como SYSTEM). Sin interfaz.
 
@@ -334,6 +383,8 @@ def main(argv: list[str] | None = None) -> int:
         return self_test()
     if args.capture_boot:
         return capture_boot()
+    if args.maintenance:
+        return maintenance()
     if args.undo_all:
         new_console = _attach_console(allocate=True)
         code = undo_all_cli(args.yes, args.demo)

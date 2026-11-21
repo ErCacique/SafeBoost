@@ -7,6 +7,30 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-21
+
+### Added
+- **Avisos de programas nuevos al inicio**: al abrir SafeTrim compara los programas que arrancan
+  con Windows con los de la última vez y avisa en el Dashboard de los nuevos, con acceso directo
+  a la página Inicio. También anota los programas instalados desde la última vez.
+- **Página Evolución**: gráfica del tiempo de arranque de los últimos 30 arranques medidos,
+  detección de empeoramiento ("desde el día 14 arranca 28 s más lento; coincide con: Spotify")
+  y lista de lo que ha cambiado (programas instalados, añadidos al inicio, mantenimientos).
+- **Qué instala un programa**: foto del sistema antes de instalar (servicios y su tipo de inicio,
+  tareas programadas, programas de inicio e instalados) y comparación después, para ver lo que
+  el instalador añadió sin avisar.
+- **Mantenimiento mensual** (opcional, en Ajustes): tarea programada cada 4 semanas que
+  comprueba si Windows ha deshecho cambios, limpia temporales y miniaturas con las mismas reglas
+  de antigüedad y registra programas nuevos. El informe aparece en el Dashboard.
+- **Página Privacidad**: qué programas han usado la cámara, el micrófono y la ubicación, cuándo,
+  y cuáles los están usando ahora mismo, con acceso a la página de Configuración de Windows para
+  quitar permisos.
+
+### Changed
+- `Engine.apply(..., restore_point=False)` solo se admite para limpiezas, que un punto de
+  restauración no recupera; lo usa el mantenimiento mensual.
+- Menú lateral más compacto para que quepan las 11 páginas en pantallas pequeñas.
+
 ## [0.6.0] - 2026-11-21
 
 ### Added

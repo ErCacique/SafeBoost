@@ -336,17 +336,28 @@ class Engine:
         confirmed: set[str] | None = None,
         progress: ProgressFn = _noop_progress,
         cancel: threading.Event | None = None,
+        restore_point: bool = True,
     ) -> Session:
         """Aplica los tweaks seleccionados en una sesión nueva.
 
         `confirmed` debe contener los IDs de acciones irreversibles y de tweaks con doble
         confirmación; si falta alguno se omite (defensa en profundidad frente a la UI).
+        `restore_point=False` solo se admite si todo son acciones (limpieza): un punto de
+        restauración no recupera archivos borrados y el mantenimiento mensual no debe crearlo.
         """
+        if not restore_point and not all(self.catalog.get(t).is_action for t in tweak_ids):
+            raise PreflightError("Sin punto de restauración solo se pueden ejecutar limpiezas")
         if not self._lock.acquire(blocking=False):
             raise PreflightError("Ya hay una operación en curso")
         try:
             return self._apply(
-                tweak_ids, params or {}, profile, confirmed or set(), progress, cancel
+                tweak_ids,
+                params or {},
+                profile,
+                confirmed or set(),
+                progress,
+                cancel,
+                restore_point,
             )
         finally:
             self._lock.release()
@@ -359,6 +370,7 @@ class Engine:
         confirmed: set[str],
         progress: ProgressFn,
         cancel: threading.Event | None,
+        restore_point: bool = True,
     ) -> Session:
         session = Session.new(
             "apply", profile=profile, env=self.env.to_dict(), selected=list(tweak_ids)
@@ -366,7 +378,7 @@ class Engine:
         total = len(tweak_ids) + 2
         self.tasks.clear_cache()  # el estado real manda al aplicar, no lo detectado antes
         progress(0.0, "Comprobaciones previas")
-        self._preflight(session, tweak_ids)
+        self._preflight(session, tweak_ids, restore_point)
         self.store.save(session)
         progress(1 / total, "Copias de seguridad creadas")
 
@@ -389,7 +401,9 @@ class Engine:
         log.info("session_finished", extra={"session": session.id, "summary": session.summary()})
         return session
 
-    def _preflight(self, session: Session, tweak_ids: list[str]) -> None:
+    def _preflight(
+        self, session: Session, tweak_ids: list[str], restore_point: bool = True
+    ) -> None:
         if not self.env.supported and not self.settings.allow_unsupported_os:
             raise PreflightError(
                 f"{self.env.os_label} no está soportado: SafeTrim solo puede simular en este "
@@ -397,6 +411,9 @@ class Engine:
             )
         if not self.env.is_admin:
             raise PreflightError("SafeTrim necesita ejecutarse como administrador")
+        if not restore_point:
+            session.restore_point = "Omitido: solo limpieza de archivos"
+            return
         result = self.restore.create(f"SafeTrim {session.id}")
         session.restore_point = result.message
         if not result.ok:
