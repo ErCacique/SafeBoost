@@ -20,6 +20,7 @@ from ui.theme import (
     PAD_S,
     RISK_COLORS,
     TEXT_MUTED,
+    WRAP,
 )
 from ui.widgets import Card
 from ui.worker import BackgroundTask, ProgressFn
@@ -110,6 +111,9 @@ class DiagnosticsPage(Page):
         self._process_list(columns, 0, "Procesador", report.top_cpu, memory=False)
         self._process_list(columns, 1, "Memoria", report.top_memory, memory=True)
 
+        self._section("Qué retrasa el arranque")
+        self._boot_list(report)
+
         self._section("Equipo")
         self._lines(self._hardware_lines(report))
 
@@ -140,7 +144,7 @@ class DiagnosticsPage(Page):
                     row,
                     text=f"{req.name}: {req.detail}",
                     font=FONT_BODY,
-                    wraplength=850,
+                    wraplength=WRAP,
                     justify="left",
                 ).pack(side="left", padx=PAD_S)
 
@@ -155,7 +159,7 @@ class DiagnosticsPage(Page):
             anchor="w", padx=PAD, pady=(PAD, 0)
         )
         ctk.CTkLabel(
-            card, text=finding.detail, font=FONT_BODY, wraplength=900, justify="left"
+            card, text=finding.detail, font=FONT_BODY, wraplength=WRAP, justify="left"
         ).pack(anchor="w", padx=PAD, pady=(PAD_S, PAD))
 
     def _process_list(
@@ -185,11 +189,43 @@ class DiagnosticsPage(Page):
                 ).pack(anchor="w", padx=PAD * 2)
         ctk.CTkFrame(card, height=PAD, fg_color="transparent").pack()
 
+    def _boot_list(self, report: DiagnosticReport) -> None:
+        boot = report.boot
+        if not boot.available:
+            self._lines(["No se pudo leer el registro de diagnóstico de arranque de Windows."])
+            return
+        if not boot.culprits:
+            period = f" en los últimos {boot.boots} arranques" if boot.boots else ""
+            self._lines([f"Windows no ha registrado nada que retrase el arranque{period}."])
+            return
+        card = Card(self.body)
+        card.pack(fill="x", pady=PAD_S)
+        ctk.CTkLabel(
+            card,
+            text=f"Datos de Windows de los últimos {boot.boots} arranques (60 días).",
+            font=FONT_SMALL,
+            text_color=TEXT_MUTED,
+        ).pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
+        for culprit in boot.culprits:
+            seen = f"{culprit.count} vez" if culprit.count == 1 else f"{culprit.count} veces"
+            ctk.CTkLabel(
+                card,
+                text=f"{culprit.name} ({culprit.kind}) — unos {culprit.avg_ms / 1000:.1f} s "
+                f"de retraso, {seen}",
+                font=FONT_BODY,
+                anchor="w",
+            ).pack(anchor="w", padx=PAD)
+            if culprit.advice:
+                ctk.CTkLabel(
+                    card, text=culprit.advice, font=FONT_SMALL, text_color=TEXT_MUTED
+                ).pack(anchor="w", padx=PAD * 2)
+        ctk.CTkFrame(card, height=PAD, fg_color="transparent").pack()
+
     def _lines(self, lines: list[str]) -> None:
         card = Card(self.body)
         card.pack(fill="x", pady=PAD_S)
         ctk.CTkLabel(
-            card, text="\n".join(lines), font=FONT_BODY, justify="left", wraplength=900
+            card, text="\n".join(lines), font=FONT_BODY, justify="left", wraplength=WRAP
         ).pack(anchor="w", padx=PAD, pady=PAD)
 
     @staticmethod

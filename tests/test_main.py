@@ -10,7 +10,7 @@ import main
 def test_self_test_ok(capsys: pytest.CaptureFixture[str]) -> None:
     pytest.importorskip("tkinter")
     assert main.main(["--self-test"]) == 0
-    assert "self-test OK: 71 tweaks" in capsys.readouterr().out
+    assert "self-test OK: 74 tweaks" in capsys.readouterr().out
 
 
 def test_capture_boot_removes_task_when_nothing_pending(

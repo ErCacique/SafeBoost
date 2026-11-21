@@ -209,6 +209,44 @@ class DemoRunner:
                 "secure_boot": True,
                 "firmware": "UEFI",
             }
+        if "DegradationTime" in script:
+            return {
+                "boots": 9,
+                "items": [
+                    {
+                        "id": 101,
+                        "name": "OneDrive.exe",
+                        "friendly": "Microsoft OneDrive",
+                        "company": "Microsoft",
+                        "total": "9100",
+                        "degradation": "6200",
+                    },
+                    {
+                        "id": 101,
+                        "name": "OneDrive.exe",
+                        "friendly": "Microsoft OneDrive",
+                        "company": "Microsoft",
+                        "total": "8800",
+                        "degradation": "5900",
+                    },
+                    {
+                        "id": 103,
+                        "name": "HPAppHelperCap",
+                        "friendly": "HP App Helper HSA Service",
+                        "company": "HP Inc.",
+                        "total": "5200",
+                        "degradation": "4100",
+                    },
+                    {
+                        "id": 102,
+                        "name": "iaStorAC.sys",
+                        "friendly": "Intel RST",
+                        "company": "Intel",
+                        "total": "2300",
+                        "degradation": "1500",
+                    },
+                ],
+            }
         if "Get-HotFix" in script:
             return 12
         if "Win32_Volume" in script:

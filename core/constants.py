@@ -11,15 +11,32 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeTrim"
-APP_VERSION: Final = "0.4.1"
+APP_VERSION: Final = "0.5.0"
 APP_ID: Final = "ErCacique.SafeTrim"
 
 # --------------------------------------------------------------------------- rutas
 
 
+# Versión portable (USB): si junto al .exe hay un archivo con este nombre, los datos se guardan
+# en una carpeta al lado del programa y no se toca %LOCALAPPDATA%.
+PORTABLE_MARKER: Final = "portable.txt"
+PORTABLE_DATA_DIR: Final = "SafeTrimData"
+
+
+def _portable_home() -> Path | None:
+    if not getattr(sys, "frozen", False):
+        return None
+    exe_dir = Path(sys.executable).resolve().parent
+    return exe_dir / PORTABLE_DATA_DIR if (exe_dir / PORTABLE_MARKER).exists() else None
+
+
 def _home_override() -> str | None:
     # WINTUNE_HOME es el nombre anterior de la variable (hasta 0.2.x): se sigue aceptando.
-    return os.environ.get("SAFETRIM_HOME") or os.environ.get("WINTUNE_HOME")
+    env = os.environ.get("SAFETRIM_HOME") or os.environ.get("WINTUNE_HOME")
+    if env:
+        return env
+    portable = _portable_home()
+    return str(portable) if portable else None
 
 
 def _local_appdata() -> Path:
@@ -44,6 +61,7 @@ def _resource_root() -> Path:
 
 APP_HOME: Final = _app_home()
 HOME_OVERRIDDEN: Final = _home_override() is not None
+PORTABLE_MODE: Final = _portable_home() is not None
 
 # Nombre anterior del programa (hasta 0.2.x). Se usa solo para migrar datos y tareas.
 LEGACY_APP_NAME: Final = "WinTune"
@@ -346,6 +364,8 @@ DIAG_CPU_BUSY_PERCENT: Final = 80
 DIAG_PROCESS_HOG_PERCENT: Final = 25
 DIAG_LOW_DISK_FREE_PERCENT: Final = 10
 DIAG_WEAK_CPU_THREADS: Final = 2
+# Un elemento que retrasa el arranque de media más que esto se señala en el veredicto.
+DIAG_BOOT_CULPRIT_WARN_MS: Final = 3000
 
 # Procesos de Windows y programas comunes → explicación en lenguaje claro (nombre en minúsculas).
 _WU_HINT = "Windows Update instalando o preparando actualizaciones: déjalo terminar y reinicia."

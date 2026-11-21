@@ -27,9 +27,9 @@ env:
 
 jobs:
   build:
-    name: Compilar SafeTrim.exe
+    name: Compilar instalador y portable
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         shell: pwsh
@@ -73,24 +73,58 @@ jobs:
 
       - name: Self-test del ejecutable (catálogo y handlers empaquetados)
         run: |
-          $p = Start-Process dist/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
+          $p = Start-Process dist/SafeTrim/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
           if ($p.ExitCode -ne 0) { Write-Error "Self-test falló (código $($p.ExitCode))"; exit 1 }
+
+      - name: Versión
+        id: ver
+        run: |
+          $v = python -c "from core.constants import APP_VERSION; print(APP_VERSION)"
+          "version=$v" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+
+      - name: Portable (.zip con portable.txt)
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $stage = "dist/portable/SafeTrim"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Copy-Item -Recurse dist/SafeTrim/* $stage
+          "Versión portable: los datos se guardan en la carpeta SafeTrimData junto al programa." |
+            Out-File -Encoding utf8 "$stage/portable.txt"
+          Compress-Archive -Path $stage -DestinationPath "dist/SafeTrim-portable-$v.zip" -Force
+
+      - name: Instalador (Inno Setup)
+        run: |
+          $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress | Out-Null
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging/SafeTrim.iss
+          if ($LASTEXITCODE -ne 0) { Write-Error "ISCC falló ($LASTEXITCODE)"; exit 1 }
 
       - name: SHA256
         id: hash
         run: |
-          $hash = (Get-FileHash dist/SafeTrim.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  SafeTrim.exe" | Out-File -Encoding ascii dist/SafeTrim.exe.sha256
-          "sha256=$hash" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
-          Write-Host "SHA256: $hash"
+          $v = "${{ steps.ver.outputs.version }}"
+          $files = @("SafeTrim-Setup-$v.exe", "SafeTrim-portable-$v.zip")
+          $lines = foreach ($f in $files) {
+            $h = (Get-FileHash "dist/$f" -Algorithm SHA256).Hash.ToLower()
+            "$h  $f"
+          }
+          $lines | Out-File -Encoding ascii dist/SHA256SUMS.txt
+          $lines | ForEach-Object { Write-Host $_ }
+          "setup=$(($lines[0] -split ' ')[0])" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "portable=$(($lines[1] -split ' ')[0])" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
 
       - name: Subir artifact
         uses: actions/upload-artifact@v7
         with:
           name: SafeTrim-${{ env.RELEASE_TAG || github.sha }}
           path: |
-            dist/SafeTrim.exe
-            dist/SafeTrim.exe.sha256
+            dist/SafeTrim-Setup-*.exe
+            dist/SafeTrim-portable-*.zip
+            dist/SHA256SUMS.txt
           retention-days: 30
 
       - name: Publicar Release
@@ -101,14 +135,20 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: SafeTrim ${{ env.RELEASE_TAG }}
           files: |
-            dist/SafeTrim.exe
-            dist/SafeTrim.exe.sha256
+            dist/SafeTrim-Setup-*.exe
+            dist/SafeTrim-portable-*.zip
+            dist/SHA256SUMS.txt
           body: |
-            **SHA256 (SafeTrim.exe):** `${{ steps.hash.outputs.sha256 }}`
+            **Instalador** (recomendado): `SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe`
+            SHA256: `${{ steps.hash.outputs.setup }}`
+
+            **Portable** (USB / sin instalar; los datos se guardan junto al programa):
+            `SafeTrim-portable-${{ steps.ver.outputs.version }}.zip`
+            SHA256: `${{ steps.hash.outputs.portable }}`
 
             Verificar en PowerShell:
             ```powershell
-            (Get-FileHash .\SafeTrim.exe -Algorithm SHA256).Hash.ToLower()
+            (Get-FileHash .\SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe -Algorithm SHA256).Hash.ToLower()
             ```
 
             Cambios: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ env.RELEASE_TAG }}/CHANGELOG.md).

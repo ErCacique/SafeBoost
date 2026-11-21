@@ -7,6 +7,30 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-21
+
+### Added
+- **Qué retrasa el arranque**: el Diagnóstico lee los eventos 101-110 del registro de rendimiento
+  de arranque de Windows (últimos 60 días) y lista los programas, servicios y drivers que lo
+  retrasan, cuántas veces y cuántos segundos, con un consejo para cada tipo. Si alguno supera
+  los 3 s de media aparece en el veredicto.
+- **Navegadores en segundo plano**: tres tweaks nuevos de nivel 2 (Edge Startup boost, Edge y
+  Chrome en segundo plano al cerrarlos), reversibles y preseleccionados solo con menos de 5 GB
+  de RAM. El de Chrome solo aparece si está instalado. Son directivas: los navegadores mostrarán
+  "Tu organización administra este navegador", y en equipos gestionados no se aplican.
+- **Kit de rescate**: `SafeTrim.exe --undo-all` deshace todas las sesiones sin interfaz (también
+  en modo seguro), con un acceso directo en el menú Inicio. Si se abre sin consola crea una.
+- **Instalador y versión portable**: el release publica `SafeTrim-Setup-X.Y.Z.exe` (Inno Setup)
+  y `SafeTrim-portable-X.Y.Z.zip`. Con `portable.txt` junto al `.exe`, los datos se guardan en
+  `SafeTrimData\` al lado del programa (ideal para USB y técnicos).
+
+### Changed
+- El programa se empaqueta en modo *onedir* en lugar de un único `.exe`: abre varios segundos
+  antes en equipos lentos y da menos falsos positivos de antivirus.
+- La ventana se adapta a la pantalla: en portátiles de 1366x768 con escalado al 125 % se
+  maximiza en lugar de salirse por los bordes; los diálogos y los textos largos también se
+  ajustan.
+
 ## [0.4.1] - 2026-11-21
 
 ### Changed

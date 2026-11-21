@@ -59,12 +59,23 @@ pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store 
 ```powershell
 pip install -r requirements-build.txt   # PyInstaller 6.22.3
 pyinstaller --clean --noconfirm packaging/SafeTrim.spec
-.\dist\SafeTrim.exe --self-test           # catálogo y handlers dentro del binario
-(Get-FileHash .\dist\SafeTrim.exe -Algorithm SHA256).Hash.ToLower()
+.\dist\SafeTrim\SafeTrim.exe --self-test     # catálogo y handlers dentro del binario
+iscc /DAppVersion=0.5.0 packaging\SafeTrim.iss   # instalador (Inno Setup 6)
 ```
 
-El `.spec` genera un único `.exe` sin consola, con manifest `requireAdministrator`, sin UPX y
-con recurso de versión. La línea de comandos equivalente está comentada al principio del
+El `.spec` genera una carpeta (`dist\SafeTrim`, modo *onedir*) con `SafeTrim.exe` sin consola,
+manifest `requireAdministrator`, sin UPX y con recurso de versión. A partir de ella el release
+publica dos descargas:
+
+- **`SafeTrim-Setup-X.Y.Z.exe`**: instalador para todo el equipo, con acceso directo
+  "SafeTrim - Deshacer todos los cambios" en el menú Inicio. Al desinstalar se conservan los
+  datos (sesiones para deshacer, copias `.reg`, logs).
+- **`SafeTrim-portable-X.Y.Z.zip`**: sin instalar, para USB o técnicos. Lleva un `portable.txt`
+  junto al `.exe`: con él los datos se guardan en `SafeTrimData\` al lado del programa y no se
+  programa la medición tras reiniciar.
+
+Se dejó de usar un único `.exe` (*onefile*) porque se descomprime entero en `%TEMP%` en cada
+apertura (varios segundos en equipos lentos) y da más falsos positivos de antivirus. La línea de comandos equivalente está comentada al principio del
 `.spec`. Los handlers de `tweaks/` se declaran como *hidden imports* porque se cargan
 dinámicamente; `--self-test` lo verifica en `release.yml`.
 
@@ -125,7 +136,11 @@ administrador:
 .\SafeTrim.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
 ```
 
-Los tweaks de riesgo alto (mitigaciones de CPU) nunca se aplican por CLI. Códigos de salida:
+Los tweaks de riesgo alto (mitigaciones de CPU) nunca se aplican por CLI.
+
+**Kit de rescate**: `SafeTrim.exe --undo-all` deshace todas las sesiones aplicadas, de la más
+reciente a la más antigua, sin interfaz gráfica (pide confirmación; `--yes` la omite). Funciona
+también en modo seguro y es lo que ejecuta el acceso directo "Deshacer todos los cambios". Códigos de salida:
 0 correcto, 1 sin permisos, 2 archivo o condiciones previas, 3 hubo fallos.
 
 ## Perfiles
@@ -241,6 +256,9 @@ Campos obligatorios: `id`, `name`, `description`, `rationale`, `category`, `leve
 | `power.hibernate_off` | Desactivar hibernación | medio | No | Sí | 10/11 |
 | `power.high_performance` | Plan de energía: Alto rendimiento | bajo | Sí (si chassis=desktop) | Sí | 10/11 |
 | `power.ultimate_performance` | Plan de energía: Máximo rendimiento | medio | No · requiere chassis=desktop | Sí | 10/11 |
+| `performance.edge_startup_boost` | Edge: desactivar el arranque acelerado | bajo | Sí (si RAM < 5 GB) | Sí | 10/11 |
+| `performance.edge_background` | Edge: no seguir ejecutándose al cerrarlo | bajo | Sí (si RAM < 5 GB) | Sí | 10/11 |
+| `performance.chrome_background` | Chrome: no seguir ejecutándose al cerrarlo | bajo | Sí (si RAM < 5 GB) · requiere Chrome | Sí | 10/11 |
 
 ### Nivel 3
 

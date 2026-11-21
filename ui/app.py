@@ -11,7 +11,14 @@ from typing import Any
 import customtkinter as ctk
 
 from core.app import AppContext
-from core.constants import APP_HOME, APP_NAME, APP_VERSION, ICON_FILE, self_command
+from core.constants import (
+    APP_HOME,
+    APP_NAME,
+    APP_VERSION,
+    ICON_FILE,
+    PORTABLE_MODE,
+    self_command,
+)
 from core.engine import PlanItem
 from core.logger import get_logger, ui_log_queue
 from core.metrics import (
@@ -47,6 +54,7 @@ from ui.theme import (
     PAD,
     PAD_S,
     RISK_COLORS,
+    SCREEN_MARGIN,
     SECONDARY_BUTTON,
     SIDEBAR_WIDTH,
     TEXT_MUTED,
@@ -72,12 +80,29 @@ PAGES: list[tuple[str, str, type[Page]]] = [
 ]
 
 
+def fit_window(screen_w: int, screen_h: int, scaling: float) -> tuple[str, tuple[int, int], bool]:
+    """Geometría para una pantalla de screen_w x screen_h píxeles físicos con ese escalado.
+
+    Devuelve (geometría "AxB+X+Y" en píxeles lógicos, tamaño mínimo, maximizar). Función pura
+    para poder probarla sin pantalla.
+    """
+    scaling = scaling or 1.0
+    avail_w = int(screen_w / scaling) - SCREEN_MARGIN[0]
+    avail_h = int(screen_h / scaling) - SCREEN_MARGIN[1]
+    width = max(min(WINDOW_SIZE[0], avail_w), 640)
+    height = max(min(WINDOW_SIZE[1], avail_h), 480)
+    minimum = (min(WINDOW_MIN[0], width), min(WINDOW_MIN[1], height))
+    maximize = width < WINDOW_SIZE[0] or height < WINDOW_SIZE[1]
+    x = max((avail_w + SCREEN_MARGIN[0] - width) // 2, 0)
+    y = max((avail_h - height) // 3, 0)
+    return f"{width}x{height}+{x}+{y}", minimum, maximize
+
+
 class MainWindow(ctk.CTk):
     def __init__(self, builder: Callable[[Callable[[str], None]], AppContext]) -> None:
         super().__init__()
         self.title(f"{WINDOW_TITLE} {APP_VERSION}")
-        self.geometry(WINDOW_SIZE)
-        self.minsize(*WINDOW_MIN)
+        self._fit_to_screen()
         if sys.platform == "win32" and ICON_FILE.exists():
             # Llamarlo antes de 200 ms evita que CustomTkinter ponga su icono por defecto.
             self.iconbitmap(str(ICON_FILE))
@@ -107,6 +132,18 @@ class MainWindow(ctk.CTk):
     def _loading_progress(self, _fraction: float, step: str) -> None:
         if self.loading_step.winfo_exists():
             self.loading_step.configure(text=f"{step}…")
+
+    def _fit_to_screen(self) -> None:
+        """Ajusta la ventana a la pantalla: centrada si cabe, maximizada si no."""
+        geometry, minimum, maximize = fit_window(
+            self.winfo_screenwidth(),
+            self.winfo_screenheight(),
+            ctk.ScalingTracker.get_window_scaling(self),
+        )
+        self.geometry(geometry)
+        self.minsize(*minimum)
+        if maximize and sys.platform == "win32":
+            self.after(0, lambda: self.state("zoomed"))
 
     # ================================================================== construcción
 
@@ -392,8 +429,11 @@ class MainWindow(ctk.CTk):
             after.boot = before.boot
             app.metrics.save(session.id, "before", before)
             app.metrics.save(session.id, "after", after)
-            if app.settings.measure_boot_after_reboot and any(
-                r.status in ("applied", "partial") for r in session.results.values()
+            # En modo portable el USB puede no estar tras reiniciar: no se programa la tarea.
+            if (
+                not PORTABLE_MODE
+                and app.settings.measure_boot_after_reboot
+                and any(r.status in ("applied", "partial") for r in session.results.values())
             ):
                 progress(1.0, "Programando la medición tras reiniciar…")
                 schedule_post_reboot_capture(app.runner, self_command(), APP_HOME)

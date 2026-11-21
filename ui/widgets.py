@@ -26,6 +26,7 @@ from ui.theme import (
     RISK_COLORS,
     STATE_COLORS,
     TEXT_MUTED,
+    WRAP,
 )
 
 
@@ -133,7 +134,7 @@ class TweakRow(ctk.CTkFrame):
             font=FONT_SMALL,
             text_color=TEXT_MUTED,
             justify="left",
-            wraplength=820,
+            wraplength=WRAP,
             anchor="w",
         ).pack(anchor="w", padx=(28, 0))
         if tweak.params and on_param:
@@ -232,7 +233,7 @@ class SectionHeader(ctk.CTkFrame):
                 text=subtitle,
                 font=FONT_SMALL,
                 text_color=TEXT_MUTED,
-                wraplength=900,
+                wraplength=WRAP,
                 justify="left",
             ).pack(anchor="w")
 

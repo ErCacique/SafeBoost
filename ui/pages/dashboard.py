@@ -37,6 +37,7 @@ from ui.theme import (
     RISK_COLORS,
     SECONDARY_BUTTON,
     TEXT_MUTED,
+    WRAP,
 )
 from ui.widgets import Card, MetricCard
 from ui.worker import BackgroundTask, ProgressFn
@@ -61,6 +62,12 @@ PROFILE_INFO: dict[int, tuple[str, str]] = {
         "medio",
     ),
 }
+
+
+def _fit_wrap(label: ctk.CTkLabel, card_width: int) -> None:
+    """Ajusta el texto al ancho real de la tarjeta (en píxeles físicos → lógicos de CTk)."""
+    scaling = ctk.ScalingTracker.get_widget_scaling(label) or 1.0
+    label.configure(wraplength=max(int(card_width / scaling) - 2 * PAD - 8, 120))
 
 
 class DashboardPage(Page):
@@ -93,7 +100,7 @@ class DashboardPage(Page):
             grid.grid_columnconfigure(col, weight=1)
 
         self.recommendation = ctk.CTkLabel(
-            body, text="", font=FONT_BODY, wraplength=950, justify="left", text_color=ACCENT
+            body, text="", font=FONT_BODY, wraplength=WRAP, justify="left", text_color=ACCENT
         )
         self.recommendation.pack(anchor="w", pady=PAD_S)
         self._build_drift(body)
@@ -156,7 +163,7 @@ class DashboardPage(Page):
                 card,
                 text=f"⚠ {alert}",
                 font=FONT_SMALL,
-                wraplength=950,
+                wraplength=WRAP,
                 justify="left",
                 text_color=RISK_COLORS["medio"],
             ).pack(anchor="w", padx=PAD, pady=(0, PAD_S))
@@ -179,9 +186,9 @@ class DashboardPage(Page):
                 font=FONT_H2,
                 command=self._choose_profile,
             ).pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
-            ctk.CTkLabel(card, text=text, font=FONT_SMALL, wraplength=280, justify="left").pack(
-                anchor="w", padx=PAD
-            )
+            desc = ctk.CTkLabel(card, text=text, font=FONT_SMALL, wraplength=280, justify="left")
+            desc.pack(anchor="w", padx=PAD)
+            card.bind("<Configure>", lambda e, label=desc: _fit_wrap(label, e.width))
             ctk.CTkLabel(
                 card, text=f"Riesgo {risk}", font=FONT_SMALL, text_color=RISK_COLORS[risk]
             ).pack(anchor="w", padx=PAD, pady=(0, PAD))
@@ -214,7 +221,7 @@ class DashboardPage(Page):
             text="",
             font=FONT_BODY,
             justify="left",
-            wraplength=900,
+            wraplength=WRAP,
             text_color=RISK_COLORS["medio"],
         )
         self.drift_label.pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))

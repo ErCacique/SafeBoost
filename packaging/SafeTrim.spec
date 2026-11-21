@@ -2,12 +2,12 @@
 # PyInstaller 6.22.3 · Python 3.12 · Ejecutar desde la raíz del repo:
 #   pyinstaller --clean --noconfirm packaging/SafeTrim.spec
 #
-# Equivalente en línea de comandos (por referencia):
-#   pyinstaller --onefile --noconsole --uac-admin --name SafeTrim --clean ^
-#     --add-data "data/tweaks.json;data" --add-data "data/tweaks.schema.json;data" ^
-#     --collect-data customtkinter --paths . --hidden-import tweaks.cleanup (uno por módulo) ^
-#     --add-data "assets/safetrim.ico;assets" --icon assets/safetrim.ico ^
-#     --version-file packaging/version_info.txt --noupx main.py
+# Genera una carpeta (onedir) en dist/SafeTrim: SafeTrim.exe + _internal/. A partir de ella el
+# release crea el instalador (packaging/SafeTrim.iss) y la versión portable (.zip).
+#
+# Por qué onedir y no onefile: un .exe de un solo archivo se descomprime entero en %TEMP% cada
+# vez que se abre (varios segundos en un equipo lento) y los antivirus desconfían más de ese
+# patrón de "autoextracción".
 
 from pathlib import Path
 
@@ -43,9 +43,8 @@ pyz = PYZ(a.pure)  # noqa: F821
 exe = EXE(  # noqa: F821
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="SafeTrim",
     console=False,
     # Manifest con requestedExecutionLevel=requireAdministrator: Windows pide UAC al abrir.
@@ -55,4 +54,14 @@ exe = EXE(  # noqa: F821
     version=str(ROOT / "packaging" / "version_info.txt"),
     icon=str(ROOT / "assets" / "safetrim.ico"),
     disable_windowed_traceback=False,
+    contents_directory="_internal",
+)
+
+coll = COLLECT(  # noqa: F821
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="SafeTrim",
 )
