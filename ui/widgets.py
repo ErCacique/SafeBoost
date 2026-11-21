@@ -11,6 +11,7 @@ import customtkinter as ctk
 from core.catalog import Applicability, Tweak
 from core.context import DETECT_LABELS, DetectResult
 from core.environment import EnvironmentInfo
+from core.sources import source_for
 from ui.theme import (
     BG_CARD,
     FONT_BODY,
@@ -124,6 +125,9 @@ class TweakRow(ctk.CTkFrame):
         lines = [tweak.description, f"Por qué: {tweak.rationale}"]
         if tweak.revert_note:
             lines.append(f"Reversión: {tweak.revert_note}")
+        source = source_for(tweak.id)
+        if source:
+            lines.append(f"Documentación oficial: {source}")
         if not applicability.applicable:
             lines.append("No aplicable: " + "; ".join(applicability.reasons))
         elif applicability.preselect_reasons:

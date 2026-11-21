@@ -201,6 +201,38 @@ def boot_trend(records: list[HealthRecord], events: list[dict[str, str]]) -> Tre
     return Trend(since, before, after, causes)
 
 
+@dataclass
+class Improvement:
+    boot_before: int | None
+    boot_after: int | None
+    ram_before: int
+    ram_after: int
+    startup_before: int
+    startup_after: int
+
+
+def improvement_summary(records: list[HealthRecord], since: str) -> Improvement | None:
+    """Medianas antes y después de la primera sesión aplicada (`since`, ISO). Para decir
+    "desde que usas SafeTrim: arranque 134 s → 60 s, 11 → 5 programas de inicio"."""
+    before = [r for r in records if r.when < since]
+    after = [r for r in records if r.when >= since]
+    if len(before) < 2 or len(after) < 2:
+        return None
+
+    def med(items: list[HealthRecord], attr: str) -> int | None:
+        values = [getattr(r, attr) for r in items if getattr(r, attr)]
+        return int(statistics.median(values)) if values else None
+
+    return Improvement(
+        med(before, "boot_ms"),
+        med(after, "boot_ms"),
+        med(before, "ram_used") or 0,
+        med(after, "ram_used") or 0,
+        med(before, "startup_count") or 0,
+        med(after, "startup_count") or 0,
+    )
+
+
 # --------------------------------------------------------------------------- foto antes/después
 
 

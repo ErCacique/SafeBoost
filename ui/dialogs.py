@@ -398,3 +398,73 @@ class WelcomeWizard(_Modal):
         go_real = bool(self.go_real.get()) and self.real_switch.cget("state") != "disabled"
         self.destroy()
         self.on_done(go_real)
+
+
+class FixPlanDialog(_Modal):
+    """Plan de "Arreglar mi PC lento": qué hacer primero, qué se aplicará y qué depende de ti."""
+
+    def __init__(
+        self,
+        master: Any,
+        plan: Any,
+        on_prepare: Callable[[Any], None],
+        on_startup: Callable[[], None],
+    ) -> None:
+        super().__init__(master, "Plan para tu equipo", "760x600")
+        self.plan = plan
+        body = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        body.pack(fill="both", expand=True, padx=PAD, pady=PAD)
+
+        def section(title: str, lines: list[str]) -> None:
+            if not lines:
+                return
+            ctk.CTkLabel(body, text=title, font=FONT_H2).pack(anchor="w", pady=(PAD, PAD_S))
+            card = Card(body)
+            card.pack(fill="x")
+            for line in lines:
+                ctk.CTkLabel(
+                    card, text=f"• {line}", font=FONT_BODY, wraplength=WRAP - 60, justify="left"
+                ).pack(anchor="w", padx=PAD, pady=2)
+            ctk.CTkFrame(card, height=PAD_S, fg_color="transparent").pack()
+
+        section("Primero", plan.first)
+        applies = []
+        if plan.level is not None:
+            applies.append(f"Perfil {plan.level} (el recomendado). {plan.why}")
+        else:
+            applies.append(f"Ningún perfil por ahora. {plan.why}")
+        if plan.cleanups:
+            applies.append(
+                "Limpieza de temporales y miniaturas (irreversible; se confirma aparte)."
+            )
+        section("Lo que SafeTrim preparará", applies)
+        section(
+            "Programas de inicio que conviene desactivar (página Inicio)",
+            [f"{c.name}: {c.reason}" for c in plan.startup],
+        )
+        section("Lo que ningún ajuste arregla", plan.hardware)
+
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.pack(fill="x", padx=PAD, pady=PAD)
+        ctk.CTkButton(footer, text="Cerrar", **SECONDARY_BUTTON, command=self.destroy).pack(
+            side="right"
+        )
+        if plan.startup:
+            ctk.CTkButton(
+                footer,
+                text="Abrir Inicio",
+                **SECONDARY_BUTTON,
+                command=lambda: (self.destroy(), on_startup()),
+            ).pack(side="right", padx=PAD_S)
+        if plan.has_actions:
+            ctk.CTkButton(
+                footer,
+                text="Preparar y simular",
+                command=lambda: (self.destroy(), on_prepare(plan)),
+            ).pack(side="right")
+        ctk.CTkLabel(
+            footer,
+            text="Nada se aplica sin tu confirmación.",
+            font=FONT_SMALL,
+            text_color=TEXT_MUTED,
+        ).pack(side="left")

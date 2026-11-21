@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
-from core.metrics import local_time
+from core.metrics import human_bytes, local_time
 from core.watch import (
     EventLog,
     HealthHistory,
@@ -18,6 +18,7 @@ from core.watch import (
     SnapshotStore,
     boot_trend,
     diff_snapshots,
+    improvement_summary,
     take_snapshot,
 )
 from ui.pages.base import Page
@@ -90,7 +91,11 @@ class EvolutionPage(Page):
         self.trend_label = ctk.CTkLabel(
             chart_card, text="", font=FONT_BODY, wraplength=WRAP, justify="left"
         )
-        self.trend_label.pack(anchor="w", padx=PAD, pady=(0, PAD))
+        self.trend_label.pack(anchor="w", padx=PAD, pady=(0, PAD_S))
+        self.improvement_label = ctk.CTkLabel(
+            chart_card, text="", font=FONT_BODY, wraplength=WRAP, justify="left"
+        )
+        self.improvement_label.pack(anchor="w", padx=PAD, pady=(0, PAD))
 
         self._title("Lo que ha cambiado")
         self.events_card = Card(self.body)
@@ -167,6 +172,7 @@ class EvolutionPage(Page):
             canvas.create_text(
                 points[-1][0], height - 10, text=last.when[:10], anchor="e", fill=muted
             )
+        self._show_improvement(records)
         trend = boot_trend(records, EventLog().all())
         boots = [r for r in records if r.boot_ms]
         if trend:
@@ -188,6 +194,24 @@ class EvolutionPage(Page):
             )
         else:
             self.trend_label.configure(text="")
+
+    def _show_improvement(self, records: list[HealthRecord]) -> None:
+        applied = [s for s in self.state.app.store.list() if s.kind == "apply"]
+        summary = improvement_summary(records, applied[-1].created) if applied else None
+        if summary is None:
+            self.improvement_label.configure(text="")
+            return
+        parts = []
+        if summary.boot_before and summary.boot_after:
+            parts.append(
+                f"arranque {summary.boot_before / 1000:.0f} s → {summary.boot_after / 1000:.0f} s"
+            )
+        parts.append(f"programas de inicio {summary.startup_before} → {summary.startup_after}")
+        parts.append(
+            f"RAM en uso al abrir {human_bytes(summary.ram_before)} → "
+            f"{human_bytes(summary.ram_after)}"
+        )
+        self.improvement_label.configure(text="Desde que usas SafeTrim: " + ", ".join(parts) + ".")
 
     # ------------------------------------------------------------------ eventos
 

@@ -13,6 +13,8 @@ import customtkinter as ctk
 from core.catalog import LEVEL_LABELS
 from core.constants import APP_VERSION
 from core.engine import DriftItem
+from core.fixplan import FIX_CLEANUPS, FixPlan, build_plan
+from core.gamemode import GameMode
 from core.metrics import (
     BootInfo,
     Snapshot,
@@ -26,6 +28,8 @@ from core.metrics import (
 from core.selection import Selection, SelectionError, load_selection
 from core.update_check import ReleaseInfo
 from core.watch import MaintenanceReport, MaintenanceStore
+from tweaks.startup import executable_from_command
+from ui.dialogs import FixPlanDialog
 from ui.pages.base import Page, show_error
 from ui.theme import (
     ACCENT,
@@ -81,6 +85,11 @@ def describe_maintenance(report: MaintenanceReport) -> str:
     return text
 
 
+def _file_of(command: str) -> str:
+    exe = executable_from_command(command)
+    return exe.name if exe else ""
+
+
 class DashboardPage(Page):
     title = "Dashboard"
     subtitle = "Estado del equipo, recomendación y selección de perfil."
@@ -115,6 +124,17 @@ class DashboardPage(Page):
             body, text="", font=FONT_BODY, wraplength=WRAP, justify="left", text_color=ACCENT
         )
         self.recommendation.pack(anchor="w", pady=PAD_S)
+        quick = ctk.CTkFrame(body, fg_color="transparent")
+        quick.pack(anchor="w", pady=(0, PAD_S))
+        self.fix_btn = ctk.CTkButton(
+            quick, text="Arreglar mi PC lento", width=190, command=self.fix_my_pc
+        )
+        self.fix_btn.pack(side="left")
+        self.game_btn = ctk.CTkButton(
+            quick, text="Modo juego", width=150, **SECONDARY_BUTTON, command=self.toggle_game_mode
+        )
+        self.game_btn.pack(side="left", padx=PAD_S)
+        self.after(500, self._refresh_game_button)
         self._build_drift(body)
         self._build_profiles(body)
         self._build_compare(body)
@@ -201,6 +221,96 @@ class DashboardPage(Page):
         MaintenanceStore().mark_seen()
         self.watch_label.configure(text="")
         self.watch_card.pack_forget()
+
+    # ------------------------------------------------------------------ arreglar / modo juego
+
+    def fix_my_pc(self) -> None:
+        app = self.state.app
+        self.fix_btn.configure(state="disabled", text="Analizando el equipo…")
+
+        def work(_p: ProgressFn, _c: threading.Event) -> FixPlan:
+            from core.diagnostics import collect
+            from tweaks.startup import StartupManager
+
+            report = collect(app.env, app.registry, app.runner)
+            entries = StartupManager(app.registry, app.runner, app.engine.tasks, app.env).list()
+            startup = [(e.name, _file_of(e.command), e.impact) for e in entries if e.enabled]
+            engine = app.engine
+            cleanups = [
+                tid
+                for tid in FIX_CLEANUPS
+                if tid in engine.catalog and engine.evaluate(engine.catalog.get(tid)).applicable
+            ]
+            return build_plan(
+                report, recommend_profile(app.env, report.snapshot), startup, cleanups
+            )
+
+        def done(plan: FixPlan) -> None:
+            self.fix_btn.configure(state="normal", text="Arreglar mi PC lento")
+            FixPlanDialog(self, plan, self._prepare_fix, lambda: self.main.show("startup"))
+
+        def failed(exc: BaseException) -> None:
+            self.fix_btn.configure(state="normal", text="Arreglar mi PC lento")
+            show_error("Arreglar mi PC lento", exc, self)
+
+        BackgroundTask(self, work, done, failed).start()
+
+    def _prepare_fix(self, plan: FixPlan) -> None:
+        if plan.level is not None:
+            self.state.apply_profile(plan.level)
+            self.profile_var.set(plan.level)
+        self.state.selected |= set(plan.cleanups)
+        self.state.notify()
+        self.main.simulate()
+
+    def _refresh_game_button(self) -> None:
+        def work(_p: ProgressFn, _c: threading.Event) -> bool:
+            return GameMode(self.state.app.engine).active
+
+        def done(active: bool) -> None:
+            self.game_btn.configure(text="Desactivar modo juego" if active else "Modo juego")
+
+        BackgroundTask(self, work, done, lambda _e: None).start()
+
+    def toggle_game_mode(self) -> None:
+        app = self.state.app
+        mode = GameMode(app.engine)
+        if (
+            app.settings.dry_run
+            or not app.env.is_admin
+            or not (app.env.supported or app.settings.allow_unsupported_os)
+        ):
+            messagebox.showinfo(
+                "Modo juego",
+                "El modo juego cambia ajustes de verdad: desactiva el modo simulación en Ajustes "
+                "(y ejecuta SafeTrim como administrador en un Windows soportado).",
+                parent=self,
+            )
+            return
+        activating = not mode.active
+        if activating and not messagebox.askyesno(
+            "Modo juego",
+            "Activa el plan de alto rendimiento, desactiva Game DVR/Game Bar y da prioridad a la "
+            "ventana en primer plano. Pulsa otra vez el botón al terminar de jugar para volver "
+            "a como estaba. No se activa solo al abrir un juego. ¿Activar?",
+            parent=self,
+        ):
+            return
+
+        def work(_p: ProgressFn, _c: threading.Event) -> Any:
+            return mode.start() if activating else mode.stop()
+
+        def done(session: Any) -> None:
+            if activating and session is None:
+                messagebox.showinfo(
+                    "Modo juego",
+                    "Todos los ajustes del modo juego ya estaban activos.",
+                    parent=self,
+                )
+            self._refresh_game_button()
+            self.main.invalidate_detections()
+
+        self.main.run_long(work, done, "Modo juego")
 
     def show_update(self, info: ReleaseInfo) -> None:
         self.update_url = info.url
