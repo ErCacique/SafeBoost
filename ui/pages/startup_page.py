@@ -11,7 +11,7 @@ import customtkinter as ctk
 from core.session import Session
 from tweaks.startup import StartupEntry, StartupManager
 from ui.pages.base import Page, show_error
-from ui.theme import FONT_BODY, FONT_SMALL, PAD, PAD_S, RISK_COLORS, STATE_COLORS, TEXT_MUTED
+from ui.theme import FONT_BODY, FONT_SMALL, PAD, PAD_S, RISK_COLORS, STATE_COLORS, TEXT_MUTED, WRAP
 from ui.widgets import Badge, Card
 from ui.worker import BackgroundTask, ProgressFn
 
@@ -107,7 +107,7 @@ class StartupPage(Page):
                 font=FONT_SMALL,
                 text_color=TEXT_MUTED,
                 justify="left",
-                wraplength=900,
+                wraplength=WRAP,
                 anchor="w",
             ).pack(anchor="w", padx=PAD * 2, pady=(0, PAD_S))
         enabled = sum(1 for e in entries if e.enabled)

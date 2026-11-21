@@ -2740,6 +2740,152 @@
       ]
     },
     {
+      "id": "performance.edge_startup_boost",
+      "name": "Edge: desactivar el arranque acelerado (Startup boost)",
+      "description": "Impide que Microsoft Edge se cargue en memoria al iniciar Windows para abrirse antes.",
+      "rationale": "Startup boost deja procesos de Edge residentes desde el arranque aunque no lo uses. En equipos con poca RAM esa memoria hace más falta para lo que sí estás usando. Solo se preselecciona con menos de 5 GB de RAM. Edge y Chrome mostrarán \"Tu organización administra este navegador\": lo indican con cualquier directiva y no significa que nadie controle el equipo.",
+      "category": "performance",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {
+        "check": "tweaks.browsers:low_ram"
+      },
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Edge",
+          "name": "StartupBoostEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "performance.edge_background",
+      "name": "Edge: no seguir ejecutándose al cerrarlo",
+      "description": "Cierra Edge de verdad al cerrar la ventana en lugar de dejarlo en segundo plano.",
+      "rationale": "Con \"Seguir ejecutando extensiones y aplicaciones en segundo plano\", Edge sigue consumiendo memoria y CPU después de cerrarlo. Solo se preselecciona con menos de 5 GB de RAM. Edge y Chrome mostrarán \"Tu organización administra este navegador\": lo indican con cualquier directiva y no significa que nadie controle el equipo.",
+      "category": "performance",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {
+        "check": "tweaks.browsers:low_ram"
+      },
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Microsoft\\Edge",
+          "name": "BackgroundModeEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "performance.chrome_background",
+      "name": "Chrome: no seguir ejecutándose al cerrarlo",
+      "description": "Cierra Google Chrome de verdad al cerrar la ventana en lugar de dejarlo en segundo plano.",
+      "rationale": "Chrome puede quedarse residente con extensiones y aplicaciones en segundo plano. Solo aparece si Chrome está instalado y se preselecciona con menos de 5 GB de RAM. Edge y Chrome mostrarán \"Tu organización administra este navegador\": lo indican con cualquier directiva y no significa que nadie controle el equipo.",
+      "category": "performance",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.browsers:chrome_installed"
+      },
+      "auto_when": {
+        "check": "tweaks.browsers:low_ram"
+      },
+      "apply": [
+        {
+          "op": "registry_set",
+          "hive": "HKLM",
+          "path": "SOFTWARE\\Policies\\Google\\Chrome",
+          "name": "BackgroundModeEnabled",
+          "kind": "REG_DWORD",
+          "value": 0
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
       "id": "performance.foreground_priority",
       "name": "Prioridad de CPU para la app en primer plano",
       "description": "Da quantums más largos a la ventana activa.",

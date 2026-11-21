@@ -44,6 +44,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="con --apply-selection: incluye las acciones irreversibles (limpieza)",
     )
+    parser.add_argument(
+        "--undo-all",
+        action="store_true",
+        help="kit de rescate: deshace todas las sesiones aplicadas, sin interfaz (pide "
+        "confirmación salvo con --yes); funciona también en modo seguro",
+    )
     # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
     parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
@@ -99,14 +105,102 @@ def self_test() -> int:
     return 0
 
 
-def _attach_console() -> None:
-    """El .exe no tiene consola (--noconsole): para la CLI se engancha a la de quien lo lanzó."""
+def _attach_console(allocate: bool = False) -> bool:
+    """El .exe no tiene consola (--noconsole): para la CLI se engancha a la de quien lo lanzó.
+
+    Con `allocate`, si no hay consola padre (lanzado desde un acceso directo) abre una propia.
+    Devuelve True si la consola es nueva: entonces hay que pausar antes de salir para que el
+    usuario pueda leer el resultado.
+    """
     if sys.platform != "win32" or not getattr(sys, "frozen", False):
-        return
-    if ctypes.windll.kernel32.AttachConsole(-1):  # type: ignore[attr-defined]
-        # CONOUT$ es un dispositivo de Windows, no una ruta: Path no aporta nada aquí.
-        stream = open("CONOUT$", "w", encoding="utf-8", errors="replace")  # noqa: PTH123, SIM115
-        sys.stdout = sys.stderr = stream
+        return False
+    kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+    created = False
+    if not kernel32.AttachConsole(-1):
+        if not (allocate and kernel32.AllocConsole()):
+            return False
+        created = True
+    # CONOUT$/CONIN$ son dispositivos de Windows, no rutas: Path no aporta nada aquí.
+    stream = open("CONOUT$", "w", encoding="utf-8", errors="replace")  # noqa: PTH123, SIM115
+    sys.stdout = sys.stderr = stream
+    sys.stdin = open("CONIN$", encoding="utf-8", errors="replace")  # noqa: PTH123, SIM115
+    return created
+
+
+def _ask(question: str) -> bool:
+    try:
+        return input(f"{question} (s/N): ").strip().lower() in ("s", "si", "sí", "y", "yes")
+    except (EOFError, OSError):
+        return False
+
+
+def undo_all_cli(yes: bool, demo: bool, ask: Callable[[str], bool] = _ask) -> int:
+    """Kit de rescate: deshace todas las sesiones aplicadas y no deshechas, de la más reciente a
+    la más antigua, sin interfaz gráfica.
+
+    Códigos de salida: 0 correcto o nada que deshacer, 1 sin permisos, 2 cancelado,
+    3 alguna sesión no se pudo deshacer por completo.
+    """
+    from core.app import build_context
+    from core.engine import PreflightError
+    from core.settings import Settings
+
+    if not demo:
+        if sys.platform != "win32":
+            print("El kit de rescate solo funciona en Windows (o con --demo).")
+            return 2
+        if not is_admin():
+            print("Ejecuta SafeTrim como administrador para deshacer los cambios.")
+            return 1
+    setup_logging()
+    settings = Settings.load()
+    if demo:
+        from core.demo import DemoRunner, demo_environment, demo_registry
+
+        app = build_context(
+            settings=settings,
+            backend=(demo_backend := demo_registry()),
+            runner=DemoRunner(demo_backend),
+            env=demo_environment(),
+            warm_checks=False,
+        )
+    else:
+        # Sin comprobaciones de hardware: deshacer no las necesita y así arranca antes.
+        app = build_context(settings=settings, warm_checks=False)
+    pending = [s for s in app.store.list() if s.kind == "apply" and not s.reverted_by]
+    if not pending:
+        print("No hay cambios de SafeTrim que deshacer.")
+        return 0
+    print(f"SafeTrim {APP_VERSION} · kit de rescate\n")
+    print(f"Se van a deshacer {len(pending)} sesión(es), de la más reciente a la más antigua:")
+    for session in pending:
+        applied = sum(r.status in ("applied", "partial") for r in session.results.values())
+        print(f"  {session.created.replace('T', ' ')}  ·  {applied} cambio(s)  ·  {session.id}")
+    print(
+        "\nLas limpiezas de archivos no se pueden deshacer. Si algo falla, también puedes usar "
+        "Restaurar sistema (rstrui.exe)."
+    )
+    if not yes and not ask("\n¿Deshacer ahora?"):
+        print("Cancelado: no se ha cambiado nada.")
+        return 2
+    incomplete = 0
+    for session in pending:
+        try:
+            result = app.engine.revert(session.id)
+        except PreflightError as exc:
+            print(f"\n[{session.id}] No se pudo deshacer: {exc}")
+            incomplete += 1
+            continue
+        summary = result.summary()
+        failed = summary.get("failed", 0) + summary.get("partial", 0)
+        incomplete += bool(failed)
+        line = f"\n[{session.id}] revertidos: {summary.get('reverted', 0)}"
+        print(line + (f" · con problemas: {failed}" if failed else ""))
+        for tid, item in result.results.items():
+            if item.status in ("failed", "partial"):
+                print(f"    {tid}: {item.message}")
+    print("\nHecho. Reinicia el equipo para que todos los cambios surtan efecto.")
+    return 3 if incomplete else 0
 
 
 def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: bool) -> int:
@@ -240,6 +334,12 @@ def main(argv: list[str] | None = None) -> int:
         return self_test()
     if args.capture_boot:
         return capture_boot()
+    if args.undo_all:
+        new_console = _attach_console(allocate=True)
+        code = undo_all_cli(args.yes, args.demo)
+        if new_console:
+            input("\nPulsa Enter para cerrar…")
+        return code
     if args.apply_selection:
         return apply_selection_cli(
             args.apply_selection, args.yes, args.include_irreversible, args.demo

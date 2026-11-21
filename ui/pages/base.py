@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
-from ui.theme import FONT_SMALL, FONT_TITLE, PAD, TEXT_MUTED
+from ui.theme import FONT_SMALL, FONT_TITLE, PAD, TEXT_MUTED, WRAP
 
 if TYPE_CHECKING:
     from ui.app import MainWindow
@@ -34,7 +34,7 @@ class Page(ctk.CTkFrame):
                 text=self.subtitle,
                 font=FONT_SMALL,
                 text_color=TEXT_MUTED,
-                wraplength=950,
+                wraplength=WRAP,
                 justify="left",
             ).pack(anchor="w")
 

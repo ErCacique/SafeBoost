@@ -20,18 +20,29 @@ from ui.theme import (
     PAD,
     PAD_S,
     RISK_COLORS,
+    SCREEN_MARGIN,
     SECONDARY_BUTTON,
     STATUS_LABELS,
     TEXT_MUTED,
+    WRAP,
 )
 from ui.widgets import Card, risk_badge
+
+
+def _clamp_size(window: Any, size: str) -> str:
+    """Reduce "AxB" para que el diálogo quepa en pantallas pequeñas con escalado."""
+    width, height = (int(v) for v in size.split("x"))
+    scaling = ctk.ScalingTracker.get_window_scaling(window) or 1.0
+    max_w = int(window.winfo_screenwidth() / scaling) - SCREEN_MARGIN[0]
+    max_h = int(window.winfo_screenheight() / scaling) - SCREEN_MARGIN[1]
+    return f"{max(min(width, max_w), 480)}x{max(min(height, max_h), 360)}"
 
 
 class _Modal(ctk.CTkToplevel):
     def __init__(self, master: Any, title: str, size: str = "900x640") -> None:
         super().__init__(master)
         self.title(title)
-        self.geometry(size)
+        self.geometry(_clamp_size(self, size))
         self.transient(master)
         # grab_set falla si la ventana aún no es visible; se difiere al primer ciclo.
         self.after(50, self._grab)
@@ -68,7 +79,7 @@ class ReviewDialog(_Modal):
             else "Revisa cada cambio. Antes de aplicar se crea un punto de restauración y "
             "copias .reg."
         )
-        ctk.CTkLabel(self, text=header, font=FONT_BODY, wraplength=840, justify="left").pack(
+        ctk.CTkLabel(self, text=header, font=FONT_BODY, wraplength=WRAP, justify="left").pack(
             anchor="w", padx=PAD, pady=(PAD, PAD_S)
         )
         counts = (
@@ -155,7 +166,7 @@ class ReviewDialog(_Modal):
             font=FONT_SMALL,
             text_color=TEXT_MUTED,
             justify="left",
-            wraplength=820,
+            wraplength=WRAP,
             anchor="w",
         ).pack(anchor="w", padx=PAD * 2, pady=(0, PAD_S))
 
@@ -224,7 +235,7 @@ class SummaryDialog(_Modal):
                 "SafeTrim medirá el nuevo tiempo de arranque.",
                 font=FONT_BODY,
                 text_color=RISK_COLORS["medio"],
-                wraplength=800,
+                wraplength=WRAP,
                 justify="left",
             ).pack(anchor="w", padx=PAD)
 

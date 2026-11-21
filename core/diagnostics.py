@@ -13,7 +13,9 @@ from typing import Literal
 
 import psutil
 
+from core.boot import BootReport, read_boot_culprits
 from core.constants import (
+    DIAG_BOOT_CULPRIT_WARN_MS,
     DIAG_CPU_BUSY_PERCENT,
     DIAG_LOW_DISK_FREE_PERCENT,
     DIAG_PROCESS_HOG_PERCENT,
@@ -123,6 +125,7 @@ class DiagnosticReport:
     updates: UpdateStatus
     win11: list[Requirement] = field(default_factory=list)
     findings: list[Finding] = field(default_factory=list)
+    boot: BootReport = field(default_factory=BootReport)
 
     @property
     def ram_installed(self) -> int:
@@ -213,6 +216,7 @@ def collect(
         top_memory=sorted(processes, key=lambda p: p.memory, reverse=True)[:DIAG_TOP_PROCESSES],
         hardware=hardware,
         updates=read_update_status(registry, runner),
+        boot=read_boot_culprits(runner),
     )
     report.win11 = win11_requirements(report)
     report.findings = analyze(report)
@@ -329,6 +333,23 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
                 "warning",
                 "Procesador saturado",
                 f"La CPU está al {snap.cpu_percent:.0f} % repartida entre muchos procesos.",
+            )
+        )
+
+    worst = report.boot.culprits[0] if report.boot.culprits else None
+    if worst and worst.avg_ms >= DIAG_BOOT_CULPRIT_WARN_MS:
+        times = (
+            f" en {worst.count} de {report.boot.boots} arranques"
+            if report.boot.boots >= worst.count
+            else ""
+        )
+        findings.append(
+            Finding(
+                "warning",
+                "Algo retrasa el arranque",
+                f"{worst.name} ({worst.kind}) retrasa el arranque unos "
+                f"{worst.avg_ms / 1000:.0f} s{times}. {worst.advice} "
+                "Mira la lista completa más abajo.",
             )
         )
 

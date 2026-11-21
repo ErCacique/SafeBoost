@@ -85,8 +85,8 @@ Para automatizarlo, añade al final de `release.yml`, con un *fine-grained PAT* 
    <https://www.microsoft.com/wdsi/filesubmission> (*Software developer*). Suele resolverse en
    pocos días, y por versión.
 3. **Si las detecciones persisten**:
-   - **`--onedir`** en lugar de `--onefile` reduce detecciones, a cambio de distribuir una
-     carpeta (zip).
+   - Desde la v0.5.0 ya se distribuye en modo **onedir** (instalador + zip portable), que da
+     menos detecciones que `--onefile`.
    - **Compilar el bootloader de PyInstaller desde el código fuente** cambia su firma binaria.
      Es más trabajo y hay que repetirlo en cada actualización de PyInstaller.
 

@@ -8,8 +8,12 @@ APPEARANCE: Final = "dark"
 COLOR_THEME: Final = "blue"
 
 WINDOW_TITLE: Final = "SafeTrim"
-WINDOW_SIZE: Final = "1280x820"
-WINDOW_MIN: Final = (1100, 700)
+# Tamaño preferido y mínimo en píxeles lógicos (CustomTkinter aplica el escalado de Windows).
+# Un portátil de 1366x768 al 125 % solo ofrece ~1090x614 lógicos: ahí se maximiza la ventana.
+WINDOW_SIZE: Final = (1280, 820)
+WINDOW_MIN: Final = (900, 560)
+# Margen para la barra de tareas y el borde de la ventana.
+SCREEN_MARGIN: Final = (40, 90)
 SIDEBAR_WIDTH: Final = 210
 
 PAD: Final = 12
@@ -65,3 +69,5 @@ POLL_MS: Final = 100
 LOG_POLL_MS: Final = 250
 METRICS_REFRESH_MS: Final = 3000
 LOG_MAX_LINES: Final = 2000
+# Ancho máximo de los textos largos: cabe en la zona de contenido de una pantalla 1366x768 al 125 %.
+WRAP: Final = 760

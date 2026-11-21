@@ -102,7 +102,9 @@ class Session:
     @classmethod
     def new(cls, kind: Literal["apply", "revert"], **kwargs: Any) -> Session:
         stamp = datetime.now()
-        sid = f"{stamp:%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}"
+        # Microsegundos en el id: las sesiones se ordenan por nombre y dos creadas en el mismo
+        # segundo (deshacer justo tras aplicar, CLI) quedaban en orden aleatorio.
+        sid = f"{stamp:%Y%m%d-%H%M%S-%f}-{uuid.uuid4().hex[:4]}"
         return cls(id=sid, kind=kind, created=stamp.isoformat(timespec="seconds"), **kwargs)
 
     @property
