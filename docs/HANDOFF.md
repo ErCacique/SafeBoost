@@ -11,8 +11,7 @@ se reinicia el entorno. Última actualización: 2026-11-21.
   los pregunte. Cuando pide explicaciones "como a un niño de 8 años", pasos muy simples.
 - Dio permiso general: "Haz todo tú, te doy mi permiso". Se fusionan PR y se publican versiones
   cuando la CI está en verde, avisándole.
-- **Última instrucción (vigente): "No empieces todavía con la v0.8.0".** No continuar la v0.8.0
-  hasta que lo pida.
+- El usuario pidió continuar la v0.8.0 (la pausa anterior ya no está vigente).
 
 ## Repositorio y procedimiento
 
@@ -56,21 +55,13 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 
 Enlaces v0.7.0: `https://github.com/ErCacique/WinOpt/releases/tag/v0.7.0`.
 
-## v0.8.0 (en pausa por indicación del usuario)
+## v0.8.0
 
-Hecho y subido a la rama (commit `862489e`, sin PR ni publicar; versión aún 0.7.0):
-servicios de fabricantes (`tweaks/vendors.py`, 4 tweaks), documentación oficial por tweak
-(`core/sources.py`), modo juego (`core/gamemode.py`; `restore_point=False` permitido para
-limpiezas y tweaks reversibles de riesgo bajo), "Arreglar mi PC lento" (`core/fixplan.py`,
-`FixPlanDialog`), resumen de mejoras en Evolución (`improvement_summary`). Faltan tests de estas
-piezas.
-
-Pendiente de la v0.8.0: qué ocupa el disco (solo lectura), programas instalados por tamaño y
-último uso (`core/programs.py` ya existe), informe PDF para clientes (Edge
-`--headless --print-to-pdf`), inglés (i18n), actualización automática (descarga + SHA256 de
-`SHA256SUMS.txt` + instalador `/SILENT`; requiere repo público), manifiesto winget, build ARM64
-(runner `windows-11-arm`, no bloqueante), firma de código preparada en `release.yml`
-(condicionada a secretos). Descartado por el usuario: explicación con IA.
+Completa en la rama (versión 0.8.0): fabricantes, fuentes oficiales, modo juego, "Arreglar mi PC
+lento", resumen de mejoras, página Espacio, informe PDF (Edge headless), actualización verificada,
+winget, ARM64 opcional, firma preparada, inglés parcial (menú, títulos, botones, nombres de
+tweaks; descripciones y diagnóstico siguen en español). Tests en `tests/test_v080.py`.
+Pendiente posible: traducir descripciones y textos del diagnóstico al inglés.
 
 ## Tareas manuales del usuario
 
