@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.i18n import _
 from ui.theme import FONT_SMALL, FONT_TITLE, PAD, TEXT_MUTED, WRAP
 
 if TYPE_CHECKING:
@@ -27,11 +28,11 @@ class Page(ctk.CTkFrame):
         self.state = main.ui
         head = ctk.CTkFrame(self, fg_color="transparent")
         head.pack(fill="x", padx=PAD, pady=(PAD, 0))
-        ctk.CTkLabel(head, text=self.title, font=FONT_TITLE).pack(anchor="w")
+        ctk.CTkLabel(head, text=_(self.title), font=FONT_TITLE).pack(anchor="w")
         if self.subtitle:
             ctk.CTkLabel(
                 head,
-                text=self.subtitle,
+                text=_(self.subtitle),
                 font=FONT_SMALL,
                 text_color=TEXT_MUTED,
                 wraplength=WRAP,

@@ -11,6 +11,7 @@ import customtkinter as ctk
 from core.catalog import Applicability, Tweak
 from core.context import DETECT_LABELS, DetectResult
 from core.environment import EnvironmentInfo
+from core.i18n import tweak_name
 from core.sources import source_for
 from ui.theme import (
     BG_CARD,
@@ -93,7 +94,7 @@ class TweakRow(ctk.CTkFrame):
         top.pack(fill="x")
         self.check = ctk.CTkCheckBox(
             top,
-            text=tweak.name,
+            text=tweak_name(tweak.id, tweak.name),
             variable=self.var,
             font=FONT_BODY,
             command=lambda: on_toggle(tweak.id, self.var.get()),

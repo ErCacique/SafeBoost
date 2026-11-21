@@ -18,6 +18,7 @@ from core.constants import APP_VERSION, PORTABLE_MODE
 from core.engine import DriftItem
 from core.fixplan import FIX_CLEANUPS, FixPlan, build_plan
 from core.gamemode import GameMode
+from core.i18n import _
 from core.metrics import (
     BootInfo,
     Snapshot,
@@ -130,11 +131,15 @@ class DashboardPage(Page):
         quick = ctk.CTkFrame(body, fg_color="transparent")
         quick.pack(anchor="w", pady=(0, PAD_S))
         self.fix_btn = ctk.CTkButton(
-            quick, text="Arreglar mi PC lento", width=190, command=self.fix_my_pc
+            quick, text=_("Arreglar mi PC lento"), width=190, command=self.fix_my_pc
         )
         self.fix_btn.pack(side="left")
         self.game_btn = ctk.CTkButton(
-            quick, text="Modo juego", width=150, **SECONDARY_BUTTON, command=self.toggle_game_mode
+            quick,
+            text=_("Modo juego"),
+            width=150,
+            **SECONDARY_BUTTON,
+            command=self.toggle_game_mode,
         )
         self.game_btn.pack(side="left", padx=PAD_S)
         self.after(500, self._refresh_game_button)
@@ -254,11 +259,11 @@ class DashboardPage(Page):
             )
 
         def done(plan: FixPlan) -> None:
-            self.fix_btn.configure(state="normal", text="Arreglar mi PC lento")
+            self.fix_btn.configure(state="normal", text=_("Arreglar mi PC lento"))
             FixPlanDialog(self, plan, self._prepare_fix, lambda: self.main.show("startup"))
 
         def failed(exc: BaseException) -> None:
-            self.fix_btn.configure(state="normal", text="Arreglar mi PC lento")
+            self.fix_btn.configure(state="normal", text=_("Arreglar mi PC lento"))
             show_error("Arreglar mi PC lento", exc, self)
 
         BackgroundTask(self, work, done, failed).start()
@@ -276,7 +281,7 @@ class DashboardPage(Page):
             return GameMode(self.state.app.engine).active
 
         def done(active: bool) -> None:
-            self.game_btn.configure(text="Desactivar modo juego" if active else "Modo juego")
+            self.game_btn.configure(text=_("Desactivar modo juego") if active else _("Modo juego"))
 
         BackgroundTask(self, work, done, lambda _e: None).start()
 
@@ -422,14 +427,14 @@ class DashboardPage(Page):
         actions.pack(anchor="w")
         ctk.CTkButton(
             actions,
-            text="Exportar selección…",
+            text=_("Exportar selección…"),
             width=160,
             command=self._export_selection,
             **SECONDARY_BUTTON,
         ).pack(side="left")
         ctk.CTkButton(
             actions,
-            text="Importar selección…",
+            text=_("Importar selección…"),
             width=160,
             command=self._import_selection,
             **SECONDARY_BUTTON,

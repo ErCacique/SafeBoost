@@ -19,6 +19,7 @@ datas = [
     (str(ROOT / "data" / "tweaks.json"), "data"),
     (str(ROOT / "data" / "tweaks.schema.json"), "data"),
     (str(ROOT / "assets" / "safetrim.ico"), "assets"),
+    (str(ROOT / "data" / "i18n"), "data/i18n"),
 ]
 # Temas JSON y fuentes de CustomTkinter: sin esto el .exe arranca sin estilos.
 datas += collect_data_files("customtkinter")

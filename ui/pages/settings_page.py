@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import customtkinter as ctk
 
 from core.constants import APP_HOME, APP_VERSION, LOG_DIR, self_command
+from core.i18n import LANGUAGES, _
 from core.logger import ROOT_LOGGER_NAME, export_logs
 from core.restore import RestoreResult
 from core.watch import remove_maintenance, schedule_maintenance
@@ -117,6 +118,19 @@ class SettingsPage(Page):
             ),
         ).pack(anchor="w", padx=PAD, pady=(PAD_S, PAD))
 
+        lang_row = ctk.CTkFrame(other, fg_color="transparent")
+        lang_row.pack(anchor="w", padx=PAD, pady=(0, PAD))
+        ctk.CTkLabel(lang_row, text=_("Idioma (requiere reiniciar SafeTrim)"), font=FONT_BODY).pack(
+            side="left"
+        )
+        self.language = ctk.StringVar(value=LANGUAGES.get(settings.language, "Español"))
+        ctk.CTkOptionMenu(
+            lang_row,
+            values=list(LANGUAGES.values()),
+            variable=self.language,
+            command=lambda _v: self._save(),
+        ).pack(side="left", padx=PAD)
+
         look = self._section(body, "Apariencia")
         self.appearance = ctk.StringVar(value=settings.appearance)
         ctk.CTkSegmentedButton(
@@ -157,6 +171,8 @@ class SettingsPage(Page):
         settings.log_level = self.level.get()
         settings.check_updates = self.check_updates.get()
         settings.maintenance = self.maintenance.get()
+        names = {v: k for k, v in LANGUAGES.items()}
+        settings.language = names.get(self.language.get(), "es")
         settings.save()
         self.main.refresh_action_bar()
 

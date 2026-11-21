@@ -414,6 +414,9 @@ def main(argv: list[str] | None = None) -> int:
     # Antes de leer los ajustes: la migración trae también settings.json de WinTune.
     migration = None if args.demo else _migrate_from_wintune()
     settings = Settings.load()
+    from core.i18n import set_language
+
+    set_language(settings.language)
     setup_logging(level=getattr(logging, settings.log_level, logging.INFO))
     log = get_logger("main")
     log.info("start", extra={"version": APP_VERSION, "demo": args.demo})

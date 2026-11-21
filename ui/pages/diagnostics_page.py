@@ -14,6 +14,7 @@ from core.constants import LOW_RAM_GIB
 from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
 from core.hardware import GIB, ram_purchase_advice
+from core.i18n import _
 from core.metrics import human_bytes
 from ui.pages.base import Page
 from ui.theme import (
@@ -64,11 +65,11 @@ class DiagnosticsPage(Page):
         self._running = False
         bar = ctk.CTkFrame(self, fg_color="transparent")
         bar.pack(fill="x", padx=PAD, pady=(PAD, 0))
-        self.run_btn = ctk.CTkButton(bar, text="Analizar ahora", width=150, command=self.analyze)
+        self.run_btn = ctk.CTkButton(bar, text=_("Analizar ahora"), width=150, command=self.analyze)
         self.run_btn.pack(side="left")
         self.scan_btn = ctk.CTkButton(
             bar,
-            text="Análisis rápido con Defender",
+            text=_("Análisis rápido con Defender"),
             width=220,
             **SECONDARY_BUTTON,
             command=self.defender_scan,
@@ -76,7 +77,7 @@ class DiagnosticsPage(Page):
         self.scan_btn.pack(side="right")
         self.report_btn = ctk.CTkButton(
             bar,
-            text="Informe para el cliente",
+            text=_("Informe para el cliente"),
             width=190,
             **SECONDARY_BUTTON,
             command=self.client_report,
@@ -168,12 +169,12 @@ class DiagnosticsPage(Page):
             return quick_scan(runner)
 
         def done(result: ScanResult) -> None:
-            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            self.scan_btn.configure(state="normal", text=_("Análisis rápido con Defender"))
             show = messagebox.showwarning if result.threats else messagebox.showinfo
             show("Windows Defender", result.message, parent=self)
 
         def failed(exc: BaseException) -> None:
-            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            self.scan_btn.configure(state="normal", text=_("Análisis rápido con Defender"))
             messagebox.showerror("Windows Defender", str(exc), parent=self)
 
         BackgroundTask(self, work, done, failed).start()

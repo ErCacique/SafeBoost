@@ -27,6 +27,7 @@ class Settings:
     check_updates: bool = True
     # Tarea \SafeTrim\Maintenance cada 4 semanas (Ajustes → General).
     maintenance: bool = False
+    language: str = "es"  # "es" o "en" (core.i18n); se aplica al reiniciar
 
     @classmethod
     def load(cls, path: Path = SETTINGS_FILE) -> Settings:
