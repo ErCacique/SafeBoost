@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeTrim"
-APP_VERSION: Final = "0.4.0"
+APP_VERSION: Final = "0.4.1"
 APP_ID: Final = "ErCacique.SafeTrim"
 
 # --------------------------------------------------------------------------- rutas
@@ -408,3 +408,7 @@ UPDATE_CHECK_TIMEOUT: Final = 5
 
 # En equipos flojos, varias PowerShell a la vez saturan la CPU: se lanzan de una en una.
 POWERSHELL_MAX_CONCURRENT: Final = 1
+
+# Comprobaciones requires.check demasiado lentas para el arranque (dxdiag: 20-90 s en equipos
+# flojos). La interfaz las resuelve en segundo plano con la ventana ya abierta.
+SLOW_CHECKS: Final = frozenset({"tweaks.gaming:hags_supported"})

@@ -7,6 +7,26 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-21
+
+### Changed
+- **Arranque más rápido.** La detección del entorno hace una sola llamada a PowerShell en lugar
+  de siete (arrancar PowerShell cuesta 2-4 s en un equipo flojo). Cada consulta va aislada en
+  su propio try/catch, así que un fallo solo deja ese dato como desconocido.
+- La comprobación de HAGS (`dxdiag`, 20-90 s en equipos flojos) ya no bloquea el arranque: se
+  hace en segundo plano con la ventana abierta. Mientras tanto el tweak indica "comprobando
+  compatibilidad" y, al terminar, las páginas se refrescan solas. La CLI la sigue resolviendo
+  antes de aplicar.
+- Las consultas del arranque se ejecutan con prioridad normal (la prioridad baja de la v0.4.0
+  las dejaba al final de la cola si Windows Update ocupaba la CPU); la baja se mantiene para lo
+  que viene después.
+- Las impresoras se consultan por CIM con un límite de 15 s: `Get-Printer` podía quedarse
+  colgado con una impresora de red apagada.
+
+### Added
+- La pantalla de carga muestra el paso en curso ("Disco, equipo, impresoras y
+  actualizaciones…") y el log registra cuántos milisegundos tarda cada paso (`env_step`).
+
 ## [0.4.0] - 2026-11-21
 
 ### Added

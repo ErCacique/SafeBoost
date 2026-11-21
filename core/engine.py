@@ -17,7 +17,7 @@ from typing import Any, Literal
 
 from core.appx import AppxError, AppxManager
 from core.catalog import Applicability, Catalog, Tweak, evaluate, is_policy_op
-from core.constants import ALLOWED_COMMAND_EXES, SC_START_ARG
+from core.constants import ALLOWED_COMMAND_EXES, SC_START_ARG, SLOW_CHECKS
 from core.context import (
     DetectResult,
     DetectState,
@@ -108,6 +108,7 @@ class Engine:
         self.settings = settings
         self.guard = ProtectionGuard(env, services)
         self._check_cache: dict[str, bool] = {}
+        self.defer_slow_checks = False
         self._check_lock = threading.Lock()
         self._lock = threading.Lock()
 
@@ -141,29 +142,61 @@ class Engine:
             ctx.prior_state = prior.handler_state.get(tweak.id, {})
         return ctx
 
-    def check(self, ref: str) -> bool:
-        """Resuelve condiciones requires.check (p. ej. soporte de HAGS). Se cachea."""
+    def check(self, ref: str) -> bool | None:
+        """Resuelve condiciones requires.check (p. ej. soporte de HAGS). Se cachea.
+
+        Con `defer_slow_checks`, una comprobación lenta aún no resuelta devuelve None sin
+        ejecutarse (la resuelve run_slow_checks en segundo plano): así nunca se ejecuta dxdiag
+        desde el hilo de Tk. El cálculo va fuera del cerrojo para no bloquear las demás.
+        """
         with self._check_lock:
-            if ref not in self._check_cache:
-                func = resolve_handler(ref)
-                dummy = self.catalog.tweaks[0]
-                self._check_cache[ref] = bool(func(self._ctx(dummy, dry_run=True)))
-            return self._check_cache[ref]
+            if ref in self._check_cache:
+                return self._check_cache[ref]
+            if self.defer_slow_checks and ref in SLOW_CHECKS:
+                return None
+        value = self._run_check(ref)
+        with self._check_lock:
+            return self._check_cache.setdefault(ref, value)
+
+    def check_pending(self, ref: str) -> bool:
+        with self._check_lock:
+            return self.defer_slow_checks and ref in SLOW_CHECKS and ref not in self._check_cache
+
+    def _run_check(self, ref: str) -> bool:
+        try:
+            func = resolve_handler(ref)
+            return bool(func(self._ctx(self.catalog.tweaks[0], dry_run=True)))
+        except Exception as exc:  # noqa: BLE001 - un check roto equivale a "no soportado"
+            log.warning("check_failed", extra={"ref": ref, "err": str(exc)})
+            return False
+
+    def _check_refs(self) -> set[str]:
+        return {t.requires["check"] for t in self.catalog.tweaks if t.requires.get("check")}
 
     def warm_checks(self) -> None:
-        """Ejecuta todas las comprobaciones de hardware del catálogo y las deja en caché.
+        """Deja en caché las comprobaciones de hardware del catálogo desde el hilo de arranque.
 
-        Algunas son lentas (dxdiag tarda hasta 90 s): se llama desde el hilo de arranque para
-        que la interfaz nunca las dispare desde el hilo de Tk al evaluar un tweak.
+        Con `defer_slow_checks` se saltan las lentas (dxdiag tarda hasta 90 s en un equipo
+        flojo): las resuelve run_slow_checks después, con la ventana ya abierta.
         """
-        refs = {t.requires["check"] for t in self.catalog.tweaks if t.requires.get("check")}
-        for ref in sorted(refs):
-            try:
-                self.check(ref)
-            except Exception as exc:  # noqa: BLE001 - un check roto equivale a "no soportado"
-                log.warning("check_failed", extra={"ref": ref, "err": str(exc)})
-                with self._check_lock:
-                    self._check_cache[ref] = False
+        for ref in sorted(self._check_refs()):
+            if self.defer_slow_checks and ref in SLOW_CHECKS:
+                continue
+            self.check(ref)
+
+    def run_slow_checks(self) -> list[str]:
+        """Resuelve las comprobaciones lentas pendientes. Llamar desde un hilo de trabajo.
+        Devuelve las que se han resuelto ahora (para refrescar la interfaz)."""
+        done = []
+        for ref in sorted(self._check_refs() & SLOW_CHECKS):
+            with self._check_lock:
+                if ref in self._check_cache:
+                    continue
+            value = self._run_check(ref)
+            with self._check_lock:
+                self._check_cache[ref] = value
+            done.append(ref)
+        return done
 
     def evaluate(self, tweak: Tweak, level: int = 3) -> Applicability:
         return evaluate(tweak, self.env, level, self.check)

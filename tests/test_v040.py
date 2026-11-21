@@ -395,10 +395,20 @@ def test_powershell_calls_are_serialized(monkeypatch: pytest.MonkeyPatch) -> Non
     process._POWERSHELL_SLOTS.release()
 
 
-def test_child_processes_use_below_normal_priority() -> None:
-    assert process.BELOW_NORMAL_PRIORITY_CLASS == 0x00004000
-    source = Path(process.__file__).read_text(encoding="utf-8")
-    assert "CREATE_NO_WINDOW | BELOW_NORMAL_PRIORITY_CLASS" in source
+@pytest.mark.parametrize("low", [True, False])
+def test_child_process_priority(monkeypatch: pytest.MonkeyPatch, low: bool) -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_run(args: list[str], **kwargs: Any) -> Any:
+        captured.update(kwargs)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(process.sys, "platform", "win32")
+    monkeypatch.setattr(process.subprocess, "run", fake_run)
+    process.SubprocessRunner(low_priority=low).run(["x.exe"])
+    flags = captured["creationflags"]
+    assert flags & process.CREATE_NO_WINDOW
+    assert bool(flags & process.BELOW_NORMAL_PRIORITY_CLASS) is low
 
 
 # --------------------------------------------------------------------------- 5. versión nueva
