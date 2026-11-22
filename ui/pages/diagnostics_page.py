@@ -16,6 +16,7 @@ from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
 from core.hardware import GIB, ram_purchase_advice
 from core.i18n import _
+from core.license import Branding, load_license
 from core.metrics import human_bytes
 from core.support import support_url
 from ui.pages.base import Page
@@ -141,7 +142,11 @@ class DiagnosticsPage(Page):
         report = self.report
 
         def work(_p: ProgressFn, _c: threading.Event) -> Path:
-            html = render_client_html(report, app.store.list(), app.engine.catalog)
+            # La marca del técnico solo con una licencia Técnico válida.
+            branding = Branding.load() if load_license() else None
+            html = render_client_html(
+                report, app.store.list(), app.engine.catalog, branding=branding
+            )
             out = Path(target)
             page = out.with_suffix(".html")
             page.write_text(html, encoding="utf-8")

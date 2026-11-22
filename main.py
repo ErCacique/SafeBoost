@@ -100,6 +100,9 @@ def self_test() -> int:
             raise OSError(f"Falta el icono empaquetado: {ICON_FILE}")
 
         import tweaks.startup  # noqa: F401
+
+        if sys.platform == "win32":
+            import pystray  # noqa: F401  (icono de vigilancia; backend Win32 importado aparte)
     except (HandlerError, ImportError, OSError, ValueError) as exc:
         if sys.stderr:
             print(f"self-test FALLÓ: {exc}", file=sys.stderr)

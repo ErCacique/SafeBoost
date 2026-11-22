@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafeTrim · Optimiza Windows sin miedo</title>
+<meta name="description" content="SafeTrim acelera Windows 10 y 11 con cambios que puedes deshacer uno a uno: bloatware, arranque, servicios, limpieza y diagnóstico. Gratis, sin anuncios y sin enviar tus datos.">
+<link rel="icon" href="favicon.ico">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --text: #1b1f24; --muted: #5b6470;
+    --accent: #1f6aa5; --accent-text: #ffffff; --border: #dde1e6; --ok: #2e7d32;
+    --shadow: 0 8px 30px rgba(20, 30, 40, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15181d; --surface: #1e2229; --text: #e8eaed; --muted: #a0a8b3;
+      --accent: #4a9ae0; --accent-text: #0d1117; --border: #2c323b; --ok: #66bb6a;
+      --shadow: 0 8px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181d; --surface: #1e2229; --text: #e8eaed; --muted: #a0a8b3;
+    --accent: #4a9ae0; --accent-text: #0d1117; --border: #2c323b; --ok: #66bb6a;
+    --shadow: 0 8px 30px rgba(0, 0, 0, .35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 20px 0; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { font-weight: 700; font-size: 22px; text-decoration: none; color: var(--text); }
+  nav a { margin-left: 18px; text-decoration: none; color: var(--muted); }
+  .hero { padding: 48px 0 32px; text-align: center; }
+  .hero h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.15; margin: 0 0 16px; }
+  .hero p { max-width: 680px; margin: 0 auto 28px; color: var(--muted); font-size: 19px; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 22px; border-radius: 8px; font-weight: 600;
+    text-decoration: none; border: 1px solid var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-text); }
+  .btn.secondary { color: var(--accent); }
+  .small { font-size: 14px; color: var(--muted); }
+  .shot {
+    margin: 36px auto 0; max-width: 960px; border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+  .shot img { display: block; width: 100%; height: auto; }
+  section { padding: 48px 0; }
+  h2 { font-size: 28px; margin: 0 0 24px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .gallery { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .gallery figure { margin: 0; }
+  .gallery img {
+    width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border);
+  }
+  .gallery figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .promise li { margin-bottom: 8px; }
+  .promise li::marker { color: var(--ok); }
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; text-align: center; }
+  code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 5px; font-size: 14px; word-break: break-all; }
+  @media (max-width: 560px) { nav { display: none; } .hero { padding-top: 24px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="#">SafeTrim</a>
+    <nav>
+      <a href="#que-hace">Qué hace</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#tecnico">Edición Técnico</a>
+      <a href="#preguntas">Preguntas</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero wrap">
+    <h1>Tu Windows más rápido.<br>Y todo se puede deshacer.</h1>
+    <p>SafeTrim te dice por qué va lento el equipo y lo arregla con cambios revisables: quita
+      bloatware, retrasa lo que frena el arranque, ajusta servicios y limpia. Cada cambio queda
+      guardado y se deshace con un clic.</p>
+    <div class="cta">
+      <a class="btn primary" id="dl-setup" href="https://github.com/ErCacique/WinOpt/releases/latest">Descargar instalador</a>
+      <a class="btn secondary" id="dl-portable" href="https://github.com/ErCacique/WinOpt/releases/latest">Versión portable (USB)</a>
+    </div>
+    <p class="small" id="dl-version">Windows 10 22H2 y Windows 11 · Gratis · Sin anuncios</p>
+    <div class="shot"><img src="img/dashboard.webp" width="1280" height="810" alt="Panel principal de SafeTrim con el estado del equipo y los tres perfiles"></div>
+  </div>
+
+  <section id="que-hace">
+    <div class="wrap">
+      <h2>Qué hace</h2>
+      <div class="grid">
+        <div class="card"><h3>Diagnóstico</h3><p>Qué consume, qué retrasa el arranque, salud del disco y la batería, seguridad y si tu equipo admite Windows 11.</p></div>
+        <div class="card"><h3>Arreglar mi PC lento</h3><p>Un plan ordenado según tu equipo. Lo revisas antes y nada se aplica sin confirmar.</p></div>
+        <div class="card"><h3>Arranque</h3><p>Desactiva o retrasa 90 segundos los programas que se abren al encender.</p></div>
+        <div class="card"><h3>Bloatware y privacidad</h3><p>Quita apps preinstaladas, telemetría y publicidad de Windows, y te dice quién usó tu cámara.</p></div>
+        <div class="card"><h3>Espacio</h3><p>Qué ocupa el disco, duplicados, programas sin usar, caché y extensiones de los navegadores.</p></div>
+        <div class="card"><h3>Modo juego y modo ahorro</h3><p>Un clic para jugar con todo a favor o para alargar la batería. Se apagan igual de fácil.</p></div>
+        <div class="card"><h3>Evolución</h3><p>Gráfica del tiempo de arranque, prueba de rendimiento y qué instala cada programa a escondidas.</p></div>
+        <div class="card"><h3>Vigilancia opcional</h3><p>Un icono junto al reloj que avisa cuando algo nuevo se mete en el arranque.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Así se ve</h2>
+      <div class="gallery">
+        <figure><img src="img/diagnostics.webp" width="1280" height="485" loading="lazy" alt="Diagnóstico con el veredicto del equipo"><figcaption>Diagnóstico: el porqué, en lenguaje claro.</figcaption></figure>
+        <figure><img src="img/startup.webp" width="1280" height="810" loading="lazy" alt="Programas de inicio con su impacto"><figcaption>Inicio: impacto de cada programa y opción de retrasarlo.</figcaption></figure>
+        <figure><img src="img/evolution.webp" width="1280" height="810" loading="lazy" alt="Evolución del tiempo de arranque"><figcaption>Evolución: cómo cambia el equipo con el tiempo.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="seguridad">
+    <div class="wrap">
+      <h2>Por qué es seguro</h2>
+      <ul class="promise">
+        <li><b>Modo simulación por defecto:</b> ves exactamente qué cambiaría antes de cambiar nada.</li>
+        <li><b>Todo se deshace:</b> cada sesión guarda el estado anterior, y hay punto de restauración del sistema antes de los cambios grandes.</li>
+        <li><b>Kit de rescate:</b> un acceso en el menú Inicio deshace todo, incluso en modo seguro.</li>
+        <li><b>No toca lo esencial:</b> Defender, Windows Update, la Store y la red están protegidos.</li>
+        <li><b>Nada sale de tu equipo:</b> sin cuentas, sin telemetría. Solo consulta si hay versión nueva (se puede desactivar).</li>
+        <li><b>Descargas verificables:</b> cada versión publica su huella SHA-256.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tecnico">
+    <div class="wrap">
+      <h2>Edición Técnico</h2>
+      <div class="card">
+        <p>Para quien arregla equipos de otros. El informe en PDF para el cliente (estado, cambios hechos y recomendaciones de hardware) lleva tu nombre, tu contacto y tu logo. Funciona sin internet, también en la versión portable desde un USB. El resto de SafeTrim es igual y gratis.</p>
+        <p style="margin-top:12px"><a href="https://github.com/ErCacique/WinOpt/issues/new?title=Licencia%20T%C3%A9cnico">Pedir una licencia</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="preguntas">
+    <div class="wrap">
+      <h2>Preguntas</h2>
+      <details><summary>¿Windows dice que el programa no es de confianza?</summary><p>SmartScreen avisa de los programas nuevos sin firma de pago. Pulsa «Más información» → «Ejecutar de todas formas». Puedes comprobar la huella SHA-256 de la descarga con <code>Get-FileHash .\SafeTrim-Setup-X.exe</code> y compararla con la de la página de la versión.</p></details>
+      <details><summary>¿Por qué pide permisos de administrador?</summary><p>Porque cambia ajustes del sistema (servicios, tareas programadas, planes de energía). Sin ellos solo puede simular.</p></details>
+      <details><summary>¿Y si algo va mal?</summary><p>Abre SafeTrim → Historial y pulsa «Deshacer», o usa «SafeTrim · deshacer todo» en el menú Inicio. Si Windows no arranca bien, también puedes usar Restaurar sistema.</p></details>
+      <details><summary>¿Funciona en Windows 7, 8 o en versiones antiguas de Windows 10?</summary><p>No. Solo Windows 10 22H2 y Windows 11, que son los que reciben actualizaciones. En otros solo deja simular.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">SafeTrim · <a href="https://github.com/ErCacique/WinOpt">Código en GitHub</a> · <a href="https://github.com/ErCacique/WinOpt/blob/main/CHANGELOG.md">Novedades</a></div>
+</footer>
+
+<script>
+  // Enlaces directos a la última versión (si la API de GitHub no responde, quedan los de la página de Releases).
+  (async () => {
+    try {
+      const res = await fetch("https://api.github.com/repos/ErCacique/WinOpt/releases/latest");
+      if (!res.ok) return;
+      const rel = await res.json();
+      const find = (re) => (rel.assets || []).find((a) => re.test(a.name));
+      const setup = find(/^SafeTrim-Setup-.*\.exe$/);
+      const portable = find(/^SafeTrim-portable-\d.*\.zip$/);
+      if (setup) document.getElementById("dl-setup").href = setup.browser_download_url;
+      if (portable) document.getElementById("dl-portable").href = portable.browser_download_url;
+      if (rel.tag_name) {
+        document.getElementById("dl-version").textContent =
+          `Versión ${rel.tag_name.replace(/^v/, "")} · Windows 10 22H2 y Windows 11 · Gratis · Sin anuncios`;
+      }
+    } catch (err) {
+      console.warn("No se pudo consultar la última versión", err);
+    }
+  })();
+</script>
+</body>
+</html>

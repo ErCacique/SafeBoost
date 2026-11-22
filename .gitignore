@@ -49,3 +49,7 @@ sessions/
 
 # --- graphify (salida local; se regenera con /graphify) ---
 graphify-out/
+
+# --- Licencias: la clave privada NUNCA va al repositorio ---
+*private*.key
+*.license-private

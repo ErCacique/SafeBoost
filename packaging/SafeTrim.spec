@@ -27,7 +27,7 @@ datas += collect_data_files("customtkinter")
 # Los handlers se cargan con importlib a partir de tweaks.json: PyInstaller no los ve solo.
 # Se listan desde los ficheros: collect_submodules("tweaks") corre en un subproceso sin la
 # raíz del repo en sys.path y devuelve una lista vacía sin avisar.
-hiddenimports = ["tweaks"] + sorted(
+hiddenimports = ["tweaks", "pystray._win32", "core.tray"] + sorted(
     f"tweaks.{p.stem}" for p in (ROOT / "tweaks").glob("*.py") if p.stem != "__init__"
 )
 
@@ -36,7 +36,7 @@ a = Analysis(  # noqa: F821
     pathex=[str(ROOT)],
     datas=datas,
     hiddenimports=hiddenimports,
-    excludes=["pytest", "jsonschema", "ruff"],
+    excludes=["pytest", "jsonschema", "ruff", "mypy", "coverage"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)  # noqa: F821

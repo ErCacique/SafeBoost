@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
+from core.i18n import _
 from core.logger import get_logger
 from core.metrics import human_bytes
 from core.process import CommandError, Runner, as_list
@@ -330,10 +331,16 @@ def hardware_findings(
                 (
                     "critical",
                     "El disco puede estar fallando",
-                    f"{disk.name} informa de estado “{disk.health or 'con errores'}”"
-                    + (f" y {disk.read_errors} errores de lectura" if disk.read_errors else "")
-                    + ". Haz una copia de seguridad de tus archivos cuanto antes y plantéate "
-                    "cambiarlo: un disco que falla hace que todo vaya lento.",
+                    _(
+                        "{disk} informa de estado “{health}”{errors}. Haz una copia de seguridad "
+                        "de tus archivos cuanto antes y plantéate cambiarlo: un disco que falla "
+                        "hace que todo vaya lento.",
+                        disk=disk.name,
+                        health=disk.health or _("con errores"),
+                        errors=_(" y {n} errores de lectura", n=disk.read_errors)
+                        if disk.read_errors
+                        else "",
+                    ),
                 )
             )
         elif disk.wear is not None and disk.wear >= DISK_WEAR_WARN:
@@ -341,8 +348,12 @@ def hardware_findings(
                 (
                     "warning",
                     "SSD desgastado",
-                    f"{disk.name} ha consumido el {disk.wear} % de su vida útil estimada. "
-                    "Sigue funcionando, pero conviene tener copia de seguridad.",
+                    _(
+                        "{disk} ha consumido el {wear} % de su vida útil estimada. Sigue "
+                        "funcionando, pero conviene tener copia de seguridad.",
+                        disk=disk.name,
+                        wear=disk.wear,
+                    ),
                 )
             )
         if disk.temp is not None and disk.temp >= DISK_TEMP_WARN:
@@ -350,20 +361,28 @@ def hardware_findings(
                 (
                     "warning",
                     "Disco muy caliente",
-                    f"{disk.name} está a {disk.temp} °C. Revisa la ventilación del equipo.",
+                    _(
+                        "{disk} está a {temp} °C. Revisa la ventilación del equipo.",
+                        disk=disk.name,
+                        temp=disk.temp,
+                    ),
                 )
             )
     battery = details.battery
     if battery and battery.percent:
-        cycles = f" tras {battery.cycles} ciclos de carga" if battery.cycles else ""
+        cycles = _(" tras {n} ciclos de carga", n=battery.cycles) if battery.cycles else ""
         if battery.percent < BATTERY_WARN:
             out.append(
                 (
                     "warning",
                     "Batería muy gastada",
-                    f"La batería conserva el {battery.percent} % de su capacidad original"
-                    f"{cycles}. Cambiarla devolvería la autonomía; no afecta a la velocidad "
-                    "con el cargador enchufado.",
+                    _(
+                        "La batería conserva el {pct} % de su capacidad original{cycles}. "
+                        "Cambiarla devolvería la autonomía; no afecta a la velocidad con el "
+                        "cargador enchufado.",
+                        pct=battery.percent,
+                        cycles=cycles,
+                    ),
                 )
             )
         elif battery.percent < BATTERY_INFO:
@@ -371,23 +390,32 @@ def hardware_findings(
                 (
                     "info",
                     "Batería algo gastada",
-                    f"La batería conserva el {battery.percent} % de su capacidad original{cycles}.",
+                    _(
+                        "La batería conserva el {pct} % de su capacidad original{cycles}.",
+                        pct=battery.percent,
+                        cycles=cycles,
+                    ),
                 )
             )
     perf = details.cpu_perf
     if perf and perf.utility >= THROTTLE_BUSY_UTILITY and perf.performance < THROTTLE_PERFORMANCE:
         cause = (
-            "Estás con batería: el modo de ahorro reduce la velocidad a propósito."
+            _("Estás con batería: el modo de ahorro reduce la velocidad a propósito.")
             if plugged is False
-            else "Con el cargador puesto, lo más probable es calor: limpia el ventilador y las "
-            "rejillas, y no lo uses sobre superficies blandas."
+            else _(
+                "Con el cargador puesto, lo más probable es calor: limpia el ventilador y las "
+                "rejillas, y no lo uses sobre superficies blandas."
+            )
         )
         out.append(
             (
                 "warning",
                 "Procesador frenado",
-                f"El procesador está ocupado pero va al {perf.performance} % de su velocidad "
-                f"normal. {cause}",
+                _(
+                    "El procesador está ocupado pero va al {pct} % de su velocidad normal. {cause}",
+                    pct=perf.performance,
+                    cause=cause,
+                ),
             )
         )
     for dev in details.devices:
@@ -395,8 +423,11 @@ def hardware_findings(
             (
                 "warning",
                 "Dispositivo con problemas",
-                f"{dev.name}: {dev.meaning}. Instala el driver desde la web del fabricante del "
-                "equipo.",
+                _(
+                    "{name}: {meaning}. Instala el driver desde la web del fabricante del equipo.",
+                    name=dev.name,
+                    meaning=_(dev.meaning),
+                ),
             )
         )
     for gpu in details.gpus:
@@ -406,8 +437,13 @@ def hardware_findings(
                 (
                     "info",
                     "Driver de gráfica antiguo",
-                    f"El driver de {gpu.name} es de {gpu.date[:4]} (versión {gpu.version}). "
-                    "Uno reciente de la web del fabricante puede mejorar estabilidad y vídeo.",
+                    _(
+                        "El driver de {gpu} es de {year} (versión {version}). Uno reciente de la "
+                        "web del fabricante puede mejorar estabilidad y vídeo.",
+                        gpu=gpu.name,
+                        year=gpu.date[:4],
+                        version=gpu.version,
+                    ),
                 )
             )
     return out

@@ -344,6 +344,11 @@ CHROMIUM_BROWSERS: dict[str, tuple[str, str]] = {
 CHROMIUM_CACHE_DIRS = (r"Cache\Cache_Data", "Code Cache", "GPUCache")
 
 
+def _join(base: Path, rel: str) -> Path:
+    """Las rutas relativas se escriben con "\\" como en Windows; se unen por partes."""
+    return base.joinpath(*rel.split("\\"))
+
+
 def _chromium_profiles(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
@@ -357,10 +362,10 @@ def browser_caches(local_appdata: Path) -> dict[str, list[Path]]:
     out: dict[str, list[Path]] = {}
     for name, (rel, _exe) in CHROMIUM_BROWSERS.items():
         dirs = [
-            profile / cache
-            for profile in _chromium_profiles(local_appdata / rel)
+            _join(profile, cache)
+            for profile in _chromium_profiles(_join(local_appdata, rel))
             for cache in CHROMIUM_CACHE_DIRS
-            if (profile / cache).is_dir()
+            if _join(profile, cache).is_dir()
         ]
         if dirs:
             out[name] = dirs

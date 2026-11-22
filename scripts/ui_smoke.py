@@ -28,6 +28,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lang", default="es")
     parser.add_argument("--screenshots", type=Path)
     parser.add_argument("--timeout", type=int, default=120)
+    parser.add_argument(
+        "--delay", type=int, default=PAGE_DELAY_MS, help="ms por pantalla (más para capturas)"
+    )
     args = parser.parse_args(argv)
 
     # Antes de importar core: APP_HOME se calcula al importar core.constants.
@@ -70,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     steps += [("space", view) for view in space_views]
 
     def capture(name: str) -> None:
-        if args.screenshots is None or sys.platform != "win32":
+        if args.screenshots is None or (sys.platform != "win32" and not os.environ.get("DISPLAY")):
             return
         from PIL import ImageGrab
 
@@ -92,19 +95,19 @@ def main(argv: list[str] | None = None) -> int:
             key, view = steps[index - 1]
             capture(key if view is None else f"{key}-{view}")
         if index >= len(steps):
-            window.after(PAGE_DELAY_MS, window.destroy)
+            window.after(args.delay, window.destroy)
             return
         key, view = steps[index]
         try:
             window.show(key)
             if view is not None:
-                page = window.pages[key]
-                page.view.set(view)  # type: ignore[attr-defined]
-                page._show(view)  # type: ignore[attr-defined]
+                page: Any = window.pages[key]
+                page.view.set(view)
+                page._show(view)
             print(f"OK  {key}{' / ' + view if view else ''}", flush=True)
         except Exception:  # noqa: BLE001 - se informa y se sigue con la siguiente página
             errors.append(f"{key}/{view}: {traceback.format_exc()}")
-        window.after(PAGE_DELAY_MS, lambda: run_step(index + 1))
+        window.after(args.delay, lambda: run_step(index + 1))
 
     built = {"ok": False}
 

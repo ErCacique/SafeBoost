@@ -191,7 +191,7 @@ def list_extensions(local_appdata: Path, roaming_appdata: Path) -> list[Extensio
         # Opera guarda el perfil en Roaming; el resto en Local.
         base = roaming_appdata if browser == "Opera" else local_appdata
         try:
-            found.extend(_chromium(browser, base / rel))
+            found.extend(_chromium(browser, base.joinpath(*rel.split("\\"))))
         except OSError as exc:
             log.warning("extensions_unreadable", extra={"browser": browser, "err": str(exc)})
     try:

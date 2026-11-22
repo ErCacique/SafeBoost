@@ -11,7 +11,7 @@ import customtkinter as ctk
 from core.catalog import Applicability, Tweak
 from core.context import DETECT_LABELS, DetectResult
 from core.environment import EnvironmentInfo
-from core.i18n import tweak_name
+from core.i18n import _, tweak_name, tweak_text
 from core.sources import source_for
 from ui.theme import (
     BG_CARD,
@@ -123,16 +123,22 @@ class TweakRow(ctk.CTkFrame):
         ).pack(side="right")
 
         self.detail = ctk.CTkFrame(self, fg_color="transparent")
-        lines = [tweak.description, f"Por qué: {tweak.rationale}"]
+        tid = tweak.id
+        lines = [
+            tweak_text(tid, "description", tweak.description),
+            f"{_('Por qué')}: {tweak_text(tid, 'rationale', tweak.rationale)}",
+        ]
         if tweak.revert_note:
-            lines.append(f"Reversión: {tweak.revert_note}")
+            lines.append(f"{_('Reversión')}: {tweak_text(tid, 'revert_note', tweak.revert_note)}")
         source = source_for(tweak.id)
         if source:
-            lines.append(f"Documentación oficial: {source}")
+            lines.append(f"{_('Documentación oficial')}: {source}")
         if not applicability.applicable:
-            lines.append("No aplicable: " + "; ".join(applicability.reasons))
+            lines.append(_("No aplicable") + ": " + "; ".join(applicability.reasons))
         elif applicability.preselect_reasons:
-            lines.append("No se preselecciona: " + "; ".join(applicability.preselect_reasons))
+            lines.append(
+                _("No se preselecciona") + ": " + "; ".join(applicability.preselect_reasons)
+            )
         ctk.CTkLabel(
             self.detail,
             text="\n".join(lines),

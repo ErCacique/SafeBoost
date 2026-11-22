@@ -14,6 +14,7 @@ from core.catalog import Catalog
 from core.constants import APP_NAME, APP_VERSION
 from core.diagnostics import DiagnosticReport
 from core.hardware import ram_purchase_advice
+from core.license import Branding
 from core.metrics import human_bytes
 from core.process import CommandError, Runner
 from core.report import _CSS
@@ -27,8 +28,13 @@ LEVEL_LABEL = {"critical": "Importante", "warning": "Atención", "info": "Inform
 
 
 def render_client_html(
-    report: DiagnosticReport, sessions: list[Session], catalog: Catalog, technician: str = ""
+    report: DiagnosticReport,
+    sessions: list[Session],
+    catalog: Catalog,
+    technician: str = "",
+    branding: Branding | None = None,
 ) -> str:
+    """`branding` (edición Técnico) pone el nombre, contacto y logo del técnico en la cabecera."""
     env, snap, hw = report.env, report.snapshot, report.hardware
     rows = [
         ("Sistema", env.os_label + f" · {env.edition.capitalize()}"),
@@ -67,9 +73,18 @@ def render_client_html(
         else ""
     )
     by = f" · Técnico: {escape(technician)}" if technician else ""
+    header = ""
+    if branding is not None and (branding.business or branding.has_logo):
+        logo = branding.logo_data_uri()
+        header = (
+            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">'
+            + (f'<img src="{logo}" alt="" style="max-height:64px;max-width:200px">' if logo else "")
+            + f"<div><b>{escape(branding.business)}</b><br>"
+            + f'<span class="muted">{escape(branding.contact)}</span></div></div>'
+        )
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Informe del equipo</title><style>{_CSS}</style></head><body>
-<h1>Informe del equipo</h1>
+{header}<h1>Informe del equipo</h1>
 <p class="muted">{datetime.now():%Y-%m-%d %H:%M} · {APP_NAME} {APP_VERSION}{by}</p>
 <h2>Equipo</h2><table>{equipo}</table>
 <h2>Diagnóstico</h2><ul>{findings or "<li>Sin problemas detectados.</li>"}</ul>
