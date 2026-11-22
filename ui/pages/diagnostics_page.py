@@ -16,6 +16,7 @@ from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
 from core.hardware import GIB, ram_purchase_advice
 from core.i18n import _
+from core.license import Branding, load_license
 from core.metrics import human_bytes
 from core.support import support_url
 from ui.pages.base import Page
@@ -141,7 +142,11 @@ class DiagnosticsPage(Page):
         report = self.report
 
         def work(_p: ProgressFn, _c: threading.Event) -> Path:
-            html = render_client_html(report, app.store.list(), app.engine.catalog)
+            # La marca del técnico solo con una licencia Técnico válida.
+            branding = Branding.load() if load_license() else None
+            html = render_client_html(
+                report, app.store.list(), app.engine.catalog, branding=branding
+            )
             out = Path(target)
             page = out.with_suffix(".html")
             page.write_text(html, encoding="utf-8")
@@ -391,17 +396,17 @@ class DiagnosticsPage(Page):
         if advice:
             label = "Ampliar" if report.ram_installed < LOW_RAM_GIB * GIB else "Si amplías"
             lines.append(f"  {label}: {advice}")
-        for disk in details.disks:
-            parts = [disk.media or "disco", human_bytes(disk.size)]
-            if disk.health:
-                parts.append(HEALTH_LABELS.get(disk.health.lower(), disk.health))
-            if disk.wear is not None:
-                parts.append(f"{disk.wear} % de vida usada")
-            if disk.temp is not None:
-                parts.append(f"{disk.temp} °C")
-            if disk.hours is not None:
-                parts.append(f"{disk.hours} h encendido")
-            lines.append(f"Disco {disk.name}: " + ", ".join(parts))
+        for drive in details.disks:
+            parts = [drive.media or "disco", human_bytes(drive.size)]
+            if drive.health:
+                parts.append(HEALTH_LABELS.get(drive.health.lower(), drive.health))
+            if drive.wear is not None:
+                parts.append(f"{drive.wear} % de vida usada")
+            if drive.temp is not None:
+                parts.append(f"{drive.temp} °C")
+            if drive.hours is not None:
+                parts.append(f"{drive.hours} h encendido")
+            lines.append(f"Disco {drive.name}: " + ", ".join(parts))
         if details.battery and details.battery.percent:
             cycles = f", {details.battery.cycles} ciclos" if details.battery.cycles else ""
             lines.append(f"Batería: {details.battery.percent} % de su capacidad original{cycles}")

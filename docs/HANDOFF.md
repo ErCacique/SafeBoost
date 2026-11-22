@@ -52,10 +52,11 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
 | 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
+| 0.10.0 | Prueba de rendimiento, navegadores (caché y extensiones), modo ahorro, vigilancia en segundo plano (bandeja), inglés completo, licencia Técnico (Ed25519 offline), MSIX, web, mypy/cobertura/humo de UI |
 | 0.9.0 | Informes de error locales, estado de seguridad, retrasar inicio 90 s, programas del fabricante con desinstalador, soporte del modelo |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Última publicada: v0.9.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.9.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
+Última publicada: v0.10.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.10.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
 ## v0.8.0 (publicada el 2026-11-22)
 
@@ -96,3 +97,25 @@ Módulos: `core/crash.py`, `core/security.py`, `core/support.py`, `core/oem.py`,
 3. Retrasar programas de inicio (tarea programada al iniciar sesión con retraso, en vez de desactivar), deshacible.
 4. Programas basura del fabricante (Win32: pruebas de antivirus, utilidades OEM) con desinstalador del fabricante y confirmación.
 5. Página de soporte del modelo (fabricante, modelo, nº de serie; Dell con service tag).
+
+## v0.10.0 (2026-11-22, pedida: "Sigue con los pasos del 6 al 15")
+
+Decisiones del usuario: licencia **clave firmada offline**; Store **solo preparado** (sin cuenta de
+Partner Center todavía); web en **GitHub Pages** (se activa cuando el repo sea público).
+
+Módulos nuevos: `core/benchmark.py`, `core/extensions.py`, `core/tray.py` (`--tray`, tarea
+`\SafeTrim\Tray`), `core/ed25519.py` (RFC 8032 en Python puro), `core/license.py`,
+`scripts/license_tool.py`, `scripts/make_msix.py`, `scripts/ui_smoke.py`, `site/`,
+`.github/workflows/pages.yml`. `core/gamemode.py` generaliza `TweakMode` (GameMode, BatteryMode).
+Tweaks nuevos: `cleanup.browser_cache`, `power.dc_battery_saver`, `power.dc_cpu_max`,
+`power.dc_display_off` (handlers `tweaks.power:*_dc_value`, lectura con `powercfg /q`).
+Dependencias nuevas: pystray 0.19.5, pillow 12.3.0, six 1.17.0 (runtime); mypy 2.3.1 y
+pytest-cov 7.0.0 (dev). Tests en `tests/test_v0100.py`.
+
+**Clave privada de licencias**: se generó en la sesión y se entregó al usuario como archivo; NO
+está en el repo. Clave pública en `core/license.py`. Procedimiento en `docs/LICENCIAS.md`.
+
+Lecciones: mypy con `platform = "win32"` evita falsos positivos de winreg/ctypes; las rutas
+relativas de Windows con `\` deben unirse por partes (`joinpath(*rel.split("\\"))`) para que los
+tests funcionen en Linux; pystray no se puede importar en Linux sin pantalla (importarlo dentro de
+`run_tray`).

@@ -403,6 +403,10 @@ class WelcomeWizard(_Modal):
 class FixPlanDialog(_Modal):
     """Plan de "Arreglar mi PC lento": qué hacer primero, qué se aplicará y qué depende de ti."""
 
+    def _close_then(self, action: Callable[[], None]) -> None:
+        self.destroy()
+        action()
+
     def __init__(
         self,
         master: Any,
@@ -454,13 +458,13 @@ class FixPlanDialog(_Modal):
                 footer,
                 text="Abrir Inicio",
                 **SECONDARY_BUTTON,
-                command=lambda: (self.destroy(), on_startup()),
+                command=lambda: self._close_then(on_startup),
             ).pack(side="right", padx=PAD_S)
         if plan.has_actions:
             ctk.CTkButton(
                 footer,
                 text="Preparar y simular",
-                command=lambda: (self.destroy(), on_prepare(plan)),
+                command=lambda: self._close_then(lambda: on_prepare(plan)),
             ).pack(side="right")
         ctk.CTkLabel(
             footer,

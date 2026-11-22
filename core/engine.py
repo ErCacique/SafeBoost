@@ -33,7 +33,7 @@ from core.protection import ProtectionError, ProtectionGuard
 from core.registry import Registry, RegistryError, RegValue, export_key, values_equal
 from core.restore import RestoreManager
 from core.services import ServiceError, ServiceManager
-from core.session import Session, SessionStore, TweakResult
+from core.session import Session, SessionStore, TweakResult, TweakStatus
 from core.settings import Settings
 from core.tasks import TaskError, TaskManager
 
@@ -269,9 +269,9 @@ class Engine:
         self.prefetch([t for t, _ in candidates])
         items: list[DriftItem] = []
         for tweak, session_id in candidates:
-            result = self.detect(tweak)
-            if result.state in (DetectState.NOT_APPLIED, DetectState.PARTIAL):
-                items.append(DriftItem(tweak.id, session_id, result.state, result.detail))
+            detected = self.detect(tweak)
+            if detected.state in (DetectState.NOT_APPLIED, DetectState.PARTIAL):
+                items.append(DriftItem(tweak.id, session_id, detected.state, detected.detail))
         log.info("drift", extra={"count": len(items)})
         return items
 
@@ -470,7 +470,7 @@ class Engine:
         changed = "changed" in outcomes
         details = ctx.notes + skips + errors
         if errors:
-            status = "partial" if changed else "failed"
+            status: TweakStatus = "partial" if changed else "failed"
             return TweakResult(tweak.id, status, errors[0], details, detect_before)
         if changed:
             msg = "Requiere reiniciar" if tweak.reboot_required else "Aplicado"

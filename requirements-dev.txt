@@ -1,6 +1,8 @@
-# Desarrollo y CI (lint, tests, validación del catálogo).
+# Desarrollo y CI (lint, tipos, tests, cobertura y validación del catálogo).
 -r requirements.txt
 pytest==9.2.0
+pytest-cov==7.0.0
 ruff==0.17.3
+mypy==2.3.1
 jsonschema==4.26.0
 pre-commit==4.7.0

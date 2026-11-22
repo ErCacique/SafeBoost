@@ -45,7 +45,83 @@
     "Analizar ahora": "Analyze now",
     "Análisis rápido con Defender": "Quick scan with Defender",
     "Informe para el cliente": "Client report",
-    "Idioma (requiere reiniciar SafeTrim)": "Language (restart SafeTrim to apply)"
+    "Idioma (requiere reiniciar SafeTrim)": "Language (restart SafeTrim to apply)",
+    "Modo ahorro": "Battery saver mode",
+    "Desactivar modo ahorro": "Turn off battery saver mode",
+    "Por qué": "Why",
+    "Reversión": "Undo",
+    "Poca memoria RAM": "Low RAM",
+    "La RAM está al {pct} %. Windows usa el disco como memoria y va a tirones.": "RAM is at {pct}%. Windows is using the disk as memory and stutters.",
+    "Lo que más ocupa: {what}.": "Using the most: {what}.",
+    "Memoria casi llena": "Memory almost full",
+    "Seguridad: {name}": "Security: {name}",
+    "{detail}. Actívalo en Seguridad de Windows: un equipo sin esta protección también puede ir lento por malware.": "{detail}. Turn it on in Windows Security: a PC without this protection can also be slow because of malware.",
+    "Reinicio pendiente de Windows Update": "Windows Update restart pending",
+    "Windows tiene actualizaciones a medio instalar. Reinicia antes de optimizar o de medir el rendimiento.": "Windows has half-installed updates. Restart before optimizing or measuring performance.",
+    "Windows sin actualizar": "Windows not up to date",
+    "La última actualización se instaló hace {days} días. Ejecuta Windows Update hasta que diga “Estás al día”.": "The last update was installed {days} days ago. Run Windows Update until it says “You're up to date”.",
+    "{what} está usando el {pct} % del procesador.": "{what} is using {pct}% of the processor.",
+    "Proceso acaparando la CPU": "Process hogging the CPU",
+    "Procesador saturado": "Processor maxed out",
+    "La CPU está al {pct} % repartida entre muchos procesos.": "The CPU is at {pct}%, spread across many processes.",
+    " en {n} de {total} arranques": " in {n} of {total} boots",
+    "Algo retrasa el arranque": "Something is slowing down startup",
+    "{name} ({kind}) retrasa el arranque unos {secs} s{times}. {advice} Mira la lista completa más abajo.": "{name} ({kind}) delays startup by about {secs} s{times}. {advice} See the full list below.",
+    "Procesador modesto": "Modest processor",
+    "{cpu} tiene {threads} hilos: con varias cosas abiertas a la vez se queda corto. No se puede mejorar con ajustes.": "{cpu} has {threads} threads: with several things open at once it falls short. Settings cannot fix this.",
+    "El procesador": "The processor",
+    "Disco mecánico (HDD)": "Mechanical hard drive (HDD)",
+    "Cambiar el disco del sistema por un SSD es la mejora más notable en un equipo con disco duro: arranque y apertura de programas varias veces más rápidos.": "Replacing the system drive with an SSD is the most noticeable upgrade on a PC with a hard drive: startup and app launches several times faster.",
+    "Poco espacio en disco": "Low disk space",
+    "Quedan {free} libres ({pct} %). Windows necesita espacio para actualizarse y para la memoria virtual: usa Limpieza.": "{free} free ({pct}%). Windows needs space to update and for virtual memory: use Cleanup.",
+    "No cumple los requisitos de Windows 11": "It does not meet the Windows 11 requirements",
+    "Puede que admita Windows 11 (revisa la lista de requisitos)": "It may support Windows 11 (check the requirements list)",
+    "Windows 10 sin soporte": "Windows 10 out of support",
+    "Windows 10 dejó de recibir parches gratuitos el {date}. {verdict}.": "Windows 10 stopped getting free patches on {date}. {verdict}.",
+    "No hay un cuello de botella claro": "No clear bottleneck",
+    "Memoria, procesador y disco tienen margen. Si notas lentitud en un momento concreto, vuelve a analizar justo entonces.": "Memory, processor and disk have headroom. If it feels slow at a specific moment, analyze again right then.",
+    "El equipo tiene {ram}. Windows y un navegador ya la llenan, y entonces usa el disco como memoria. Ningún perfil de SafeTrim sustituye a ampliar memoria.": "The PC has {ram}. Windows and a browser already fill it, and then it uses the disk as memory. No SafeTrim profile replaces adding memory.",
+    "Ampliar a 8 GB es la mejora que más se notaría.": "Upgrading to 8 GB is the most noticeable improvement.",
+    "Tiene {n} ranura(s) libre(s): añadir un módulo de 4 u 8 GB es la mejora que más se notaría.": "It has {n} free slot(s): adding a 4 or 8 GB module is the most noticeable improvement.",
+    "Las {n} ranura(s) están ocupadas: habría que sustituir un módulo por otro mayor.": "All {n} slot(s) are in use: a module would have to be replaced with a bigger one.",
+    "La placa admite hasta {cap}.": "The motherboard supports up to {cap}.",
+    "El disco puede estar fallando": "The disk may be failing",
+    "{disk} informa de estado “{health}”{errors}. Haz una copia de seguridad de tus archivos cuanto antes y plantéate cambiarlo: un disco que falla hace que todo vaya lento.": "{disk} reports “{health}” status{errors}. Back up your files as soon as possible and consider replacing it: a failing disk makes everything slow.",
+    "con errores": "with errors",
+    " y {n} errores de lectura": " and {n} read errors",
+    "SSD desgastado": "Worn SSD",
+    "{disk} ha consumido el {wear} % de su vida útil estimada. Sigue funcionando, pero conviene tener copia de seguridad.": "{disk} has used {wear}% of its estimated lifespan. It still works, but keep a backup.",
+    "Disco muy caliente": "Disk running hot",
+    "{disk} está a {temp} °C. Revisa la ventilación del equipo.": "{disk} is at {temp} °C. Check the PC's ventilation.",
+    " tras {n} ciclos de carga": " after {n} charge cycles",
+    "Batería muy gastada": "Badly worn battery",
+    "La batería conserva el {pct} % de su capacidad original{cycles}. Cambiarla devolvería la autonomía; no afecta a la velocidad con el cargador enchufado.": "The battery keeps {pct}% of its original capacity{cycles}. Replacing it would restore battery life; it does not affect speed when plugged in.",
+    "Batería algo gastada": "Somewhat worn battery",
+    "La batería conserva el {pct} % de su capacidad original{cycles}.": "The battery keeps {pct}% of its original capacity{cycles}.",
+    "Estás con batería: el modo de ahorro reduce la velocidad a propósito.": "You are on battery: power saving lowers the speed on purpose.",
+    "Con el cargador puesto, lo más probable es calor: limpia el ventilador y las rejillas, y no lo uses sobre superficies blandas.": "Plugged in, the most likely cause is heat: clean the fan and vents, and do not use it on soft surfaces.",
+    "Procesador frenado": "Throttled processor",
+    "El procesador está ocupado pero va al {pct} % de su velocidad normal. {cause}": "The processor is busy but running at {pct}% of its normal speed. {cause}",
+    "Dispositivo con problemas": "Device with problems",
+    "{name}: {meaning}. Instala el driver desde la web del fabricante del equipo.": "{name}: {meaning}. Install the driver from the PC manufacturer's website.",
+    "Driver de gráfica antiguo": "Old graphics driver",
+    "El driver de {gpu} es de {year} (versión {version}). Uno reciente de la web del fabricante puede mejorar estabilidad y vídeo.": "The {gpu} driver is from {year} (version {version}). A recent one from the manufacturer's website can improve stability and video.",
+    "Antivirus": "Antivirus",
+    "Antivirus (Windows Defender)": "Antivirus (Windows Defender)",
+    "Definiciones de virus": "Virus definitions",
+    "Firewall": "Firewall",
+    "Windows activado": "Windows activated",
+    "Control de cuentas (UAC)": "User Account Control (UAC)",
+    "Cifrado del disco (BitLocker)": "Disk encryption (BitLocker)",
+    "Actualizaciones": "Updates",
+    "DESACTIVADO o sin tiempo real": "TURNED OFF or without real-time protection",
+    "activo, protección en tiempo real": "on, real-time protection",
+    "activo en todos los perfiles": "on in all profiles",
+    "desactivado": "turned off",
+    "eleva sin preguntar": "elevates without asking",
+    "activado": "on",
+    "sí": "yes",
+    "reinicio pendiente": "restart pending"
   },
   "tweaks": {
     "bloatware.candy_crush": "Remove Candy Crush Saga and Soda Saga",
@@ -125,6 +201,366 @@
     "search.indexing_drives": "Turn off indexing on selected drives",
     "memory.pagefile_system_managed": "System-managed page file",
     "memory.pagefile_fixed": "Fixed-size page file",
-    "security.cpu_mitigations_off": "Turn off CPU mitigations (Spectre/Meltdown)"
+    "security.cpu_mitigations_off": "Turn off CPU mitigations (Spectre/Meltdown)",
+    "power.dc_battery_saver": "On battery: battery saver at 50%",
+    "power.dc_cpu_max": "On battery: processor at 80% max",
+    "power.dc_display_off": "On battery: screen off after 3 minutes",
+    "cleanup.browser_cache": "Clean: Browser cache"
+  },
+  "tweak_text": {
+    "bloatware.candy_crush": {
+      "description": "Uninstalls Candy Crush Saga and Soda Saga for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection. No verified Store ID: it is searched by name."
+    },
+    "bloatware.xbox_app": {
+      "description": "Uninstalls the Xbox app for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.solitaire": {
+      "description": "Uninstalls Microsoft Solitaire Collection for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.bing_news": {
+      "description": "Uninstalls News (Bing News) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.bing_weather": {
+      "description": "Uninstalls Weather (Bing Weather) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.clipchamp": {
+      "description": "Uninstalls Clipchamp for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.teams_personal": {
+      "description": "Uninstalls Microsoft Teams (personal / Windows 11 Chat) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection. No verified Store ID: it is searched by name."
+    },
+    "bloatware.cortana": {
+      "description": "Uninstalls Cortana for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.get_help": {
+      "description": "Uninstalls Get Help for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.tips": {
+      "description": "Uninstalls Tips for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection. No verified Store ID: it is searched by name."
+    },
+    "bloatware.feedback_hub": {
+      "description": "Uninstalls Feedback Hub for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.mixed_reality": {
+      "description": "Uninstalls Mixed Reality Portal for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.viewer_3d": {
+      "description": "Uninstalls 3D Viewer for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.paint_3d": {
+      "description": "Uninstalls Paint 3D for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.skype": {
+      "description": "Uninstalls Skype (retired in 2025) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection. No verified Store ID: it is searched by name."
+    },
+    "bloatware.phone_link": {
+      "description": "Uninstalls Phone Link (Your Phone) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.widgets": {
+      "description": "Uninstalls Widgets (Windows Web Experience Pack) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.copilot": {
+      "description": "Uninstalls Copilot (app) for all users and stops it from being reinstalled for new accounts.",
+      "rationale": "Both the installed AppX package and the provisioned package in the image are removed; if only the installed one is removed, Windows deploys it again for every new profile.",
+      "revert_note": "Undone by reinstalling it from the Microsoft Store with winget: needs an internet connection."
+    },
+    "bloatware.news_interests": {
+      "description": "Hides the widgets panel (Windows 11) and 'News and interests' on the taskbar (Windows 10).",
+      "rationale": "The policy is used instead of the TaskbarDa user value because on Windows 11 24H2 the UCPD driver blocks third-party processes from writing TaskbarDa."
+    },
+    "bloatware.copilot_policy": {
+      "description": "Hides the Copilot button on Windows 11 builds older than 24H2.",
+      "rationale": "On 24H2+ Copilot is a regular app (removed with bloatware.copilot); this policy only works on 23H2 and earlier."
+    },
+    "privacy.diagtrack": {
+      "description": "Stops and disables 'Connected User Experiences and Telemetry'.",
+      "rationale": "Here Disabled is used instead of Manual: DiagTrack has triggers that start it again if left on Manual, which would undo the change."
+    },
+    "privacy.dmwappush": {
+      "description": "Disables the WAP push message routing service used for telemetry.",
+      "rationale": "MDM/Intune enrollment also uses it, so it is skipped on managed PCs."
+    },
+    "privacy.telemetry_policy_required": {
+      "description": "Limits diagnostic data to the 'Required' level.",
+      "rationale": "On Home and Pro the value 0 (Security) is not honored and is treated as 1; 1 is written so the detected state is real."
+    },
+    "privacy.telemetry_policy_security": {
+      "description": "Turns off telemetry except the minimum security data.",
+      "rationale": "Level 0 is only honored by the Enterprise, Education and IoT editions."
+    },
+    "privacy.advertising_id": {
+      "description": "Stops apps from using an advertising ID to show personalized ads.",
+      "rationale": "Both the user value and the machine policy are written so it cannot be turned back on from Settings."
+    },
+    "privacy.tailored_experiences": {
+      "description": "Stops Microsoft from using diagnostic data to offer personalized tips and ads.",
+      "rationale": "User value equivalent to the switch in Settings > Privacy > Diagnostics."
+    },
+    "privacy.suggestions_start": {
+      "description": "Turns off suggested apps and promotional recommendations in Start.",
+      "rationale": "SubscribedContent-338388 controls Start suggestions; Start_IrisRecommendations controls Windows 11 recommendations."
+    },
+    "privacy.suggestions_settings": {
+      "description": "Turns off suggested content in Settings and 'tips and tricks' notifications.",
+      "rationale": "ContentDeliveryManager keys that feed the promotional banners in Settings."
+    },
+    "privacy.suggestions_lockscreen": {
+      "description": "Turns off promotional text over the lock screen.",
+      "rationale": "It does not turn off Windows Spotlight as a background, only the 'fun facts and tips' layer."
+    },
+    "privacy.silent_app_install": {
+      "description": "Stops Windows from reinstalling Candy Crush and similar apps on its own.",
+      "rationale": "Without this change, ContentDeliveryManager reinstalls sponsored apps after feature updates."
+    },
+    "privacy.feedback_frequency": {
+      "description": "Windows stops showing satisfaction surveys.",
+      "rationale": "NumberOfSIUFInPeriod=0 equals 'Never' in Settings > Privacy > Diagnostics."
+    },
+    "privacy.task_compat_appraiser": {
+      "description": "Disables the Compatibility Appraiser scheduled tasks.",
+      "rationale": "It collects an app inventory for telemetry. Note: Windows Update also uses it to check whether the PC can get a feature update; with it off, the offer of a new version may be delayed. Tasks that do not exist in the current build are skipped."
+    },
+    "privacy.task_ceip": {
+      "description": "Disables the Customer Experience Improvement Program (CEIP) scheduled tasks.",
+      "rationale": "Tasks that package and send CEIP data; they do not affect how the system works. Tasks that do not exist in the current build are skipped."
+    },
+    "privacy.task_disk_diag": {
+      "description": "Disables the Disk Diagnostic Data Collector scheduled tasks.",
+      "rationale": "Sends disk diagnostic data to Microsoft; local SMART alerts keep working. Tasks that do not exist in the current build are skipped."
+    },
+    "services.fax": {
+      "description": "Sets the Fax service startup to Manual.",
+      "rationale": "Manual, not Disabled: the service is still available if an app asks for it or a trigger needs it, so no feature ever breaks. Only used with fax modems."
+    },
+    "services.mapsbroker": {
+      "description": "Sets the MapsBroker service startup to Manual.",
+      "rationale": "Manual, not Disabled: the service is still available if an app asks for it or a trigger needs it, so no feature ever breaks. Only needed for offline maps; on Manual it starts when the Maps app asks for it."
+    },
+    "services.retaildemo": {
+      "description": "Sets the RetailDemo service startup to Manual.",
+      "rationale": "Manual, not Disabled: the service is still available if an app asks for it or a trigger needs it, so no feature ever breaks. Only used on store display PCs."
+    },
+    "services.wersvc": {
+      "description": "Sets the WerSvc service startup to Manual.",
+      "rationale": "Manual, not Disabled: the service is still available if an app asks for it or a trigger needs it, so no feature ever breaks. On Manual it still starts by trigger when an app crashes, so local crash dumps are kept."
+    },
+    "services.sysmain": {
+      "description": "Sets the SysMain service startup to Manual.",
+      "rationale": "Manual, not Disabled: the service is still available if an app asks for it or a trigger needs it, so no feature ever breaks. On an SSD the benefit of preloading is minimal and it causes writes; on an HDD it is kept because it does speed up app launches."
+    },
+    "services.hp_analytics": {
+      "description": "Sets the analytics service HP installs on its laptops to Manual.",
+      "rationale": "It sends PC usage data to HP and uses resources at startup. It plays no part in drivers, function keys or updates. Only shown if the service exists."
+    },
+    "services.nvidia_telemetry": {
+      "description": "Sets the NVIDIA driver telemetry service (older versions) to Manual.",
+      "rationale": "It collects and sends usage data to NVIDIA. The driver and the NVIDIA control panel work the same. Only shown if the service exists."
+    },
+    "services.adobe_genuine": {
+      "description": "Sets the Adobe service that checks licenses in the background to Manual.",
+      "rationale": "It starts with Windows even if you do not use Adobe programs. Adobe programs keep working. Only shown if the service exists."
+    },
+    "services.adobe_updater": {
+      "description": "Sets the Adobe Acrobat/Reader updater to Manual.",
+      "rationale": "Acrobat still checks for updates when you open it, but there is no longer a resident service from startup. Optional because Acrobat updates fix security issues. Only shown if the service exists."
+    },
+    "visual.best_performance": {
+      "description": "Turns off animations, shadows and transparency, but keeps ClearType and thumbnails.",
+      "rationale": "VisualFXSetting=3 (custom) + the 'best performance' UserPreferencesMask; smoothing is controlled separately with FontSmoothing. After writing, WM_SETTINGCHANGE is sent to apply it without signing out."
+    },
+    "cleanup.temp_user": {
+      "description": "Deletes the interactive user's %TEMP% (files older than 24 h).",
+      "rationale": "A minimum age is respected so installers or open apps using their temporary files do not break.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.temp_windows": {
+      "description": "Deletes C:\\Windows\\Temp (files older than 24 h).",
+      "rationale": "Same age rule; locked files are skipped without error.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.wu_cache": {
+      "description": "Deletes packages already downloaded to SoftwareDistribution\\Download that are older than 10 days.",
+      "rationale": "The wuauserv service is not stopped (it is on the protected list): only old, unlocked files are deleted.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.prefetch_orphans": {
+      "description": "Deletes Prefetch entries not used for more than 90 days (usually from uninstalled programs).",
+      "rationale": "Emptying Prefetch entirely makes startup slower; only stale .pf files are removed. Windows recreates them if the program runs again.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.recycle_bin": {
+      "description": "Empties the Recycle Bin on all drives.",
+      "rationale": "Uses SHEmptyRecycleBinW, like File Explorer.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.thumbnails": {
+      "description": "Deletes thumbcache_*.db; Windows recreates thumbnails as you browse.",
+      "rationale": "Files in use by File Explorer are skipped.",
+      "revert_note": "Irreversible action: deleted files cannot be recovered. Needs a separate confirmation."
+    },
+    "cleanup.browser_cache": {
+      "description": "Deletes the cache of Chrome, Edge, Brave, Opera and Firefox. Cookies, history, passwords and open tabs are not touched.",
+      "rationale": "The cache rebuilds itself; deleting it frees space (often several GB) and the first pages will load a little slower. Open browsers are skipped because they use those files.",
+      "revert_note": "Irreversible but harmless: the browser downloads again whatever it needs."
+    },
+    "cleanup.windows_old": {
+      "description": "Deletes the Windows.old folder left by a major Windows update (usually 10-30 GB) using Windows Disk Cleanup.",
+      "rationale": "Windows keeps it for 10 days so you can go back to the previous version. After that, or if everything works fine, it only takes up space. The official tool is used because the folder is protected by TrustedInstaller.",
+      "revert_note": "Irreversible action: afterwards you can no longer go back to the previous version of Windows. Needs a separate confirmation."
+    },
+    "power.hibernate_off": {
+      "description": "Removes hiberfil.sys and frees as much space as ~40% of the RAM.",
+      "rationale": "Optional and outside the profiles: it also turns off Fast Startup (which changes the boot measurement) and, on laptops, removes the protection against a drained battery."
+    },
+    "power.high_performance": {
+      "description": "Activates the 'High performance' power plan (creating it if missing).",
+      "rationale": "On laptops it shortens battery life, so it is only preselected on desktops. On PCs with Modern Standby (S0) the plan may not exist; it is created by duplicating the base scheme."
+    },
+    "power.ultimate_performance": {
+      "description": "Creates and activates the hidden 'Ultimate performance' plan.",
+      "rationale": "Removes power-management micro-latency; noticeably higher power use. Mutually exclusive with High performance."
+    },
+    "power.dc_battery_saver": {
+      "description": "Turns on Windows battery saver below 50% (20% by default). Nothing changes when plugged in.",
+      "rationale": "Battery saver limits background activity and lowers brightness; turning it on earlier extends battery life without touching plugged-in performance."
+    },
+    "power.dc_cpu_max": {
+      "description": "Caps the processor's maximum speed at 80% only when the laptop runs on battery.",
+      "rationale": "The last MHz use the most power and heat. Plugged in it stays at 100%. If the PC feels slow on battery, undo it."
+    },
+    "power.dc_display_off": {
+      "description": "Turns the screen off after 3 minutes idle when the laptop runs on battery.",
+      "rationale": "The screen is the biggest power draw on a laptop. Plugged in, your configured timeout is kept."
+    },
+    "network.nagle_off": {
+      "description": "Sends small TCP packets immediately (lower latency in games and interactive apps).",
+      "rationale": "TcpAckFrequency=1 and TCPNoDelay=1 are written on every interface with an IP. Real gain only in apps that do not disable Nagle themselves; cost: more packets on the network."
+    },
+    "network.autotuning_normal": {
+      "description": "Checks and restores the TCP receive window to the recommended level.",
+      "rationale": "Turning autotuning off (common advice) hurts performance on fast connections; the right thing is to make sure it is not 'disabled' or 'highlyrestricted'."
+    },
+    "network.dns": {
+      "description": "Sets public DNS servers (Cloudflare, Quad9 or Google) on active adapters.",
+      "rationale": "Never automatic: on domain PCs it breaks Active Directory name resolution. The user chooses the provider."
+    },
+    "performance.edge_startup_boost": {
+      "description": "Stops Microsoft Edge from loading into memory at Windows startup to open faster.",
+      "rationale": "Startup boost keeps Edge processes resident from startup even if you do not use it. On PCs with little RAM that memory is better spent on what you are using. Only preselected with less than 5 GB of RAM. Edge and Chrome will show \"Your browser is managed by your organization\": they say so for any policy, and it does not mean anyone controls the PC."
+    },
+    "performance.edge_background": {
+      "description": "Really closes Edge when you close the window instead of leaving it in the background.",
+      "rationale": "With \"Continue running background extensions and apps\", Edge keeps using memory and CPU after you close it. Only preselected with less than 5 GB of RAM. Edge and Chrome will show \"Your browser is managed by your organization\": they say so for any policy, and it does not mean anyone controls the PC."
+    },
+    "performance.chrome_background": {
+      "description": "Really closes Google Chrome when you close the window instead of leaving it in the background.",
+      "rationale": "Chrome can stay resident with background extensions and apps. Only shown if Chrome is installed, and preselected with less than 5 GB of RAM. Edge and Chrome will show \"Your browser is managed by your organization\": they say so for any policy, and it does not mean anyone controls the PC."
+    },
+    "performance.foreground_priority": {
+      "description": "Gives longer quantums to the active window.",
+      "rationale": "Win32PrioritySeparation=0x26 (38): short, variable quantum with maximum foreground boost."
+    },
+    "gaming.gamedvr_off": {
+      "description": "Turns off background recording and the Game Bar overlay.",
+      "rationale": "Background capture uses GPU and disk even when unused. Xbox identity components are not removed."
+    },
+    "gaming.hags": {
+      "description": "Turns on HAGS if the GPU and driver support it.",
+      "rationale": "Requires WDDM 2.7+ and a compatible GPU; checked beforehand. It can cause instability with old drivers."
+    },
+    "search.indexing_drives": {
+      "description": "Removes the content indexing attribute on the drives you choose.",
+      "rationale": "The WSearch service is not turned off: that would break Start and Outlook search. By default it only suggests data drives, not the system drive."
+    },
+    "services.pcasvc": {
+      "description": "Sets the PcaSvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. It only shows compatibility notices after installing old software."
+    },
+    "services.trkwks": {
+      "description": "Sets the TrkWks service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Keeps shortcuts to files moved between NTFS volumes on a network working."
+    },
+    "services.wisvc": {
+      "description": "Sets the wisvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Only needed if the PC is in the Insider program."
+    },
+    "services.phonesvc": {
+      "description": "Sets the PhoneSvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Telephony and SMS on PCs with a modem."
+    },
+    "services.wmpnetworksvc": {
+      "description": "Sets the WMPNetworkSvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Sharing a media library over DLNA."
+    },
+    "services.xblauthmanager": {
+      "description": "Sets the XblAuthManager service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Starts on demand when opening an Xbox game."
+    },
+    "services.xblgamesave": {
+      "description": "Sets the XblGameSave service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Starts on demand when syncing saved games."
+    },
+    "services.xboxnetapisvc": {
+      "description": "Sets the XboxNetApiSvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Starts on demand in online Xbox games."
+    },
+    "services.lfsvc": {
+      "description": "Sets the lfsvc service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. On desktops location rarely helps; on laptops it is kept."
+    },
+    "services.spooler": {
+      "description": "Sets the Spooler service startup to Manual.",
+      "rationale": "Manual, not Disabled, so it starts on demand if something needs it. Only when no printers are installed; with printers it is on the protected list."
+    },
+    "privacy.background_apps": {
+      "description": "Stops Store apps from running in the background.",
+      "rationale": "GlobalUserDisabled works on Windows 10; on Windows 11 the LetAppsRunInBackground=2 policy (force deny) is used. Side effect: notifications from Store apps (e.g. Mail) may arrive late."
+    },
+    "memory.pagefile_system_managed": {
+      "description": "If virtual memory is off or fixed-size, sets it back to 'system managed'.",
+      "rationale": "A fixed or missing pagefile causes out-of-memory errors and lost crash dumps."
+    },
+    "memory.pagefile_fixed": {
+      "description": "Fixes the pagefile size on the system drive (minimum = maximum).",
+      "rationale": "Only for users who need it (e.g. avoiding fragmentation on an HDD). A low value causes out-of-memory closes and can prevent full crash dumps."
+    },
+    "security.cpu_mitigations_off": {
+      "description": "Turns off speculative execution vulnerability mitigations to regain performance.",
+      "rationale": "SECURITY WARNING: it exposes the PC to side-channel attacks (reading memory of other processes, including the browser). It only makes sense on isolated or test machines. Needs double confirmation and is never part of an automatic profile."
+    }
   }
 }

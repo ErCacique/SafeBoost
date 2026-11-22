@@ -227,7 +227,7 @@ def clean_recycle_bin(ctx: HandlerContext) -> bool:
     if sys.platform != "win32":
         raise SkipOperation("Solo disponible en Windows")
     flags = 0x1 | 0x2 | 0x4  # SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND
-    hr = ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, flags)  # type: ignore[attr-defined]
+    hr = ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, flags)
     # S_OK o E_UNEXPECTED (papelera ya vacía) se consideran correctos.
     if hr not in (0, -2147418113):
         raise OSError(f"SHEmptyRecycleBinW devolvió 0x{hr & 0xFFFFFFFF:08X}")
@@ -329,3 +329,96 @@ def clean_windows_old(ctx: HandlerContext) -> bool:
         )
     ctx.record("handler", {"action": "Windows.old"}, None, {"bytes": freed})
     return freed > 0
+
+
+# --------------------------------------------------------------------------- navegadores
+
+# Carpeta de datos (bajo %LOCALAPPDATA%) y proceso de cada navegador basado en Chromium.
+CHROMIUM_BROWSERS: dict[str, tuple[str, str]] = {
+    "Chrome": (r"Google\Chrome\User Data", "chrome.exe"),
+    "Edge": (r"Microsoft\Edge\User Data", "msedge.exe"),
+    "Brave": (r"BraveSoftware\Brave-Browser\User Data", "brave.exe"),
+    "Opera": (r"Opera Software\Opera Stable", "opera.exe"),
+}
+# Solo cachés que el navegador regenera: nunca cookies, historial, contraseñas ni sesiones.
+CHROMIUM_CACHE_DIRS = (r"Cache\Cache_Data", "Code Cache", "GPUCache")
+
+
+def _join(base: Path, rel: str) -> Path:
+    """Las rutas relativas se escriben con "\\" como en Windows; se unen por partes."""
+    return base.joinpath(*rel.split("\\"))
+
+
+def _chromium_profiles(root: Path) -> list[Path]:
+    if not root.is_dir():
+        return []
+    # Opera guarda la caché directamente en la raíz; Chrome/Edge/Brave en Default y Profile N.
+    # Solo se usan las carpetas de caché conocidas que existan dentro (browser_caches).
+    return [root, *(p for p in root.iterdir() if p.is_dir())]
+
+
+def browser_caches(local_appdata: Path) -> dict[str, list[Path]]:
+    """Carpetas de caché por navegador instalado (Chromium y Firefox)."""
+    out: dict[str, list[Path]] = {}
+    for name, (rel, _exe) in CHROMIUM_BROWSERS.items():
+        dirs = [
+            _join(profile, cache)
+            for profile in _chromium_profiles(_join(local_appdata, rel))
+            for cache in CHROMIUM_CACHE_DIRS
+            if _join(profile, cache).is_dir()
+        ]
+        if dirs:
+            out[name] = dirs
+    firefox = local_appdata / "Mozilla" / "Firefox" / "Profiles"
+    if firefox.is_dir():
+        dirs = [p / "cache2" for p in firefox.iterdir() if (p / "cache2").is_dir()]
+        if dirs:
+            out["Firefox"] = dirs
+    return out
+
+
+def folder_bytes(dirs: list[Path]) -> int:
+    """Tamaño de unas carpetas (solo lectura), para mostrarlo antes de limpiar."""
+    return _measure([Target(d) for d in dirs]).bytes
+
+
+def _running_browsers() -> set[str]:
+    exes = {exe: name for name, (_rel, exe) in CHROMIUM_BROWSERS.items()} | {
+        "firefox.exe": "Firefox"
+    }
+    running = set()
+    for proc in psutil.process_iter(["name"]):
+        name = (proc.info.get("name") or "").lower()
+        if name in exes:
+            running.add(exes[name])
+    return running
+
+
+def _browser_targets(ctx: HandlerContext) -> tuple[list[Target], list[str]]:
+    running = _running_browsers()
+    targets: list[Target] = []
+    skipped: list[str] = []
+    for name, dirs in browser_caches(user_local_appdata(ctx)).items():
+        if name in running:
+            skipped.append(name)  # con el navegador abierto los archivos están en uso
+            continue
+        targets.extend(Target(d) for d in dirs)
+    return targets, skipped
+
+
+def clean_browser_cache(ctx: HandlerContext) -> bool:
+    targets, skipped = _browser_targets(ctx)
+    if skipped:
+        ctx.note(f"Cierra {', '.join(skipped)} para limpiar su caché (ahora está abierto)")
+    if not targets:
+        raise SkipOperation(
+            "Caché de navegadores: cierra el navegador y vuelve a intentarlo"
+            if skipped
+            else "Caché de navegadores: nada que limpiar"
+        )
+    return _run_clean(ctx, "caché de navegadores", targets)
+
+
+def estimate_browser_cache(ctx: HandlerContext) -> DetectResult:
+    targets = [Target(d) for dirs in browser_caches(user_local_appdata(ctx)).values() for d in dirs]
+    return _estimate(targets)

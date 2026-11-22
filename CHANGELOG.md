@@ -7,6 +7,36 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-22
+
+### Added
+- **Prueba de rendimiento** (Evolución): disco (secuencial y archivos pequeños), procesador (uno y
+  todos los núcleos) y lo que tardan en abrirse el Bloc de notas y Paint. Guarda el historial y
+  compara con la primera medición.
+- **Navegadores** (Espacio): tamaño de la caché de Chrome, Edge, Brave, Opera y Firefox con
+  limpieza segura (nuevo `cleanup.browser_cache`; no toca cookies, historial ni contraseñas y omite
+  los navegadores abiertos) y lista de extensiones con avisos (acceso a todas las webs, tipos que
+  suelen ser publicidad).
+- **Modo ahorro** (Dashboard, solo con batería): ahorro de batería al 50 %, procesador al 80 % y
+  pantalla apagada a los 3 minutos, solo con batería. Tres tweaks nuevos `power.dc_*`, deshacibles.
+- **Vigilancia en segundo plano** (Ajustes, desactivada por defecto): icono junto al reloj que
+  avisa al momento cuando un programa se añade al inicio y, si lo pides, activa el modo juego al
+  abrir un juego de Steam, Epic, GOG, Xbox… y lo desactiva al cerrarlo.
+- **Inglés completo**: descripciones, motivos y notas de los 82 tweaks y el veredicto del
+  diagnóstico.
+- **Edición Técnico**: licencia firmada (Ed25519) que se comprueba sin internet; con ella, el
+  informe para el cliente lleva el nombre, contacto y logo del técnico (Ajustes → Edición Técnico).
+  `scripts/license_tool.py` emite licencias; ver `docs/LICENCIAS.md`.
+- **Microsoft Store**: la Release genera un paquete MSIX sin firmar listo para Partner Center
+  (`docs/STORE.md`).
+- **Web** en `site/` con publicación automática en GitHub Pages cuando el repo sea público.
+
+### Changed
+- CI: comprobación de tipos (mypy), cobertura mínima del 80 % y prueba de humo de la interfaz en
+  Linux (Xvfb) y en Windows real, con capturas de cada pantalla como artefacto.
+- mypy encontró y se corrigieron varios errores latentes de tipos (ninguno visible para el
+  usuario).
+
 ## [0.9.0] - 2026-11-22
 
 ### Added

@@ -28,6 +28,10 @@ class Settings:
     # Tarea \SafeTrim\Maintenance cada 4 semanas (Ajustes → General).
     maintenance: bool = False
     language: str = "es"  # "es" o "en" (core.i18n); se aplica al reiniciar
+    # Icono junto al reloj (core.tray), tarea \SafeTrim\Tray al iniciar sesión.
+    background_watch: bool = False
+    # Con la vigilancia: modo juego al abrir un juego de Steam, Epic, GOG, Xbox…
+    auto_game_mode: bool = False
 
     @classmethod
     def load(cls, path: Path = SETTINGS_FILE) -> Settings:

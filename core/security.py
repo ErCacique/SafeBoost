@@ -180,7 +180,7 @@ def read_security(registry: Registry, runner: Runner, env: EnvironmentInfo) -> S
     lua = registry.read("HKLM", UAC_KEY, "EnableLUA")
     consent = registry.read("HKLM", UAC_KEY, "ConsentPromptBehaviorAdmin")
     uac = (
-        int(lua.data) if lua and lua.data is not None else None,
-        int(consent.data) if consent and consent.data is not None else None,
+        int(str(lua.data)) if lua and lua.data is not None else None,
+        int(str(consent.data)) if consent and consent.data is not None else None,
     )
     return evaluate(data if isinstance(data, dict) else {}, uac, env)

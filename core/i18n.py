@@ -1,9 +1,9 @@
 """Traducción de la interfaz (español por defecto, inglés opcional).
 
 Estilo gettext: el texto original en español es la clave; si no hay traducción se muestra el
-original. Se fija el idioma una vez al arrancar (Ajustes → Idioma, requiere reiniciar). En esta
-versión están traducidos el menú, los títulos de página, los botones principales, la guía de
-inicio y los nombres de los tweaks; el resto de textos sigue en español.
+original. Se fija el idioma una vez al arrancar (Ajustes → Idioma, requiere reiniciar). Están
+traducidos el menú, los títulos, los botones principales, la guía de inicio, los tweaks (nombre,
+descripción, motivo y nota de reversión) y el veredicto del diagnóstico.
 """
 
 from __future__ import annotations
@@ -19,12 +19,13 @@ log = get_logger("i18n")
 LANGUAGES = {"es": "Español", "en": "English"}
 _ui: dict[str, str] = {}
 _tweaks: dict[str, str] = {}
+_tweak_text: dict[str, dict[str, str]] = {}
 _lang = "es"
 
 
 def set_language(lang: str) -> None:
-    global _lang, _ui, _tweaks
-    _lang, _ui, _tweaks = lang, {}, {}
+    global _lang, _ui, _tweaks, _tweak_text
+    _lang, _ui, _tweaks, _tweak_text = lang, {}, {}, {}
     if lang == "es":
         return
     path = RESOURCE_ROOT / "data" / "i18n" / f"{lang}.json"
@@ -36,6 +37,7 @@ def set_language(lang: str) -> None:
         return
     _ui = dict(data.get("ui", {}))
     _tweaks = dict(data.get("tweaks", {}))
+    _tweak_text = {k: dict(v) for k, v in data.get("tweak_text", {}).items()}
 
 
 def current() -> str:
@@ -49,3 +51,8 @@ def _(text: str, **fmt: Any) -> str:
 
 def tweak_name(tweak_id: str, default: str) -> str:
     return _tweaks.get(tweak_id, default)
+
+
+def tweak_text(tweak_id: str, field: str, default: str) -> str:
+    """Descripción, motivo (rationale) o nota de reversión traducidos del tweak."""
+    return _tweak_text.get(tweak_id, {}).get(field, default)

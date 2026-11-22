@@ -24,4 +24,4 @@ d.ellipse((cx - 70, cy - 70, cx + 70, cy + 70), fill=(240, 244, 248, 255))
 img.save(
     sys.argv[1], sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
 )
-img.resize((256, 256), Image.LANCZOS).save(sys.argv[2])
+img.resize((256, 256), Image.Resampling.LANCZOS).save(sys.argv[2])

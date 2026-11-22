@@ -172,15 +172,12 @@ class HistoryPage(Page):
         def work(progress: ProgressFn, cancel: threading.Event) -> Session:
             return engine.revert(session.id, progress=progress, cancel=cancel)
 
-        self.main.run_long(
-            work,
-            on_done=lambda s: (
-                SummaryDialog(self, s, engine.catalog, title="Reversión"),
-                self.refresh(),
-                self.main.invalidate_detections(),
-            ),
-            error_title="Error al deshacer",
-        )
+        def done(result: Session) -> None:
+            SummaryDialog(self, result, engine.catalog, title="Reversión")
+            self.refresh()
+            self.main.invalidate_detections()
+
+        self.main.run_long(work, on_done=done, error_title="Error al deshacer")
 
     def _system_restore(self) -> None:
         if not messagebox.askyesno(

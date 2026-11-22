@@ -3,12 +3,15 @@ del sistema antes y después de instalar un programa."""
 
 from __future__ import annotations
 
+import tempfile
 import threading
+from pathlib import Path
 from tkinter import messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.benchmark import BenchResult, BenchStore, change_pct, run_benchmark
 from core.metrics import human_bytes, local_time
 from core.watch import (
     EventLog,
@@ -129,6 +132,52 @@ class EvolutionPage(Page):
         self.diff_label.pack(anchor="w", padx=PAD, pady=(PAD_S, PAD))
         self._refresh_snapshot_status()
 
+        self._title("Prueba de rendimiento")
+        bench_card = Card(self.body)
+        bench_card.pack(fill="x", pady=PAD_S)
+        ctk.CTkLabel(
+            bench_card,
+            text="Mide el disco, el procesador y lo que tardan en abrirse el Bloc de notas y "
+            "Paint (unos 30 segundos). Hazla antes y después de optimizar para ver la diferencia "
+            "con números. Cierra otros programas para que la medida sea fiable.",
+            font=FONT_BODY,
+            wraplength=WRAP,
+            justify="left",
+        ).pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
+        self.bench_btn = ctk.CTkButton(bench_card, text="Medir ahora", command=self.benchmark)
+        self.bench_btn.pack(anchor="w", padx=PAD, pady=(0, PAD_S))
+        self.bench_label = ctk.CTkLabel(
+            bench_card, text="", font=FONT_BODY, wraplength=WRAP, justify="left"
+        )
+        self.bench_label.pack(anchor="w", padx=PAD, pady=(0, PAD))
+        self._show_benchmarks()
+
+    def _show_benchmarks(self) -> None:
+        results = BenchStore().load()
+        if not results:
+            self.bench_label.configure(text="Todavía no has hecho ninguna medición.")
+            return
+        self.bench_label.configure(
+            text=describe_benchmark(results[-1], results[0] if len(results) > 1 else None)
+        )
+
+    def benchmark(self) -> None:
+        app = self.state.app
+
+        def work(progress: ProgressFn, _c: threading.Event) -> BenchResult:
+            # La carpeta temporal está en la unidad del sistema, que es la que importa.
+            return run_benchmark(app.runner, Path(tempfile.gettempdir()), progress)
+
+        def done(result: BenchResult) -> None:
+            BenchStore().add(result)
+            self._show_benchmarks()
+            if result.errors:
+                messagebox.showwarning(
+                    "Prueba de rendimiento", "\n".join(result.errors), parent=self
+                )
+
+        self.main.run_long(work, done, "Prueba de rendimiento")
+
     def on_show(self) -> None:
         self.draw_chart()
         self.render_events()
@@ -188,7 +237,7 @@ class EvolutionPage(Page):
             )
         elif boots:
             self.trend_label.configure(
-                text=f"Último arranque: {boots[-1].boot_ms / 1000:.1f} s. Sin empeoramiento "
+                text=f"Último arranque: {(boots[-1].boot_ms or 0) / 1000:.1f} s. Sin empeoramiento "
                 "apreciable.",
                 text_color=ACCENT,
             )
@@ -311,3 +360,35 @@ def describe_diff(diff: SnapshotDiff) -> str:
             more = f"\n  … y {len(items) - 12} más" if len(items) > 12 else ""
             parts.append(f"{title} ({len(items)}):\n{shown}{more}")
     return "\n\n".join(parts)
+
+
+def describe_benchmark(last: BenchResult, first: BenchResult | None) -> str:
+    """Resultado de la última medición y, si hay una anterior, cuánto ha cambiado desde la
+    primera (positivo = mejor)."""
+
+    def fmt(value: float | None, unit: str, base: float | None = None, higher: bool = True) -> str:
+        if value is None:
+            return "no medido"
+        text = f"{value:g} {unit}"
+        pct = change_pct(base, value, higher) if first else None
+        if pct:
+            text += f"  ({'+' if pct > 0 else ''}{pct} % {'mejor' if pct > 0 else 'peor'})"
+        return text
+
+    base = first or BenchResult()
+    lines = [
+        f"Última medición: {local_time(last.when)}",
+        f"Disco, escritura: {fmt(last.disk_write_mbs, 'MB/s', base.disk_write_mbs)}",
+        f"Disco, lectura: {fmt(last.disk_read_mbs, 'MB/s', base.disk_read_mbs)}",
+        "Disco, archivos pequeños: "
+        + fmt(last.disk_random_iops, "operaciones/s", base.disk_random_iops),
+        f"Procesador, un núcleo: {fmt(last.cpu_single_mbs, 'MB/s', base.cpu_single_mbs)}",
+        f"Procesador, {last.threads} hilos: {fmt(last.cpu_multi_mbs, 'MB/s', base.cpu_multi_mbs)}",
+    ]
+    names = {"notepad.exe": "Bloc de notas", "mspaint.exe": "Paint"}
+    for app, ms in last.apps_ms.items():
+        before = base.apps_ms.get(app)
+        lines.append(f"Abrir {names.get(app, app)}: {fmt(ms, 'ms', before, higher=False)}")
+    if first:
+        lines.append(f"Comparado con la primera medición ({local_time(first.when)}).")
+    return "\n".join(lines)

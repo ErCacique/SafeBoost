@@ -38,6 +38,7 @@ from core.hardware import (
     query_hardware,
     ram_purchase_advice,
 )
+from core.i18n import _
 from core.logger import get_logger
 from core.metrics import GIB, Snapshot, human_bytes, take_snapshot
 from core.process import Runner
@@ -283,25 +284,28 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
     ram = report.ram_installed
 
     if ram < LOW_RAM_GIB * GIB:
-        findings.append(Finding("critical", "Poca memoria RAM", _ram_advice(ram, hw)))
+        findings.append(Finding("critical", _("Poca memoria RAM"), _ram_advice(ram, hw)))
     elif snap.ram_percent >= DIAG_RAM_PRESSURE_PERCENT:
         hog = report.top_memory[0] if report.top_memory else None
-        detail = (
-            f"La RAM está al {snap.ram_percent:.0f} %. Windows usa el disco como memoria y "
-            "va a tirones."
+        detail = _(
+            "La RAM está al {pct} %. Windows usa el disco como memoria y va a tirones.",
+            pct=f"{snap.ram_percent:.0f}",
         )
         if hog:
-            detail += f" Lo que más ocupa: {_describe(hog, memory=True)}."
-        findings.append(Finding("warning", "Memoria casi llena", detail))
+            detail += " " + _("Lo que más ocupa: {what}.", what=_describe(hog, memory=True))
+        findings.append(Finding("warning", _("Memoria casi llena"), detail))
 
     for check in report.security.problems:
         if check.critical:
             findings.append(
                 Finding(
                     "critical",
-                    f"Seguridad: {check.name}",
-                    f"{check.detail}. Actívalo en Seguridad de Windows: un equipo sin esta "
-                    "protección también puede ir lento por malware.",
+                    _("Seguridad: {name}", name=_(check.name)),
+                    _(
+                        "{detail}. Actívalo en Seguridad de Windows: un equipo sin esta "
+                        "protección también puede ir lento por malware.",
+                        detail=_(check.detail),
+                    ),
                 )
             )
 
@@ -309,51 +313,70 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
         findings.append(
             Finding(
                 "warning",
-                "Reinicio pendiente de Windows Update",
-                "Windows tiene actualizaciones a medio instalar. Reinicia antes de optimizar o "
-                "de medir el rendimiento.",
+                _("Reinicio pendiente de Windows Update"),
+                _(
+                    "Windows tiene actualizaciones a medio instalar. Reinicia antes de optimizar "
+                    "o de medir el rendimiento."
+                ),
             )
         )
     elif report.updates.stale:
         findings.append(
             Finding(
                 "warning",
-                "Windows sin actualizar",
-                f"La última actualización se instaló hace {report.updates.last_update_days} "
-                "días. Ejecuta Windows Update hasta que diga “Estás al día”.",
+                _("Windows sin actualizar"),
+                _(
+                    "La última actualización se instaló hace {days} días. Ejecuta Windows Update "
+                    "hasta que diga “Estás al día”.",
+                    days=report.updates.last_update_days,
+                ),
             )
         )
 
     busy = snap.cpu_percent >= DIAG_CPU_BUSY_PERCENT
     top = report.top_cpu[0] if report.top_cpu else None
     if top and top.cpu_percent >= DIAG_PROCESS_HOG_PERCENT:
-        detail = f"{_describe(top)} está usando el {top.cpu_percent:.0f} % del procesador."
+        detail = _(
+            "{what} está usando el {pct} % del procesador.",
+            what=_describe(top),
+            pct=f"{top.cpu_percent:.0f}",
+        )
         if top.hint:
-            detail += f" {top.hint}"
-        findings.append(Finding("warning" if busy else "info", "Proceso acaparando la CPU", detail))
+            detail += f" {_(top.hint)}"
+        title = _("Proceso acaparando la CPU")
+        findings.append(Finding("warning" if busy else "info", title, detail))
     elif busy:
         findings.append(
             Finding(
                 "warning",
-                "Procesador saturado",
-                f"La CPU está al {snap.cpu_percent:.0f} % repartida entre muchos procesos.",
+                _("Procesador saturado"),
+                _(
+                    "La CPU está al {pct} % repartida entre muchos procesos.",
+                    pct=f"{snap.cpu_percent:.0f}",
+                ),
             )
         )
 
     worst = report.boot.culprits[0] if report.boot.culprits else None
     if worst and worst.avg_ms >= DIAG_BOOT_CULPRIT_WARN_MS:
         times = (
-            f" en {worst.count} de {report.boot.boots} arranques"
+            _(" en {n} de {total} arranques", n=worst.count, total=report.boot.boots)
             if report.boot.boots >= worst.count
             else ""
         )
         findings.append(
             Finding(
                 "warning",
-                "Algo retrasa el arranque",
-                f"{worst.name} ({worst.kind}) retrasa el arranque unos "
-                f"{worst.avg_ms / 1000:.0f} s{times}. {worst.advice} "
-                "Mira la lista completa más abajo.",
+                _("Algo retrasa el arranque"),
+                _(
+                    "{name} ({kind}) retrasa el arranque unos {secs} s{times}. {advice} Mira la "
+                    "lista completa más abajo.",
+                    name=worst.name,
+                    kind=_(worst.kind),
+                    secs=f"{worst.avg_ms / 1000:.0f}",
+                    times=times,
+                    advice=_(worst.advice),
+                ),
             )
         )
 
@@ -361,9 +384,13 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
         findings.append(
             Finding(
                 "info",
-                "Procesador modesto",
-                f"{hw.cpu_name or 'El procesador'} tiene {hw.threads} hilos: con varias cosas "
-                "abiertas a la vez se queda corto. No se puede mejorar con ajustes.",
+                _("Procesador modesto"),
+                _(
+                    "{cpu} tiene {threads} hilos: con varias cosas abiertas a la vez se queda "
+                    "corto. No se puede mejorar con ajustes.",
+                    cpu=hw.cpu_name or _("El procesador"),
+                    threads=hw.threads,
+                ),
             )
         )
 
@@ -371,15 +398,18 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
         battery = psutil.sensors_battery() if hasattr(psutil, "sensors_battery") else None
         plugged = None if battery is None else bool(battery.power_plugged)
         for level, title, detail in hardware_findings(hw.details, plugged):
-            findings.append(Finding(level, title, detail))  # type: ignore[arg-type]
+            findings.append(Finding(level, _(title), detail))  # type: ignore[arg-type]
 
     if report.env.disk_type == "hdd":
         findings.append(
             Finding(
                 "warning",
-                "Disco mecánico (HDD)",
-                "Cambiar el disco del sistema por un SSD es la mejora más notable en un equipo "
-                "con disco duro: arranque y apertura de programas varias veces más rápidos.",
+                _("Disco mecánico (HDD)"),
+                _(
+                    "Cambiar el disco del sistema por un SSD es la mejora más notable en un "
+                    "equipo con disco duro: arranque y apertura de programas varias veces más "
+                    "rápidos."
+                ),
             )
         )
     free_pct = snap.disk_free / snap.disk_total * 100 if snap.disk_total else 100
@@ -387,25 +417,32 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
         findings.append(
             Finding(
                 "warning",
-                "Poco espacio en disco",
-                f"Quedan {human_bytes(snap.disk_free)} libres ({free_pct:.0f} %). Windows "
-                "necesita espacio para actualizarse y para la memoria virtual: usa Limpieza.",
+                _("Poco espacio en disco"),
+                _(
+                    "Quedan {free} libres ({pct} %). Windows necesita espacio para actualizarse y "
+                    "para la memoria virtual: usa Limpieza.",
+                    free=human_bytes(snap.disk_free),
+                    pct=f"{free_pct:.0f}",
+                ),
             )
         )
 
     if MIN_BUILD_WIN11 > report.env.build >= 1:
         ready = [r.ok for r in report.win11]
         verdict = (
-            "No cumple los requisitos de Windows 11"
+            _("No cumple los requisitos de Windows 11")
             if False in ready
-            else "Puede que admita Windows 11 (revisa la lista de requisitos)"
+            else _("Puede que admita Windows 11 (revisa la lista de requisitos)")
         )
         findings.append(
             Finding(
                 "info",
-                "Windows 10 sin soporte",
-                f"Windows 10 dejó de recibir parches gratuitos el {WIN10_END_OF_SUPPORT}. "
-                f"{verdict}.",
+                _("Windows 10 sin soporte"),
+                _(
+                    "Windows 10 dejó de recibir parches gratuitos el {date}. {verdict}.",
+                    date=WIN10_END_OF_SUPPORT,
+                    verdict=verdict,
+                ),
             )
         )
 
@@ -414,9 +451,11 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
             0,
             Finding(
                 "ok",
-                "No hay un cuello de botella claro",
-                "Memoria, procesador y disco tienen margen. Si notas lentitud en un momento "
-                "concreto, vuelve a analizar justo entonces.",
+                _("No hay un cuello de botella claro"),
+                _(
+                    "Memoria, procesador y disco tienen margen. Si notas lentitud en un momento "
+                    "concreto, vuelve a analizar justo entonces."
+                ),
             ),
         )
     findings.sort(key=lambda f: _LEVEL_ORDER[f.level])
@@ -424,24 +463,29 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
 
 
 def _ram_advice(ram: int, hw: HardwareInfo | None) -> str:
-    text = (
-        f"El equipo tiene {human_bytes(ram)}. Windows y un navegador ya la llenan, y entonces "
-        "usa el disco como memoria. Ningún perfil de SafeTrim sustituye a ampliar memoria."
+    text = _(
+        "El equipo tiene {ram}. Windows y un navegador ya la llenan, y entonces usa el disco como "
+        "memoria. Ningún perfil de SafeTrim sustituye a ampliar memoria.",
+        ram=human_bytes(ram),
     )
     if hw is None or hw.free_slots is None:
-        return text + " Ampliar a 8 GB es la mejora que más se notaría."
+        return text + " " + _("Ampliar a 8 GB es la mejora que más se notaría.")
     if hw.free_slots > 0:
-        text += (
-            f" Tiene {hw.free_slots} ranura(s) libre(s): añadir un módulo de 4 u 8 GB es la "
-            "mejora que más se notaría."
+        text += " " + _(
+            "Tiene {n} ranura(s) libre(s): añadir un módulo de 4 u 8 GB es la mejora que más se "
+            "notaría.",
+            n=hw.free_slots,
         )
     else:
-        text += (
-            f" Las {hw.slots} ranura(s) están ocupadas: habría que sustituir un módulo por "
-            "otro mayor."
+        text += " " + _(
+            "Las {n} ranura(s) están ocupadas: habría que sustituir un módulo por otro mayor.",
+            n=hw.slots,
         )
     if hw.max_capacity:
-        text += f" La placa admite hasta {human_bytes(hw.max_capacity)}."
+        text += " " + _(
+            "La placa admite hasta {cap}.",
+            cap=human_bytes(hw.max_capacity),
+        )
     advice = ram_purchase_advice(hw.details.memory, hw.slots, hw.max_capacity, ram)
     return f"{text} {advice}" if advice else text
 

@@ -1,8 +1,9 @@
-"""Modo juego: activa con un clic los ajustes que ayudan al jugar y los deshace igual de rápido.
+"""Modos de un clic: modo juego y modo ahorro (batería).
 
-Es una sesión normal del motor (se ve y se deshace también desde el Historial), sin punto de
-restauración porque solo incluye tweaks reversibles de riesgo bajo. No se activa solo al abrir un
-juego: eso exigiría dejar SafeTrim residente vigilando procesos, y no lo hace.
+Cada modo es una sesión normal del motor (se ve y se deshace también desde el Historial), sin
+punto de restauración porque solo incluye tweaks reversibles de riesgo bajo. El modo juego puede
+activarse solo al abrir un juego si el usuario enciende la vigilancia en segundo plano
+(core.tray); por defecto no hay nada residente.
 """
 
 from __future__ import annotations
@@ -22,12 +23,22 @@ GAME_MODE_TWEAKS: tuple[str, ...] = (
     "gaming.gamedvr_off",
     "performance.foreground_priority",
 )
+BATTERY_MODE_TWEAKS: tuple[str, ...] = (
+    "power.dc_battery_saver",
+    "power.dc_cpu_max",
+    "power.dc_display_off",
+)
 
 
-class GameMode:
+class TweakMode:
+    """Un conjunto fijo de tweaks que se activa y desactiva como una unidad."""
+
+    name = "mode"
+    tweaks: tuple[str, ...] = ()
+
     def __init__(self, engine: Engine, directory: Path = WATCH_DIR) -> None:
         self.engine = engine
-        self.path = directory / "gamemode.json"
+        self.path = directory / f"{self.name}.json"
 
     def active_session(self) -> str | None:
         try:
@@ -45,9 +56,9 @@ class GameMode:
         return self.active_session() is not None
 
     def candidates(self) -> list[str]:
-        """Los del modo juego que se pueden aplicar en este equipo y aún no están aplicados."""
+        """Los del modo que se pueden aplicar en este equipo y aún no están aplicados."""
         out = []
-        for tid in GAME_MODE_TWEAKS:
+        for tid in self.tweaks:
             if tid not in self.engine.catalog:
                 continue
             tweak = self.engine.catalog.get(tid)
@@ -65,7 +76,7 @@ class GameMode:
         session = self.engine.apply(ids, restore_point=False)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps({"session": session.id}), encoding="utf-8")
-        log.info("game_mode_on", extra={"session": session.id, "tweaks": ids})
+        log.info("mode_on", extra={"mode": self.name, "session": session.id, "tweaks": ids})
         return session
 
     def stop(self) -> Session | None:
@@ -74,5 +85,20 @@ class GameMode:
             return None
         result = self.engine.revert(sid)
         self.path.unlink(missing_ok=True)
-        log.info("game_mode_off", extra={"session": sid})
+        log.info("mode_off", extra={"mode": self.name, "session": sid})
         return result
+
+
+class GameMode(TweakMode):
+    name = "gamemode"
+    tweaks = GAME_MODE_TWEAKS
+
+
+class BatteryMode(TweakMode):
+    """Modo ahorro: solo cambia los valores con batería; enchufado todo sigue igual."""
+
+    name = "batterymode"
+    tweaks = BATTERY_MODE_TWEAKS
+
+    def available(self) -> bool:
+        return self.engine.env.has_battery

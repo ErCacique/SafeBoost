@@ -25,7 +25,11 @@ def _active_interfaces(ctx: HandlerContext) -> list[str]:
         dhcp = ctx.registry.read("HKLM", path, "DhcpIPAddress")
         static = ctx.registry.read("HKLM", path, "IPAddress")
         has_dhcp = dhcp is not None and dhcp.data not in NO_ADDRESS
-        has_static = static is not None and any(ip not in NO_ADDRESS for ip in static.data)
+        has_static = (
+            static is not None
+            and isinstance(static.data, list)
+            and any(ip not in NO_ADDRESS for ip in static.data)
+        )
         if has_dhcp or has_static:
             out.append(path)
     return out

@@ -182,6 +182,18 @@ arriba y se crea una tarea programada en `\SafeTrim\Delayed\` que lanza el mismo
 después de iniciar sesión, con los permisos del usuario. Deshacer borra la tarea y reactiva la
 entrada.
 
+### Vigilancia en segundo plano (opcional)
+
+Desactivada por defecto. En Ajustes se activa un icono junto al reloj (tarea programada
+`\SafeTrim\Tray` al iniciar sesión, con privilegios elevados y sin pedir UAC) que avisa cuando un
+programa se añade al inicio y, si se pide, activa el modo juego al abrir un juego de Steam, Epic,
+GOG, Xbox, Riot, Ubisoft o EA y lo desactiva al cerrarlo (solo apaga lo que encendió él).
+
+### Edición Técnico
+
+Licencia firmada con Ed25519 que se comprueba sin internet (`core/license.py`). Desbloquea la marca
+del técnico en el informe para el cliente. Emisión y gestión de la clave: `docs/LICENCIAS.md`.
+
 ## Modelo de tweaks
 
 Cada entrada de `data/tweaks.json` se valida contra `data/tweaks.schema.json` (CI y pre-commit).

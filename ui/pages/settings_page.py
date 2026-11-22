@@ -11,8 +11,17 @@ import customtkinter as ctk
 
 from core.constants import APP_HOME, APP_VERSION, LOG_DIR, self_command
 from core.i18n import LANGUAGES, _
+from core.license import (
+    Branding,
+    LicenseError,
+    load_license,
+    remove_license,
+    save_license,
+    set_logo,
+)
 from core.logger import ROOT_LOGGER_NAME, export_logs
 from core.restore import RestoreResult
+from core.tray import remove_tray, schedule_tray
 from core.watch import remove_maintenance, schedule_maintenance
 from ui.pages.base import Page, open_path, show_error
 from ui.theme import (
@@ -24,6 +33,7 @@ from ui.theme import (
     RISK_COLORS,
     SECONDARY_BUTTON,
     TEXT_MUTED,
+    WRAP,
 )
 from ui.widgets import Card
 
@@ -108,6 +118,24 @@ class SettingsPage(Page):
             font=FONT_BODY,
             command=self._toggle_maintenance,
         ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.background = ctk.BooleanVar(value=settings.background_watch)
+        ctk.CTkSwitch(
+            other,
+            text="Vigilancia en segundo plano: icono junto al reloj que avisa al momento cuando "
+            "un programa se añade al inicio",
+            variable=self.background,
+            font=FONT_BODY,
+            command=self._toggle_background,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.auto_game = ctk.BooleanVar(value=settings.auto_game_mode)
+        ctk.CTkSwitch(
+            other,
+            text="Con la vigilancia: activar el modo juego al abrir un juego (Steam, Epic, GOG, "
+            "Xbox…) y desactivarlo al cerrarlo",
+            variable=self.auto_game,
+            font=FONT_BODY,
+            command=self._save,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
         ctk.CTkButton(
             other,
             text="Ver la guía de primeros pasos",
@@ -130,6 +158,8 @@ class SettingsPage(Page):
             variable=self.language,
             command=lambda _v: self._save(),
         ).pack(side="left", padx=PAD)
+
+        self._build_license(body)
 
         look = self._section(body, "Apariencia")
         self.appearance = ctk.StringVar(value=settings.appearance)
@@ -171,6 +201,8 @@ class SettingsPage(Page):
         settings.log_level = self.level.get()
         settings.check_updates = self.check_updates.get()
         settings.maintenance = self.maintenance.get()
+        settings.background_watch = self.background.get()
+        settings.auto_game_mode = self.auto_game.get()
         names = {v: k for k, v in LANGUAGES.items()}
         settings.language = names.get(self.language.get(), "es")
         settings.save()
@@ -239,3 +271,130 @@ class SettingsPage(Page):
             show_error("Exportar log", exc, self)
             return
         messagebox.showinfo("Exportar log", f"Log exportado en:\n{target}", parent=self)
+
+    def _toggle_background(self) -> None:
+        app = self.state.app
+        enabled = self.background.get()
+        user = app.env.interactive_user
+
+        def work(_p: Any, _c: Any) -> bool:
+            if not enabled:
+                remove_tray(app.runner)
+                return True
+            return bool(user) and schedule_tray(app.runner, self_command(), user)
+
+        def done(ok: bool) -> None:
+            if not ok:
+                self.background.set(False)
+                messagebox.showerror(
+                    "Vigilancia en segundo plano",
+                    "No se pudo programar la tarea. Revisa el log para ver el motivo.",
+                    parent=self,
+                )
+            self._save()
+
+        self.main.run_long(work, done, "Vigilancia en segundo plano")
+
+    # ------------------------------------------------------------------ edición Técnico
+
+    def _build_license(self, body: Any) -> None:
+        card = self._section(body, "Edición Técnico")
+        self.license_label = ctk.CTkLabel(
+            card, text="", font=FONT_BODY, wraplength=WRAP, justify="left"
+        )
+        self.license_label.pack(anchor="w", padx=PAD, pady=(PAD, PAD_S))
+        row = ctk.CTkFrame(card, fg_color="transparent")
+        row.pack(anchor="w", padx=PAD, pady=(0, PAD_S))
+        ctk.CTkButton(row, text="Introducir licencia…", command=self._enter_license).pack(
+            side="left"
+        )
+        self.remove_license_btn = ctk.CTkButton(
+            row, text="Quitar licencia", **SECONDARY_BUTTON, command=self._remove_license
+        )
+        self.remove_license_btn.pack(side="left", padx=PAD_S)
+        self.brand_frame = ctk.CTkFrame(card, fg_color="transparent")
+        branding = Branding.load()
+        self.brand_business = ctk.StringVar(value=branding.business)
+        self.brand_contact = ctk.StringVar(value=branding.contact)
+        for label, var in (
+            ("Nombre o empresa", self.brand_business),
+            ("Contacto (teléfono, web…)", self.brand_contact),
+        ):
+            line = ctk.CTkFrame(self.brand_frame, fg_color="transparent")
+            line.pack(fill="x", pady=2)
+            ctk.CTkLabel(line, text=label, font=FONT_BODY, width=200, anchor="w").pack(side="left")
+            entry = ctk.CTkEntry(line, textvariable=var, width=320)
+            entry.pack(side="left")
+            entry.bind("<FocusOut>", lambda _e: self._save_branding())
+        logo_row = ctk.CTkFrame(self.brand_frame, fg_color="transparent")
+        logo_row.pack(fill="x", pady=(PAD_S, 0))
+        ctk.CTkButton(
+            logo_row, text="Elegir logo (PNG o JPG)…", **SECONDARY_BUTTON, command=self._pick_logo
+        ).pack(side="left")
+        self.logo_label = ctk.CTkLabel(logo_row, text="", font=FONT_BODY)
+        self.logo_label.pack(side="left", padx=PAD)
+        self._refresh_license()
+
+    def _refresh_license(self) -> None:
+        lic = load_license()
+        if lic is None:
+            self.license_label.configure(
+                text="Sin licencia. Con la edición Técnico, el informe para el cliente lleva tu "
+                "nombre, tu contacto y tu logo. El resto de SafeTrim es igual en las dos ediciones."
+            )
+            self.remove_license_btn.pack_forget()
+            self.brand_frame.pack_forget()
+            return
+        until = f"hasta el {lic.expires}" if lic.expires else "sin caducidad"
+        self.license_label.configure(
+            text=f"Edición {lic.edition_label} · {lic.holder} · {until}. Estos datos aparecen en "
+            "la cabecera del informe para el cliente (Diagnóstico → Informe para el cliente)."
+        )
+        self.remove_license_btn.pack(side="left", padx=PAD_S)
+        self.brand_frame.pack(fill="x", padx=PAD, pady=(0, PAD))
+        self.logo_label.configure(text="Logo elegido" if Branding.load().has_logo else "Sin logo")
+
+    def _enter_license(self) -> None:
+        text = ctk.CTkInputDialog(
+            title="Licencia Técnico", text="Pega la licencia (empieza por ST1.):"
+        ).get_input()
+        if not text:
+            return
+        try:
+            lic = save_license(text)
+        except LicenseError as exc:
+            messagebox.showerror("Licencia", str(exc), parent=self)
+            return
+        messagebox.showinfo("Licencia", f"Licencia activada para {lic.holder}.", parent=self)
+        self._refresh_license()
+
+    def _remove_license(self) -> None:
+        if messagebox.askyesno(
+            "Licencia",
+            "¿Quitar la licencia de este equipo? Podrás volver a introducirla.",
+            parent=self,
+        ):
+            remove_license()
+            self._refresh_license()
+
+    def _save_branding(self) -> None:
+        branding = Branding.load()
+        branding.business = self.brand_business.get().strip()
+        branding.contact = self.brand_contact.get().strip()
+        branding.save()
+
+    def _pick_logo(self) -> None:
+        path = filedialog.askopenfilename(
+            parent=self,
+            title="Logo para el informe",
+            filetypes=[("Imágenes", "*.png *.jpg *.jpeg")],
+        )
+        if not path:
+            return
+        self._save_branding()
+        try:
+            set_logo(Path(path), Branding.load())
+        except (LicenseError, OSError) as exc:
+            messagebox.showerror("Logo", str(exc), parent=self)
+            return
+        self._refresh_license()

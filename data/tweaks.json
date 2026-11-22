@@ -2564,6 +2564,51 @@
       ]
     },
     {
+      "id": "cleanup.browser_cache",
+      "name": "Limpiar: Caché de los navegadores",
+      "description": "Borra la caché de Chrome, Edge, Brave, Opera y Firefox. No toca cookies, historial, contraseñas ni pestañas abiertas.",
+      "rationale": "La caché se regenera sola; borrarla libera espacio (a menudo varios GB) y las primeras páginas cargarán algo más lentas. Los navegadores abiertos se omiten porque usan esos archivos.",
+      "category": "cleanup",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "action",
+      "reversible": false,
+      "revert_note": "Acción irreversible, pero inofensiva: el navegador vuelve a descargar lo que necesite.",
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {},
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:clean_browser_cache"
+        }
+      ],
+      "revert": [
+        {
+          "op": "none",
+          "reason": "Borrado de archivos de caché: no reversible."
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.cleanup:estimate_browser_cache"
+        }
+      ]
+    },
+    {
       "id": "cleanup.windows_old",
       "name": "Limpiar: Copia de la versión anterior de Windows (Windows.old)",
       "description": "Borra la carpeta Windows.old que deja una actualización grande de Windows (suele ocupar 10-30 GB) usando el Liberador de espacio de Windows.",
@@ -2765,6 +2810,180 @@
           "ref": "tweaks.power:detect_scheme",
           "params": {
             "scheme": "ultimate_performance"
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.dc_battery_saver",
+      "name": "Con batería: ahorro de batería al 50 %",
+      "description": "Activa el ahorro de batería de Windows al bajar del 50 % (por defecto, al 20 %). Con el cargador no cambia nada.",
+      "rationale": "El ahorro de batería limita la actividad en segundo plano y baja el brillo; activarlo antes alarga la autonomía sin tocar el rendimiento enchufado.",
+      "category": "power",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.power:has_battery"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:set_dc_value",
+          "params": {
+            "sub": "SUB_ENERGYSAVER",
+            "setting": "ESBATTTHRESHOLD",
+            "value": 50,
+            "label": "umbral del ahorro de batería (%)"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:restore_dc_value"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:detect_dc_value",
+          "params": {
+            "sub": "SUB_ENERGYSAVER",
+            "setting": "ESBATTTHRESHOLD",
+            "value": 50,
+            "label": "umbral del ahorro de batería (%)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.dc_cpu_max",
+      "name": "Con batería: procesador al 80 % como máximo",
+      "description": "Limita la velocidad máxima del procesador al 80 % solo cuando el portátil va con batería.",
+      "rationale": "Los últimos MHz son los que más consumen y calientan. Enchufado sigue al 100 %. Si notas el equipo lento con batería, deshazlo.",
+      "category": "power",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.power:has_battery"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:set_dc_value",
+          "params": {
+            "sub": "SUB_PROCESSOR",
+            "setting": "PROCTHROTTLEMAX",
+            "value": 80,
+            "label": "velocidad máxima del procesador (%)"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:restore_dc_value"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:detect_dc_value",
+          "params": {
+            "sub": "SUB_PROCESSOR",
+            "setting": "PROCTHROTTLEMAX",
+            "value": 80,
+            "label": "velocidad máxima del procesador (%)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.dc_display_off",
+      "name": "Con batería: apagar la pantalla a los 3 minutos",
+      "description": "Apaga la pantalla tras 3 minutos sin uso cuando el portátil va con batería.",
+      "rationale": "La pantalla es lo que más gasta en un portátil. Enchufado se mantiene el tiempo que tengas configurado.",
+      "category": "power",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.power:has_battery"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:set_dc_value",
+          "params": {
+            "sub": "SUB_VIDEO",
+            "setting": "VIDEOIDLE",
+            "value": 180,
+            "label": "apagar la pantalla (segundos)"
+          }
+        }
+      ],
+      "revert": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:restore_dc_value"
+        }
+      ],
+      "detect": [
+        {
+          "op": "handler",
+          "ref": "tweaks.power:detect_dc_value",
+          "params": {
+            "sub": "SUB_VIDEO",
+            "setting": "VIDEOIDLE",
+            "value": 180,
+            "label": "apagar la pantalla (segundos)"
           }
         }
       ]

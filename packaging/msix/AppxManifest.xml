@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Paquete MSIX para Microsoft Store (sin firmar: la Store lo firma al publicarlo).
+  Los valores entre llaves dobles los rellena scripts/make_msix.py con packaging/msix/store.json, que a su
+  vez se copian de Partner Center (Producto → Identidad del producto). Ver docs/STORE.md.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+  <Identity Name="{{identity_name}}" Publisher="{{publisher}}" Version="{{version}}"
+            ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>SafeTrim</DisplayName>
+    <PublisherDisplayName>{{publisher_display_name}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Optimización reversible de Windows 10/11</Description>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19045.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="es-ES" />
+    <Resource Language="en-US" />
+  </Resources>
+  <Applications>
+    <Application Id="SafeTrim" Executable="SafeTrim.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="SafeTrim" Description="Optimización reversible de Windows"
+        BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <!-- Programa de escritorio clásico que necesita administrador (cambia ajustes del sistema). -->
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="allowElevation" />
+  </Capabilities>
+</Package>

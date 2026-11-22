@@ -35,7 +35,7 @@ MAX_APPS = 10
 
 def open_settings(uri: str) -> None:
     if sys.platform == "win32":
-        os.startfile(uri)  # type: ignore[attr-defined]  # noqa: S606 - URI ms-settings fija
+        os.startfile(uri)  # noqa: S606 - URI ms-settings fija
     else:
         webbrowser.open(uri)
 
