@@ -177,6 +177,11 @@ Administrador de tareas. Desactivar una entrada usa el mismo mecanismo que el
 Administrador de tareas (valores `StartupApproved`, o deshabilitar la tarea): no se borra nada,
 y cada cambio queda en una sesión que se puede deshacer desde Historial.
 
+**Retrasar 90 s** es la alternativa a desactivar: la entrada original se desactiva igual que
+arriba y se crea una tarea programada en `\SafeTrim\Delayed\` que lanza el mismo programa 90 s
+después de iniciar sesión, con los permisos del usuario. Deshacer borra la tarea y reactiva la
+entrada.
+
 ## Modelo de tweaks
 
 Cada entrada de `data/tweaks.json` se valida contra `data/tweaks.schema.json` (CI y pre-commit).

@@ -377,6 +377,9 @@ def capture_boot() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from core.crash import install as install_crash_reports
+
+    install_crash_reports()
     argv = list(sys.argv[1:] if argv is None else argv)
     args = _parse_args(argv)
     if args.self_test:

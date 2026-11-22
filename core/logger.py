@@ -107,4 +107,8 @@ def export_logs(destination: Path, log_dir: Path = LOG_DIR) -> Path:
     target.mkdir(parents=True, exist_ok=True)
     for path in sorted(log_dir.glob(f"{LOG_FILE_NAME}*")):
         shutil.copy2(path, target / path.name)
+    # Informes de error (core.crash): van en la misma exportación para enviarlos de una vez.
+    crashes = log_dir.parent / "crashes"
+    for path in sorted(crashes.glob("crash-*.txt")) if crashes.exists() else []:
+        shutil.copy2(path, target / path.name)
     return target

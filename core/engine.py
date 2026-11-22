@@ -28,7 +28,7 @@ from core.context import (
 )
 from core.environment import EnvironmentInfo
 from core.logger import get_logger
-from core.process import CommandError, Runner
+from core.process import CommandError, Runner, ps_quote
 from core.protection import ProtectionError, ProtectionGuard
 from core.registry import Registry, RegistryError, RegValue, export_key, values_equal
 from core.restore import RestoreManager
@@ -634,6 +634,16 @@ class Engine:
                 return True
             self.tasks.set_enabled(target["path"], bool(before))
             return True
+        if kind == "task_created":
+            folder, name = target["folder"], target["name"]
+            if ctx.dry_run:
+                ctx.plan(f"Eliminar tarea {folder}{name}")
+                return True
+            result = self.runner.powershell(
+                f"Unregister-ScheduledTask -TaskPath {ps_quote(folder)} -TaskName {ps_quote(name)}"
+                " -Confirm:$false -ErrorAction SilentlyContinue"
+            )
+            return result.ok
         # appx/command/handler se revierten con operaciones explícitas del catálogo.
         return False
 

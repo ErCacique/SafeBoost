@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
@@ -16,6 +17,7 @@ from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
 from core.hardware import GIB, ram_purchase_advice
 from core.i18n import _
 from core.metrics import human_bytes
+from core.support import support_url
 from ui.pages.base import Page
 from ui.theme import (
     ACCENT,
@@ -201,6 +203,9 @@ class DiagnosticsPage(Page):
         self._section("Equipo")
         self._lines(self._hardware_lines(report))
 
+        self._section("Seguridad")
+        self._security(report)
+
         self._section("Windows Update")
         updates = report.updates
         days = updates.last_update_days
@@ -304,6 +309,41 @@ class DiagnosticsPage(Page):
                     card, text=culprit.advice, font=FONT_SMALL, text_color=TEXT_MUTED
                 ).pack(anchor="w", padx=PAD * 2)
         ctk.CTkFrame(card, height=PAD, fg_color="transparent").pack()
+
+    def _security(self, report: DiagnosticReport) -> None:
+        card = Card(self.body)
+        card.pack(fill="x", pady=PAD_S)
+        if not report.security.checks:
+            ctk.CTkLabel(card, text="No se pudo consultar.", font=FONT_BODY).pack(
+                anchor="w", padx=PAD, pady=PAD
+            )
+        for check in report.security.checks:
+            mark, color = REQ_MARK[check.ok]
+            row = ctk.CTkFrame(card, fg_color="transparent")
+            row.pack(fill="x", padx=PAD, pady=2)
+            ctk.CTkLabel(row, text=mark, font=FONT_H2, text_color=color, width=24).pack(side="left")
+            ctk.CTkLabel(
+                row, text=f"{check.name}: {check.detail}", font=FONT_BODY, wraplength=WRAP - 60
+            ).pack(side="left", padx=PAD_S)
+        system = report.security.system
+        if system.manufacturer or system.model:
+            row = ctk.CTkFrame(card, fg_color="transparent")
+            row.pack(fill="x", padx=PAD, pady=(PAD_S, PAD))
+            serial = f" · n.º de serie {system.serial}" if system.serial else ""
+            ctk.CTkLabel(
+                row,
+                text=f"Equipo: {system.manufacturer} {system.model}{serial}",
+                font=FONT_BODY,
+            ).pack(side="left")
+            url = support_url(system.manufacturer, system.serial)
+            if url:
+                ctk.CTkButton(
+                    row,
+                    text="Drivers y BIOS de tu modelo",
+                    width=210,
+                    **SECONDARY_BUTTON,
+                    command=lambda: webbrowser.open(url),
+                ).pack(side="right")
 
     def _lines(self, lines: list[str]) -> None:
         card = Card(self.body)
