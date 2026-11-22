@@ -92,7 +92,7 @@ def is_admin() -> bool:
     if sys.platform != "win32":
         return False
     try:
-        return bool(ctypes.windll.shell32.IsUserAnAdmin())  # type: ignore[attr-defined]
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
     except OSError:
         return False
 

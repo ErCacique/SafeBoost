@@ -24,6 +24,7 @@ RUNNER_ALLOWED = {
     ("_common", "ps_run"): "comprueba ctx.dry_run y planifica antes de ejecutar",
     ("power", "_active_scheme"): "powercfg /getactivescheme (lectura)",
     ("power", "_schemes"): "powercfg /list (lectura)",
+    ("power", "_dc_value"): "powercfg /q (lectura)",
     ("gaming", "hags_supported"): "dxdiag /t a un archivo temporal (lectura)",
 }
 

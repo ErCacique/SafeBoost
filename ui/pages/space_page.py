@@ -15,10 +15,12 @@ import customtkinter as ctk
 
 from core.constants import SYSTEM_ROOT
 from core.diskusage import find_duplicates, last_used_by_exe, scan
+from core.extensions import list_extensions
 from core.metrics import human_bytes
 from core.oem import OemCandidate, find_oem_bloat, uninstall_command
 from core.programs import last_used, list_programs
 from tweaks._common import user_profile_dir
+from tweaks.cleanup import browser_caches, folder_bytes
 from ui.pages.base import Page
 from ui.theme import FONT_BODY, FONT_SMALL, PAD, PAD_S, SECONDARY_BUTTON, TEXT_MUTED, WRAP
 from ui.widgets import Card
@@ -27,22 +29,23 @@ from ui.worker import BackgroundTask, ProgressFn
 if TYPE_CHECKING:
     from ui.app import MainWindow
 
-VIEWS = ("Carpetas", "Archivos grandes", "Duplicados", "Programas")
+VIEWS = ("Carpetas", "Archivos grandes", "Duplicados", "Programas", "Navegadores")
 PROGRAMS_SHOWN = 40
 UNUSED_DAYS = 180
+BROWSER_CACHE_TWEAK = "cleanup.browser_cache"
 
 
 def open_folder(path: Path) -> None:
     target = path if path.is_dir() else path.parent
     if sys.platform == "win32":
-        os.startfile(target)  # type: ignore[attr-defined]  # noqa: S606 - carpeta local
+        os.startfile(target)  # noqa: S606 - carpeta local
     else:
         subprocess.Popen(["xdg-open", str(target)])
 
 
 def open_apps_settings() -> None:
     if sys.platform == "win32":
-        os.startfile("ms-settings:appsfeatures")  # type: ignore[attr-defined]  # noqa: S606
+        os.startfile("ms-settings:appsfeatures")  # noqa: S606
 
 
 class SpacePage(Page):
@@ -93,6 +96,10 @@ class SpacePage(Page):
                 return scan(home, cancel.is_set)
             if view == "Duplicados":
                 return find_duplicates(home / "Downloads")
+            if view == "Navegadores":
+                local, roaming = home / "AppData" / "Local", home / "AppData" / "Roaming"
+                caches = {name: folder_bytes(dirs) for name, dirs in browser_caches(local).items()}
+                return caches, list_extensions(local, roaming)
             by_exe = last_used_by_exe(SYSTEM_ROOT / "Prefetch")
             programs = list_programs(app.registry)
             return [(p, last_used(p, by_exe)) for p in programs]
@@ -151,6 +158,55 @@ class SpacePage(Page):
             subprocess.Popen(["cmd.exe", "/c", uninstall_command(cand.program)], close_fds=True)
         self.data.pop("Programas", None)
 
+    def _clean_browsers(self) -> None:
+        self.state.selected.add(BROWSER_CACHE_TWEAK)
+        self.state.notify()
+        self.data.pop("Navegadores", None)
+        self.main.simulate()
+
+    def _render_browsers(self, card: Any, caches: dict[str, int], extensions: list) -> None:
+        ctk.CTkLabel(card, text="Caché", font=FONT_BODY).pack(
+            anchor="w", padx=PAD, pady=(PAD, PAD_S)
+        )
+        if not caches:
+            self._row(card, "No se ha encontrado caché de Chrome, Edge, Brave, Opera ni Firefox.")
+        for name, size in sorted(caches.items(), key=lambda kv: -kv[1]):
+            self._row(card, f"{name}  ·  {human_bytes(size)}")
+        if caches:
+            row = ctk.CTkFrame(card, fg_color="transparent")
+            row.pack(fill="x", padx=PAD, pady=PAD_S)
+            ctk.CTkLabel(
+                row,
+                text="Se borra solo la caché: no cierra sesiones ni toca contraseñas o historial.",
+                font=FONT_SMALL,
+                text_color=TEXT_MUTED,
+            ).pack(side="left")
+            ctk.CTkButton(row, text="Limpiar caché…", width=150, command=self._clean_browsers).pack(
+                side="right"
+            )
+        ctk.CTkLabel(card, text="Extensiones", font=FONT_BODY).pack(
+            anchor="w", padx=PAD, pady=(PAD, PAD_S)
+        )
+        if not extensions:
+            self._row(card, "No hay extensiones instaladas (o no se pudieron leer).")
+        for ext in extensions:
+            where = ext.browser + (f" ({ext.profile})" if ext.profile else "")
+            detail = "; ".join(ext.warnings) if ext.warnings else ""
+            self._row(
+                card, f"{'⚠ ' if ext.suspicious else ''}{ext.name}  ·  {where}", detail=detail
+            )
+        if any(e.suspicious for e in extensions):
+            ctk.CTkLabel(
+                card,
+                text="Los avisos son orientativos: un bloqueador de anuncios también necesita "
+                "leer todas las webs. Quita desde el navegador las que no reconozcas "
+                "(menú → Extensiones).",
+                font=FONT_SMALL,
+                text_color=TEXT_MUTED,
+                wraplength=WRAP,
+                justify="left",
+            ).pack(anchor="w", padx=PAD, pady=PAD_S)
+
     def _render(self, view: str) -> None:
         self._clear()
         data = self.data[view]
@@ -183,6 +239,8 @@ class SpacePage(Page):
                     f"{len(group.paths)} copias de {human_bytes(group.size)}: {names}",
                     group.paths[0],
                 )
+        elif view == "Navegadores":
+            self._render_browsers(card, *data)
         else:
             data = sorted(data, key=lambda item: item[0].size_kb, reverse=True)
             top = ctk.CTkFrame(card, fg_color="transparent")

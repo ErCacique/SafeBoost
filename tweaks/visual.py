@@ -30,7 +30,7 @@ def broadcast_settings_change(ctx: HandlerContext) -> bool:
         return False
     result = ctypes.c_size_t()
     for area in ("WindowMetrics", "Policy", None):
-        ctypes.windll.user32.SendMessageTimeoutW(  # type: ignore[attr-defined]
+        ctypes.windll.user32.SendMessageTimeoutW(
             HWND_BROADCAST,
             WM_SETTINGCHANGE,
             0,

@@ -130,6 +130,7 @@ class DemoRunner:
         self._scheme = "381b4222-f694-41f0-9685-ff5bb260df2e"
         self._removed: set[str] = set()
         self._tasks: dict[str, str] = {}
+        self._dc: dict[str, int] = {}
 
     def run(self, args: list[str], timeout: int = 60, encoding: str | None = None) -> CommandResult:
         joined = " ".join(args).lower()
@@ -143,6 +144,14 @@ class DemoRunner:
             )
         elif "/setactive" in joined:
             self._scheme = args[-1].lower()
+        elif "powercfg" in joined and "/q" in args:
+            # Índice AC y DC actuales (powercfg /q traduce los textos, no los números).
+            defaults = {"esbattthreshold": 20, "procthrottlemax": 100, "videoidle": 300}
+            value = self._dc.get(args[-1].lower(), defaults.get(args[-1].lower(), 0))
+            out = f"    Current AC Power Setting Index: 0x{value:08x}\n"
+            out += f"    Current DC Power Setting Index: 0x{value:08x}"
+        elif "/setdcvalueindex" in joined:
+            self._dc[args[-2].lower()] = int(args[-1])
         elif "dxdiag" in joined:
             return CommandResult(tuple(args), 1, "", "dxdiag no disponible en demo")
         elif self.backend is not None and len(args) >= 5 and args[1] == "config":
@@ -310,6 +319,8 @@ class DemoRunner:
                     },
                 ],
             }
+        if "WaitForInputIdle" in script:
+            return [{"app": "notepad.exe", "ms": 420}, {"app": "mspaint.exe", "ms": 1310}]
         if "Get-HotFix" in script:
             return 12
         if "Win32_Volume" in script:

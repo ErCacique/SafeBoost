@@ -8,6 +8,7 @@ incluye los navegadores en segundo plano y aquí se suma la limpieza.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from core.diagnostics import DiagnosticReport
@@ -48,7 +49,7 @@ class FixPlan:
 def build_plan(
     report: DiagnosticReport,
     recommendation: tuple[int | None, str],
-    startup: list[tuple[str, str, str]],
+    startup: Sequence[tuple[str, str, str]],
     available_cleanups: list[str],
 ) -> FixPlan:
     """`startup`: (nombre, archivo, impacto) de los programas de inicio activos."""

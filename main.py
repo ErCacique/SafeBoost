@@ -54,6 +54,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--maintenance", action="store_true", help=argparse.SUPPRESS)
     # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
     parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
+    # Uso interno: icono de vigilancia junto al reloj (tarea \SafeTrim\Tray, opcional).
+    parser.add_argument("--tray", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
     return parser.parse_args(argv)
 
@@ -65,7 +67,7 @@ def _relaunch_elevated(argv: list[str]) -> bool:
     else:
         executable, params = sys.executable, [sys.argv[0], *argv]
     # ShellExecuteW devuelve > 32 si consiguió lanzar el proceso.
-    rc = ctypes.windll.shell32.ShellExecuteW(  # type: ignore[attr-defined]
+    rc = ctypes.windll.shell32.ShellExecuteW(
         None, "runas", executable, subprocess.list2cmdline(params), None, 1
     )
     return int(rc) > 32
@@ -116,7 +118,7 @@ def _attach_console(allocate: bool = False) -> bool:
     """
     if sys.platform != "win32" or not getattr(sys, "frozen", False):
         return False
-    kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+    kernel32 = ctypes.windll.kernel32
     created = False
     if not kernel32.AttachConsole(-1):
         if not (allocate and kernel32.AllocConsole()):
@@ -320,7 +322,9 @@ def maintenance(build: Callable[..., Any] | None = None) -> int:
     setup_logging()
     log = get_logger("maintenance")
     if build is None:
-        from core.app import build_context as build
+        from core.app import build_context
+
+        build = build_context
     app = build(settings=Settings.load(), warm_checks=False)
     engine = app.engine
     report = MaintenanceReport(when=datetime.now().isoformat(timespec="seconds"))
@@ -376,6 +380,20 @@ def capture_boot() -> int:
     return 0
 
 
+def tray() -> int:
+    """Icono de vigilancia en segundo plano (Ajustes → Vigilancia en segundo plano)."""
+    from core.app import build_context
+    from core.constants import self_command
+    from core.tray import run_tray
+
+    setup_logging()
+
+    def open_app() -> None:
+        subprocess.Popen(self_command(), close_fds=True)
+
+    return run_tray(build_context, open_app)
+
+
 def main(argv: list[str] | None = None) -> int:
     from core.crash import install as install_crash_reports
 
@@ -388,6 +406,8 @@ def main(argv: list[str] | None = None) -> int:
         return capture_boot()
     if args.maintenance:
         return maintenance()
+    if args.tray:
+        return tray()
     if args.undo_all:
         new_console = _attach_console(allocate=True)
         code = undo_all_cli(args.yes, args.demo)

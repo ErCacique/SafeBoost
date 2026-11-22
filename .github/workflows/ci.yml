@@ -45,8 +45,17 @@ jobs:
       - name: Validar data/tweaks.json
         run: python scripts/validate_tweaks.py
 
-      - name: Tests (registro simulado)
-        run: pytest -m "not windows"
+      - name: Tipos (mypy)
+        run: mypy
+
+      - name: Tests (registro simulado) y cobertura
+        run: pytest -m "not windows" --cov --cov-report=term
+
+      - name: Humo de la interfaz (Xvfb)
+        run: |
+          sudo apt-get install -y -qq xvfb > /dev/null
+          xvfb-run -a python scripts/ui_smoke.py --lang es
+          xvfb-run -a python scripts/ui_smoke.py --lang en
 
       - name: Buscar secretos (gitleaks)
         env:
@@ -102,3 +111,36 @@ jobs:
           PYTHONUTF8: "1"  # tildes legibles en el log del runner
           SAFETRIM_HOME: ${{ runner.temp }}\safetrim
         run: pytest -m e2e -rA -s
+
+  ui-windows:
+    name: Interfaz en Windows (humo y capturas)
+    needs: lint-test
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Recorrer todas las pantallas (demo)
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python scripts/ui_smoke.py --lang es --screenshots screenshots
+          python scripts/ui_smoke.py --lang en --screenshots screenshots
+
+      - name: Subir capturas
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: capturas-interfaz
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -15,6 +15,7 @@ from core.metrics import human_bytes
 from core.process import CommandError, Runner, as_list
 
 log = get_logger("hardware")
+_Date = date  # GpuDriver tiene un campo llamado `date`
 
 GIB = 1024**3
 HwFinding = tuple[str, str, str]  # (nivel, título, detalle)
@@ -177,7 +178,7 @@ class GpuDriver:
     version: str = ""
     date: str = ""  # YYYY-MM-DD
 
-    def age_days(self, today: date | None = None) -> int | None:
+    def age_days(self, today: _Date | None = None) -> int | None:
         try:
             built = date.fromisoformat(self.date)
         except ValueError:

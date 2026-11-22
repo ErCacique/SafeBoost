@@ -244,10 +244,10 @@ def take_snapshot(registry: Registry, runner: Runner, startup: Iterable[StartupI
         kind = registry.read("HKLM", path, "Type")
         start = registry.read("HKLM", path, "Start")
         # Solo servicios Win32 (0x10 propio, 0x20 compartido): los drivers no interesan aquí.
-        if kind is None or start is None or not int(kind.data or 0) & 0x30:
+        if kind is None or start is None or not int(str(kind.data or 0)) & 0x30:
             continue
         services[name] = {0: "boot", 1: "system", 2: "auto", 3: "manual", 4: "disabled"}.get(
-            int(start.data or 0), str(start.data)
+            int(str(start.data or 0)), str(start.data)
         )
     try:
         tasks = sorted(

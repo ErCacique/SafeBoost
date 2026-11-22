@@ -17,7 +17,7 @@ from core.catalog import LEVEL_LABELS
 from core.constants import APP_VERSION, PORTABLE_MODE
 from core.engine import DriftItem
 from core.fixplan import FIX_CLEANUPS, FixPlan, build_plan
-from core.gamemode import GameMode
+from core.gamemode import BatteryMode, GameMode, TweakMode
 from core.i18n import _
 from core.metrics import (
     BootInfo,
@@ -142,6 +142,16 @@ class DashboardPage(Page):
             command=self.toggle_game_mode,
         )
         self.game_btn.pack(side="left", padx=PAD_S)
+        self.battery_btn = None
+        if self.state.app.env.has_battery:
+            self.battery_btn = ctk.CTkButton(
+                quick,
+                text=_("Modo ahorro"),
+                width=150,
+                **SECONDARY_BUTTON,
+                command=self.toggle_battery_mode,
+            )
+            self.battery_btn.pack(side="left")
         self.after(500, self._refresh_game_button)
         self._build_drift(body)
         self._build_profiles(body)
@@ -277,37 +287,57 @@ class DashboardPage(Page):
         self.main.simulate()
 
     def _refresh_game_button(self) -> None:
-        def work(_p: ProgressFn, _c: threading.Event) -> bool:
-            return GameMode(self.state.app.engine).active
+        engine = self.state.app.engine
 
-        def done(active: bool) -> None:
-            self.game_btn.configure(text=_("Desactivar modo juego") if active else _("Modo juego"))
+        def work(_p: ProgressFn, _c: threading.Event) -> tuple[bool, bool]:
+            return GameMode(engine).active, BatteryMode(engine).active
+
+        def done(active: tuple[bool, bool]) -> None:
+            game, battery = active
+            self.game_btn.configure(text=_("Desactivar modo juego") if game else _("Modo juego"))
+            if self.battery_btn is not None:
+                self.battery_btn.configure(
+                    text=_("Desactivar modo ahorro") if battery else _("Modo ahorro")
+                )
 
         BackgroundTask(self, work, done, lambda _e: None).start()
 
     def toggle_game_mode(self) -> None:
+        self._toggle_mode(
+            GameMode(self.state.app.engine),
+            "Modo juego",
+            "Activa el plan de alto rendimiento, desactiva Game DVR/Game Bar y da prioridad a la "
+            "ventana en primer plano. Pulsa otra vez el botón al terminar de jugar para volver "
+            "a como estaba (o activa en Ajustes la vigilancia en segundo plano para que se "
+            "encienda y apague solo con tus juegos). ¿Activar?",
+        )
+
+    def toggle_battery_mode(self) -> None:
+        self._toggle_mode(
+            BatteryMode(self.state.app.engine),
+            "Modo ahorro",
+            "Solo con batería: el ahorro de batería de Windows se activa al 50 %, el procesador "
+            "va como máximo al 80 % y la pantalla se apaga a los 3 minutos sin uso. Con el "
+            "cargador todo sigue igual. Pulsa otra vez el botón para volver a como estaba. "
+            "¿Activar?",
+        )
+
+    def _toggle_mode(self, mode: TweakMode, title: str, question: str) -> None:
         app = self.state.app
-        mode = GameMode(app.engine)
         if (
             app.settings.dry_run
             or not app.env.is_admin
             or not (app.env.supported or app.settings.allow_unsupported_os)
         ):
             messagebox.showinfo(
-                "Modo juego",
-                "El modo juego cambia ajustes de verdad: desactiva el modo simulación en Ajustes "
-                "(y ejecuta SafeTrim como administrador en un Windows soportado).",
+                title,
+                f"El {title.lower()} cambia ajustes de verdad: desactiva el modo simulación en "
+                "Ajustes (y ejecuta SafeTrim como administrador en un Windows soportado).",
                 parent=self,
             )
             return
         activating = not mode.active
-        if activating and not messagebox.askyesno(
-            "Modo juego",
-            "Activa el plan de alto rendimiento, desactiva Game DVR/Game Bar y da prioridad a la "
-            "ventana en primer plano. Pulsa otra vez el botón al terminar de jugar para volver "
-            "a como estaba. No se activa solo al abrir un juego. ¿Activar?",
-            parent=self,
-        ):
+        if activating and not messagebox.askyesno(title, question, parent=self):
             return
 
         def work(_p: ProgressFn, _c: threading.Event) -> Any:
@@ -316,14 +346,12 @@ class DashboardPage(Page):
         def done(session: Any) -> None:
             if activating and session is None:
                 messagebox.showinfo(
-                    "Modo juego",
-                    "Todos los ajustes del modo juego ya estaban activos.",
-                    parent=self,
+                    title, f"Todos los ajustes del {title.lower()} ya estaban activos.", parent=self
                 )
             self._refresh_game_button()
             self.main.invalidate_detections()
 
-        self.main.run_long(work, done, "Modo juego")
+        self.main.run_long(work, done, title)
 
     def _install_update(self) -> None:
         info = self.update_info

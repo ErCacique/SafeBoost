@@ -13,6 +13,7 @@ from core.constants import APP_HOME, APP_VERSION, LOG_DIR, self_command
 from core.i18n import LANGUAGES, _
 from core.logger import ROOT_LOGGER_NAME, export_logs
 from core.restore import RestoreResult
+from core.tray import remove_tray, schedule_tray
 from core.watch import remove_maintenance, schedule_maintenance
 from ui.pages.base import Page, open_path, show_error
 from ui.theme import (
@@ -108,6 +109,24 @@ class SettingsPage(Page):
             font=FONT_BODY,
             command=self._toggle_maintenance,
         ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.background = ctk.BooleanVar(value=settings.background_watch)
+        ctk.CTkSwitch(
+            other,
+            text="Vigilancia en segundo plano: icono junto al reloj que avisa al momento cuando "
+            "un programa se añade al inicio",
+            variable=self.background,
+            font=FONT_BODY,
+            command=self._toggle_background,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        self.auto_game = ctk.BooleanVar(value=settings.auto_game_mode)
+        ctk.CTkSwitch(
+            other,
+            text="Con la vigilancia: activar el modo juego al abrir un juego (Steam, Epic, GOG, "
+            "Xbox…) y desactivarlo al cerrarlo",
+            variable=self.auto_game,
+            font=FONT_BODY,
+            command=self._save,
+        ).pack(anchor="w", padx=PAD, pady=PAD_S)
         ctk.CTkButton(
             other,
             text="Ver la guía de primeros pasos",
@@ -171,6 +190,8 @@ class SettingsPage(Page):
         settings.log_level = self.level.get()
         settings.check_updates = self.check_updates.get()
         settings.maintenance = self.maintenance.get()
+        settings.background_watch = self.background.get()
+        settings.auto_game_mode = self.auto_game.get()
         names = {v: k for k, v in LANGUAGES.items()}
         settings.language = names.get(self.language.get(), "es")
         settings.save()
@@ -239,3 +260,26 @@ class SettingsPage(Page):
             show_error("Exportar log", exc, self)
             return
         messagebox.showinfo("Exportar log", f"Log exportado en:\n{target}", parent=self)
+
+    def _toggle_background(self) -> None:
+        app = self.state.app
+        enabled = self.background.get()
+        user = app.env.interactive_user
+
+        def work(_p: Any, _c: Any) -> bool:
+            if not enabled:
+                remove_tray(app.runner)
+                return True
+            return bool(user) and schedule_tray(app.runner, self_command(), user)
+
+        def done(ok: bool) -> None:
+            if not ok:
+                self.background.set(False)
+                messagebox.showerror(
+                    "Vigilancia en segundo plano",
+                    "No se pudo programar la tarea. Revisa el log para ver el motivo.",
+                    parent=self,
+                )
+            self._save()
+
+        self.main.run_long(work, done, "Vigilancia en segundo plano")

@@ -1,3 +1,7 @@
 # Runtime (Python 3.12). Fijado; Dependabot propone actualizaciones semanales.
 customtkinter==5.2.2
 psutil==7.2.2
+# Icono junto al reloj (vigilancia en segundo plano, opcional). pystray usa Pillow y six.
+pystray==0.19.5
+pillow==12.3.0
+six==1.17.0

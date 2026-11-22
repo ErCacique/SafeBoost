@@ -7,6 +7,7 @@ igual que con los tweaks del catálogo.
 
 from __future__ import annotations
 
+import builtins
 import os
 import re
 import struct
@@ -115,7 +116,7 @@ class StartupManager:
             self._estimate_impact(entry, degradation)
         return sorted(entries, key=lambda e: (not e.enabled, e.name.lower()))
 
-    def _run_entries(self) -> list[StartupEntry]:
+    def _run_entries(self) -> builtins.list[StartupEntry]:
         out = []
         for hive, path in RUN_KEYS:
             source: Source = "run32" if "WOW6432Node" in path else "run"
@@ -146,7 +147,7 @@ class StartupManager:
                 return Path(os.path.expandvars(value.data))
         return Path.home()
 
-    def _folder_entries(self) -> list[StartupEntry]:
+    def _folder_entries(self) -> builtins.list[StartupEntry]:
         out = []
         folders: list[tuple[Literal["HKLM", "HKCU"], Path]] = [
             ("HKCU", self._user_profile() / USER_STARTUP),
@@ -174,7 +175,7 @@ class StartupManager:
                 )
         return out
 
-    def _task_entries(self) -> list[StartupEntry]:
+    def _task_entries(self) -> builtins.list[StartupEntry]:
         try:
             rows = self.tasks.logon_tasks()
         except Exception as exc:  # noqa: BLE001 - el inventario parcial es mejor que ninguno
