@@ -28,6 +28,7 @@ class Program:
     install_date: str = ""  # YYYYMMDD
     system_component: bool = False
     install_location: str = ""
+    uninstall_string: str = ""
 
     @property
     def installed_on(self) -> date | None:
@@ -67,6 +68,7 @@ def list_programs(registry: Registry, include_system: bool = False) -> list[Prog
                 install_date=_text(registry, hive, path, "InstallDate"),
                 system_component=system,
                 install_location=_text(registry, hive, path, "InstallLocation").strip('"'),
+                uninstall_string=_text(registry, hive, path, "UninstallString"),
             )
             # El mismo programa puede aparecer en HKLM y WOW6432Node: se queda el primero.
             seen.setdefault(name.lower(), program)

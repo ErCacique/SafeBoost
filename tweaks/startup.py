@@ -30,6 +30,9 @@ from core.tasks import TaskManager
 
 log = get_logger("tweaks.startup")
 
+# Tareas de los programas de inicio retrasados (se crean al pulsar "Retrasar").
+DELAYED_TASK_FOLDER = "\\SafeTrim\\Delayed\\"
+
 Source = Literal["run", "run32", "folder", "task"]
 Impact = Literal["alto", "medio", "bajo", "desconocido"]
 
@@ -287,3 +290,58 @@ class StartupManager:
         session.results[tid] = TweakResult(tid, "applied", f"Inicio de {entry.name} {verb}")
         session.selected.append(tid)
         log.info("startup_toggled", extra={"entry": entry.key, "enabled": enabled})
+
+    # ------------------------------------------------------------------ retrasar
+
+    def delay(self, entry: StartupEntry, session: Session, user: str, seconds: int = 90) -> None:
+        """Arranca el programa `seconds` después de iniciar sesión en vez de quitarlo: se
+        desactiva la entrada original (StartupApproved) y se crea una tarea programada al
+        iniciar sesión con retraso. Deshacer borra la tarea y reactiva la entrada."""
+        if entry.source not in ("run", "run32", "folder") or not entry.enabled:
+            raise ValueError(
+                "Solo se pueden retrasar programas de inicio activos del registro o de la "
+                "carpeta Inicio"
+            )
+        if not user:
+            raise ValueError("No se conoce el usuario con sesión")
+        exe = executable_from_command(entry.command)
+        if exe is None:
+            raise ValueError(f"No se reconoce el programa de: {entry.command}")
+        if entry.source == "folder":
+            program, args = "explorer.exe", f'"{entry.command}"'
+        else:
+            program = str(exe)
+            args = entry.command.strip()
+            args = args[len(f'"{exe}"') :] if args.startswith('"') else args[len(str(exe)) :]
+            args = args.strip()
+        task_name = re.sub(r'[\\/:*?"<>|]', "_", entry.name)[:100]
+        self.set_enabled(entry, False, session)
+        script = (
+            f"$a = New-ScheduledTaskAction -Execute {ps_quote(program)}"
+            + (f" -Argument {ps_quote(args)}" if args else "")
+            + f"; $t = New-ScheduledTaskTrigger -AtLogOn -User {ps_quote(user)};"
+            f" $t.Delay = {ps_quote(f'PT{seconds}S')};"
+            f" $p = New-ScheduledTaskPrincipal -UserId {ps_quote(user)} -LogonType Interactive"
+            " -RunLevel Limited;"
+            " $s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries"
+            " -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Seconds 0);"
+            f" Register-ScheduledTask -TaskPath {ps_quote(DELAYED_TASK_FOLDER)}"
+            f" -TaskName {ps_quote(task_name)} -Action $a -Trigger $t -Principal $p"
+            " -Settings $s -Force | Out-Null"
+        )
+        result = self.runner.powershell(script)
+        if not result.ok:
+            raise ValueError(f"No se pudo crear la tarea retrasada: {result.error_text()}")
+        session.changes.append(
+            Change(
+                entry.change_id,
+                "task_created",
+                {"folder": DELAYED_TASK_FOLDER, "name": task_name},
+                None,
+                True,
+            )
+        )
+        session.results[entry.change_id] = TweakResult(
+            entry.change_id, "applied", f"Inicio de {entry.name} retrasado {seconds} s"
+        )
+        log.info("startup_delayed", extra={"entry": entry.key, "seconds": seconds})

@@ -52,7 +52,7 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-ChangeKind = Literal["registry", "service", "task", "appx", "command", "handler"]
+ChangeKind = Literal["registry", "service", "task", "task_created", "appx", "command", "handler"]
 TweakStatus = Literal["applied", "skipped", "failed", "partial", "reverted", "irreversible"]
 
 
