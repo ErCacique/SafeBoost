@@ -8,6 +8,7 @@ import sys
 import threading
 from datetime import datetime
 from pathlib import Path
+from tkinter import messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
@@ -15,6 +16,7 @@ import customtkinter as ctk
 from core.constants import SYSTEM_ROOT
 from core.diskusage import find_duplicates, last_used_by_exe, scan
 from core.metrics import human_bytes
+from core.oem import OemCandidate, find_oem_bloat, uninstall_command
 from core.programs import last_used, list_programs
 from tweaks._common import user_profile_dir
 from ui.pages.base import Page
@@ -136,6 +138,19 @@ class SpacePage(Page):
                 side="right", padx=PAD_S
             )
 
+    def _uninstall(self, cand: OemCandidate) -> None:
+        if not messagebox.askyesno(
+            "Desinstalar",
+            f"Se abrirá el desinstalador de {cand.program.name} ({cand.reason}). Sigue sus pasos. "
+            "No se puede deshacer desde SafeTrim, pero puedes reinstalarlo desde la web del "
+            "fabricante. ¿Continuar?",
+            parent=self,
+        ):
+            return
+        if sys.platform == "win32":
+            subprocess.Popen(["cmd.exe", "/c", uninstall_command(cand.program)], close_fds=True)
+        self.data.pop("Programas", None)
+
     def _render(self, view: str) -> None:
         self._clear()
         data = self.data[view]
@@ -182,6 +197,28 @@ class SpacePage(Page):
             ctk.CTkButton(
                 top, text="Desinstalar programas…", width=190, command=open_apps_settings
             ).pack(side="right")
+            oem = find_oem_bloat([p for p, _u in data])
+            if oem:
+                ctk.CTkLabel(
+                    card,
+                    text="De prueba o del fabricante: no hacen falta para que el equipo funcione",
+                    font=FONT_BODY,
+                ).pack(anchor="w", padx=PAD, pady=(PAD_S, 2))
+                for cand in oem:
+                    row = ctk.CTkFrame(card, fg_color="transparent")
+                    row.pack(fill="x", padx=PAD, pady=1)
+                    ctk.CTkLabel(
+                        row, text=f"{cand.program.name}  ·  {cand.reason}", font=FONT_BODY
+                    ).pack(side="left")
+                    ctk.CTkButton(
+                        row,
+                        text="Desinstalar",
+                        width=110,
+                        command=lambda c=cand: self._uninstall(c),
+                    ).pack(side="right")
+                ctk.CTkLabel(
+                    card, text="Todos los programas:", font=FONT_SMALL, text_color=TEXT_MUTED
+                ).pack(anchor="w", padx=PAD, pady=(PAD, 2))
             now = datetime.now().timestamp()
             for program, used in data[:PROGRAMS_SHOWN]:
                 size = human_bytes(program.size_kb * 1024) if program.size_kb else "?"

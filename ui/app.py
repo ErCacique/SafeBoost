@@ -140,6 +140,19 @@ class MainWindow(ctk.CTk):
         if self.loading_step.winfo_exists():
             self.loading_step.configure(text=f"{step}…")
 
+    def report_callback_exception(self, exc: type, val: BaseException, tb: Any) -> None:
+        """Errores en callbacks de Tk: informe en disco y aviso con dónde está."""
+        from core.crash import write_report
+
+        path = write_report(exc, val, tb, "interfaz")
+        where = f"\n\nInforme guardado en:\n{path}" if path else ""
+        messagebox.showerror(
+            APP_NAME,
+            f"Algo ha fallado: {val}{where}\n\nAjustes → Exportar log incluye este informe para "
+            "que puedas enviarlo. SafeTrim sigue funcionando.",
+            parent=self,
+        )
+
     def _fit_to_screen(self) -> None:
         """Ajusta la ventana a la pantalla: centrada si cabe, maximizada si no."""
         geometry, minimum, maximize = fit_window(

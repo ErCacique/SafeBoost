@@ -11,7 +11,17 @@ import customtkinter as ctk
 from core.session import Session
 from tweaks.startup import StartupEntry, StartupManager
 from ui.pages.base import Page, show_error
-from ui.theme import FONT_BODY, FONT_SMALL, PAD, PAD_S, RISK_COLORS, STATE_COLORS, TEXT_MUTED, WRAP
+from ui.theme import (
+    FONT_BODY,
+    FONT_SMALL,
+    PAD,
+    PAD_S,
+    RISK_COLORS,
+    SECONDARY_BUTTON,
+    STATE_COLORS,
+    TEXT_MUTED,
+    WRAP,
+)
 from ui.widgets import Badge, Card
 from ui.worker import BackgroundTask, ProgressFn
 
@@ -101,6 +111,14 @@ class StartupPage(Page):
             ctk.CTkLabel(
                 top, text=SOURCE_LABELS[entry.source], font=FONT_SMALL, text_color=TEXT_MUTED
             ).pack(side="right")
+            if entry.enabled and entry.source in ("run", "run32", "folder"):
+                ctk.CTkButton(
+                    top,
+                    text="Retrasar 90 s",
+                    width=120,
+                    **SECONDARY_BUTTON,
+                    command=lambda e=entry: self._delay(e),
+                ).pack(side="right", padx=PAD_S)
             ctk.CTkLabel(
                 card,
                 text=f"{entry.command}\n{entry.impact_detail}",
@@ -112,6 +130,26 @@ class StartupPage(Page):
             ).pack(anchor="w", padx=PAD * 2, pady=(0, PAD_S))
         enabled = sum(1 for e in entries if e.enabled)
         self.status.configure(text=f"{len(entries)} entradas · {enabled} activas")
+
+    def _delay(self, entry: StartupEntry) -> None:
+        app = self.state.app
+        text = (
+            f"{entry.name} arrancará 90 segundos después de iniciar sesión, en vez de a la vez "
+            "que Windows. El escritorio estará listo antes y el programa seguirá abriéndose solo. "
+            "Se deshace desde Historial."
+        )
+        if app.settings.dry_run:
+            messagebox.showinfo("Simulación", "Modo simulación activo.\n\n" + text, parent=self)
+            return
+        if not messagebox.askyesno("Retrasar inicio", text + "\n\n¿Retrasar?", parent=self):
+            return
+
+        def work(_p: ProgressFn, _c: threading.Event) -> None:
+            session = Session.new("apply", env=app.env.to_dict())
+            self.manager.delay(entry, session, app.env.interactive_user)
+            app.store.save(session)
+
+        self.main.run_long(work, lambda _r: self.load(), "Retrasar inicio")
 
     def _toggle(self, entry: StartupEntry, value: bool) -> None:
         if value == entry.enabled:

@@ -42,6 +42,7 @@ from core.logger import get_logger
 from core.metrics import GIB, Snapshot, human_bytes, take_snapshot
 from core.process import Runner
 from core.registry import Registry
+from core.security import SecurityReport, read_security
 
 log = get_logger("diagnostics")
 
@@ -118,6 +119,7 @@ class DiagnosticReport:
     win11: list[Requirement] = field(default_factory=list)
     findings: list[Finding] = field(default_factory=list)
     boot: BootReport = field(default_factory=BootReport)
+    security: SecurityReport = field(default_factory=SecurityReport)
 
     @property
     def ram_installed(self) -> int:
@@ -207,6 +209,7 @@ def collect(
         hardware=hardware,
         updates=read_update_status(registry, runner),
         boot=read_boot_culprits(runner),
+        security=read_security(registry, runner, env),
     )
     report.win11 = win11_requirements(report)
     report.findings = analyze(report)
@@ -290,6 +293,17 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
         if hog:
             detail += f" Lo que más ocupa: {_describe(hog, memory=True)}."
         findings.append(Finding("warning", "Memoria casi llena", detail))
+
+    for check in report.security.problems:
+        if check.critical:
+            findings.append(
+                Finding(
+                    "critical",
+                    f"Seguridad: {check.name}",
+                    f"{check.detail}. Actívalo en Seguridad de Windows: un equipo sin esta "
+                    "protección también puede ir lento por malware.",
+                )
+            )
 
     if report.updates.reboot_pending:
         findings.append(
