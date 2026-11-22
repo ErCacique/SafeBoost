@@ -83,3 +83,11 @@ Pendiente posible: traducir descripciones y textos del diagnóstico al inglés.
 - Ids de sesión con microsegundos: dos sesiones en el mismo segundo se ordenaban al azar.
 - Contadores de rendimiento de Windows están traducidos: usar clases CIM.
 - El registro simulado devuelve subclaves en minúsculas; el de Windows no.
+
+## v0.9.0 (en curso, pedida el 2026-11-22: "Hazlas todas, de la 1 a la 5")
+
+1. Informe de errores sin conexión (excepciones de Tk, hilos y proceso → APP_HOME/crashes, diálogo "Exportar informe").
+2. Estado de seguridad (Defender, firewall, activación, UAC, BitLocker, actualizaciones) en Diagnóstico.
+3. Retrasar programas de inicio (tarea programada al iniciar sesión con retraso, en vez de desactivar), deshacible.
+4. Programas basura del fabricante (Win32: pruebas de antivirus, utilidades OEM) con desinstalador del fabricante y confirmación.
+5. Página de soporte del modelo (fabricante, modelo, nº de serie; Dell con service tag).
