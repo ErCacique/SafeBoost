@@ -128,3 +128,31 @@ No se asume ningún certificado. Opciones, de más a menos recomendable para est
 Cuando tengas certificado, se añade un paso `signtool sign /fd sha256 /tr <TSA> /td sha256` (o
 la acción oficial del servicio) entre "PyInstaller" y "SHA256" en `release.yml`. El hash debe
 calcularse **después** de firmar.
+
+## Firma de código automática (desde la v0.8.0)
+
+`release.yml` firma `SafeTrim.exe` y el instalador con `signtool` (SHA-256 y sello de tiempo de
+DigiCert) **solo si** el repositorio tiene estos secretos (*Settings → Secrets and variables →
+Actions*):
+
+| Secreto | Contenido |
+|---|---|
+| `SIGN_PFX_BASE64` | El certificado `.pfx` en Base64: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("cert.pfx"))` |
+| `SIGN_PFX_PASSWORD` | La contraseña del `.pfx` |
+
+Sin ellos el release sale sin firmar, como hasta ahora. Los certificados en la nube (Azure
+Trusted Signing, certificados EV en HSM) no se exportan a `.pfx`: necesitarían otro paso de firma.
+
+## winget (desde la v0.8.0)
+
+Cada Release incluye `winget-manifests-X.Y.Z.zip` (esquema 1.6, `ErCacique.SafeTrim`). Para
+publicarlo, las Releases deben ser públicas; después se abre un PR en
+`microsoft/winget-pkgs` con esos archivos en `manifests/e/ErCacique/SafeTrim/X.Y.Z/` (o con
+`wingetcreate submit`). Tras la revisión de Microsoft, se instala con
+`winget install ErCacique.SafeTrim`.
+
+## ARM64
+
+El job `arm64` de `release.yml` compila en `windows-11-arm` una versión portable ARM64. No bloquea
+la publicación: si el runner no está disponible para el repositorio, el Release sale con la
+versión x64, que Windows en ARM ejecuta emulada.

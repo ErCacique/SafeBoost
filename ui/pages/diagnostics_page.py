@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import threading
-from tkinter import messagebox
+from pathlib import Path
+from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.client_report import html_to_pdf, render_client_html
 from core.constants import LOW_RAM_GIB
 from core.defender import ScanResult, quick_scan
 from core.diagnostics import DiagnosticReport, Finding, ProcessUsage, collect
 from core.hardware import GIB, ram_purchase_advice
+from core.i18n import _
 from core.metrics import human_bytes
 from ui.pages.base import Page
 from ui.theme import (
@@ -62,16 +65,24 @@ class DiagnosticsPage(Page):
         self._running = False
         bar = ctk.CTkFrame(self, fg_color="transparent")
         bar.pack(fill="x", padx=PAD, pady=(PAD, 0))
-        self.run_btn = ctk.CTkButton(bar, text="Analizar ahora", width=150, command=self.analyze)
+        self.run_btn = ctk.CTkButton(bar, text=_("Analizar ahora"), width=150, command=self.analyze)
         self.run_btn.pack(side="left")
         self.scan_btn = ctk.CTkButton(
             bar,
-            text="Análisis rápido con Defender",
+            text=_("Análisis rápido con Defender"),
             width=220,
             **SECONDARY_BUTTON,
             command=self.defender_scan,
         )
         self.scan_btn.pack(side="right")
+        self.report_btn = ctk.CTkButton(
+            bar,
+            text=_("Informe para el cliente"),
+            width=190,
+            **SECONDARY_BUTTON,
+            command=self.client_report,
+        )
+        self.report_btn.pack(side="right", padx=PAD_S)
         self.status = ctk.CTkLabel(
             bar,
             text="Mide el uso durante un par de segundos. Hazlo cuando notes el equipo lento.",
@@ -111,6 +122,38 @@ class DiagnosticsPage(Page):
 
         BackgroundTask(self, work, done, failed).start()
 
+    def client_report(self) -> None:
+        if self.report is None:
+            messagebox.showinfo("Informe", "Espera a que termine el análisis.", parent=self)
+            return
+        target = filedialog.asksaveasfilename(
+            parent=self,
+            title="Guardar informe para el cliente",
+            defaultextension=".pdf",
+            initialfile=f"Informe-equipo-{self.report.snapshot.taken[:10]}.pdf",
+            filetypes=[("PDF", "*.pdf"), ("HTML", "*.html")],
+        )
+        if not target:
+            return
+        app = self.state.app
+        report = self.report
+
+        def work(_p: ProgressFn, _c: threading.Event) -> Path:
+            html = render_client_html(report, app.store.list(), app.engine.catalog)
+            out = Path(target)
+            page = out.with_suffix(".html")
+            page.write_text(html, encoding="utf-8")
+            if out.suffix.lower() == ".pdf" and html_to_pdf(page, out, app.runner):
+                page.unlink(missing_ok=True)
+                return out
+            return page
+
+        def done(path: Path) -> None:
+            note = "" if path.suffix == ".pdf" else " (en HTML: ábrelo e imprímelo a PDF)"
+            messagebox.showinfo("Informe", f"Informe guardado{note}:\n{path}", parent=self)
+
+        self.main.run_long(work, done, "Informe para el cliente")
+
     def defender_scan(self) -> None:
         if not messagebox.askyesno(
             "Análisis rápido con Windows Defender",
@@ -126,12 +169,12 @@ class DiagnosticsPage(Page):
             return quick_scan(runner)
 
         def done(result: ScanResult) -> None:
-            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            self.scan_btn.configure(state="normal", text=_("Análisis rápido con Defender"))
             show = messagebox.showwarning if result.threats else messagebox.showinfo
             show("Windows Defender", result.message, parent=self)
 
         def failed(exc: BaseException) -> None:
-            self.scan_btn.configure(state="normal", text="Análisis rápido con Defender")
+            self.scan_btn.configure(state="normal", text=_("Análisis rápido con Defender"))
             messagebox.showerror("Windows Defender", str(exc), parent=self)
 
         BackgroundTask(self, work, done, failed).start()

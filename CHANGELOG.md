@@ -7,6 +7,35 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-21
+
+### Added
+- **"Arreglar mi PC lento"** (Dashboard): diagnostica el equipo y propone un plan revisable
+  (qué hacer primero, perfil recomendado + limpieza segura, programas de inicio que retrasan el
+  arranque y consejos de hardware). Prepara la selección y abre la simulación; nada se aplica
+  sin confirmar. Sustituye al "perfil para equipos antiguos".
+- **Modo juego** con un clic: plan de alto rendimiento, Game DVR desactivado y prioridad al
+  primer plano; se desactiva igual (es una sesión normal, también deshacible desde Historial).
+  No se activa solo al abrir un juego.
+- **Servicios de fabricantes**: HP Insights Analytics, NVIDIA Telemetry, Adobe Genuine y (opcional)
+  el actualizador de Acrobat pasan a Manual; solo aparecen si el servicio existe.
+- **Documentación oficial** de cada tweak (Microsoft Learn o el fabricante) en su detalle.
+- **Página Espacio**: carpetas y archivos más grandes, duplicados en Descargas (mismo SHA-256) y
+  programas instalados por tamaño con último uso estimado (Prefetch). Solo lee.
+- **Informe para el cliente** (Diagnóstico) en PDF, generado con Microsoft Edge en modo headless
+  (o HTML si no hay Edge).
+- **Actualizar ahora**: descarga el instalador del Release, comprueba su SHA-256 con
+  `SHA256SUMS.txt` y lo ejecuta en modo silencioso. Requiere Releases públicas.
+- **Inglés** (Ajustes → Idioma): menú, títulos, botones principales y nombres de los tweaks. Las
+  descripciones y los textos del diagnóstico siguen en español en esta versión.
+- **Resumen "desde que usas SafeTrim"** en Evolución (arranque, programas de inicio y RAM).
+- Release: manifiestos de **winget**, **portable ARM64** (job opcional en `windows-11-arm`) y
+  **firma de código** automática si existen los secretos `SIGN_PFX_BASE64` y
+  `SIGN_PFX_PASSWORD`.
+
+### Changed
+- `restore_point=False` se admite también para tweaks reversibles de riesgo bajo (modo juego).
+
 ## [0.7.0] - 2026-11-21
 
 ### Added

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 
 from core.registry import Registry
 
@@ -26,6 +27,7 @@ class Program:
     size_kb: int = 0  # EstimatedSize: lo declara el instalador, puede faltar o ser inexacto
     install_date: str = ""  # YYYYMMDD
     system_component: bool = False
+    install_location: str = ""
 
     @property
     def installed_on(self) -> date | None:
@@ -64,7 +66,24 @@ def list_programs(registry: Registry, include_system: bool = False) -> list[Prog
                 size_kb=int(size) if size.isdigit() else 0,
                 install_date=_text(registry, hive, path, "InstallDate"),
                 system_component=system,
+                install_location=_text(registry, hive, path, "InstallLocation").strip('"'),
             )
             # El mismo programa puede aparecer en HKLM y WOW6432Node: se queda el primero.
             seen.setdefault(name.lower(), program)
     return sorted(seen.values(), key=lambda p: p.name.lower())
+
+
+def last_used(program: Program, by_exe: dict[str, float]) -> float | None:
+    """Último uso aproximado: el .exe de su carpeta de instalación que se ejecutó más tarde
+    (datos de Prefetch). None si no se sabe dónde está instalado o nunca se ha ejecutado."""
+    if not program.install_location or not by_exe:
+        return None
+    root = Path(program.install_location)
+    try:
+        exes = [p.name.lower() for p in root.glob("*.exe")] + [
+            p.name.lower() for p in root.glob("*/*.exe")
+        ]
+    except OSError:
+        return None
+    times = [by_exe[e] for e in exes if e in by_exe]
+    return max(times) if times else None

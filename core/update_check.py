@@ -1,17 +1,20 @@
 """Aviso de versión nueva: consulta la última Release publicada en GitHub.
 
-Una sola petición HTTPS de solo lectura al arrancar (desactivable en Ajustes). No descarga ni
-instala nada: solo informa y abre la página de la Release si el usuario quiere. Si no hay red,
-GitHub no responde o el repositorio es privado (404 sin credenciales), no dice nada.
+Una petición HTTPS de solo lectura al arrancar (desactivable en Ajustes). Si hay versión nueva,
+el usuario puede pulsar "Actualizar ahora": se descarga el instalador, se comprueba su SHA-256
+contra SHA256SUMS.txt del mismo Release y solo entonces se ejecuta. Si no hay red, GitHub no
+responde o el repositorio es privado (404 sin credenciales), no dice nada.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from core.constants import APP_NAME, APP_VERSION, UPDATE_API_URL, UPDATE_CHECK_TIMEOUT
@@ -26,6 +29,8 @@ Opener = Callable[..., Any]
 class ReleaseInfo:
     version: str
     url: str
+    setup_url: str = ""  # SafeTrim-Setup-X.Y.Z.exe
+    sums_url: str = ""  # SHA256SUMS.txt
 
 
 def parse_version(text: str) -> tuple[int, ...] | None:
@@ -72,4 +77,62 @@ def check_latest(
     page = str(data.get("html_url") or "")
     if latest is None or mine is None or latest <= mine or not page.startswith("https://"):
         return None
-    return ReleaseInfo(".".join(map(str, latest)), page)
+    version = ".".join(map(str, latest))
+    assets = {
+        str(a.get("name")): str(a.get("browser_download_url") or "")
+        for a in data.get("assets") or []
+        if isinstance(a, dict)
+    }
+    setup = assets.get(f"SafeTrim-Setup-{version}.exe", "")
+    sums = assets.get("SHA256SUMS.txt", "")
+    if not (setup.startswith("https://") and sums.startswith("https://")):
+        setup = sums = ""
+    return ReleaseInfo(version, page, setup, sums)
+
+
+def _download(url: str, target: Path, opener: Opener, timeout: float = 120) -> None:
+    if not url.startswith("https://"):
+        raise ValueError(f"URL no segura: {url}")
+    request = urllib.request.Request(  # noqa: S310 - esquema https comprobado arriba
+        url, headers={"User-Agent": f"{APP_NAME}/{APP_VERSION}"}
+    )
+    with opener(request, timeout=timeout) as response, target.open("wb") as fh:
+        while chunk := response.read(1024 * 1024):
+            fh.write(chunk)
+
+
+def expected_hash(sums_text: str, file_name: str) -> str | None:
+    """Busca "<sha256>  <archivo>" en SHA256SUMS.txt."""
+    for line in sums_text.splitlines():
+        parts = line.strip().split()
+        if len(parts) == 2 and parts[1] == file_name and len(parts[0]) == 64:
+            return parts[0].lower()
+    return None
+
+
+def download_installer(
+    info: ReleaseInfo, directory: Path, opener: Opener = urllib.request.urlopen
+) -> Path:
+    """Descarga el instalador y comprueba su SHA-256 con SHA256SUMS.txt del mismo Release.
+    Lanza ValueError si no coincide (el archivo se borra)."""
+    if not info.setup_url or not info.sums_url:
+        raise ValueError("Esta versión no publica instalador con huella SHA-256")
+    directory.mkdir(parents=True, exist_ok=True)
+    name = info.setup_url.rsplit("/", 1)[-1]
+    sums = directory / "SHA256SUMS.txt"
+    target = directory / name
+    _download(info.sums_url, sums, opener, timeout=30)
+    expected = expected_hash(sums.read_text(encoding="utf-8", errors="replace"), name)
+    if expected is None:
+        raise ValueError(f"{name} no aparece en SHA256SUMS.txt")
+    _download(info.setup_url, target, opener)
+    actual = hashlib.sha256(target.read_bytes()).hexdigest()
+    if actual != expected:
+        target.unlink(missing_ok=True)
+        raise ValueError("La huella SHA-256 del instalador no coincide: descarga descartada")
+    return target
+
+
+def installer_command(installer: Path) -> list[str]:
+    """Instalación silenciosa de Inno Setup: cierra SafeTrim, actualiza y lo vuelve a abrir."""
+    return [str(installer), "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/NORESTART"]

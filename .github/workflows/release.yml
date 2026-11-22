@@ -29,6 +29,10 @@ jobs:
   build:
     name: Compilar instalador y portable
     runs-on: windows-latest
+    env:
+      # Solo indica si hay certificado: los secretos no se pueden usar en `if` y así no se
+      # exponen a todos los pasos. Ver docs/DISTRIBUTION.md (firma de código).
+      HAS_SIGNING: ${{ secrets.SIGN_PFX_BASE64 != '' }}
     timeout-minutes: 30
     defaults:
       run:
@@ -76,6 +80,21 @@ jobs:
           $p = Start-Process dist/SafeTrim/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
           if ($p.ExitCode -ne 0) { Write-Error "Self-test falló (código $($p.ExitCode))"; exit 1 }
 
+      - name: Firmar el ejecutable (solo si hay certificado)
+        if: env.HAS_SIGNING == 'true'
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'sign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          & $signtool.FullName sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
+            /f $pfx /p $env:SIGN_PFX_PASSWORD dist/SafeTrim/SafeTrim.exe
+          if ($LASTEXITCODE -ne 0) { Remove-Item $pfx; Write-Error "signtool falló"; exit 1 }
+          Remove-Item $pfx
+
       - name: Versión
         id: ver
         run: |
@@ -103,6 +122,21 @@ jobs:
           & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging/SafeTrim.iss
           if ($LASTEXITCODE -ne 0) { Write-Error "ISCC falló ($LASTEXITCODE)"; exit 1 }
 
+      - name: Firmar el instalador (solo si hay certificado)
+        if: env.HAS_SIGNING == 'true'
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'sign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          & $signtool.FullName sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
+            /f $pfx /p $env:SIGN_PFX_PASSWORD "dist/SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe"
+          if ($LASTEXITCODE -ne 0) { Remove-Item $pfx; Write-Error "signtool falló"; exit 1 }
+          Remove-Item $pfx
+
       - name: SHA256
         id: hash
         run: |
@@ -117,6 +151,12 @@ jobs:
           "setup=$(($lines[0] -split ' ')[0])" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "portable=$(($lines[1] -split ' ')[0])" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
 
+      - name: Manifiestos de winget
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          python scripts/make_winget.py $v "${{ steps.hash.outputs.setup }}" "dist/winget/$v"
+          Compress-Archive -Path "dist/winget/$v/*" -DestinationPath "dist/winget-manifests-$v.zip" -Force
+
       - name: Subir artifact
         uses: actions/upload-artifact@v7
         with:
@@ -125,6 +165,7 @@ jobs:
             dist/SafeTrim-Setup-*.exe
             dist/SafeTrim-portable-*.zip
             dist/SHA256SUMS.txt
+            dist/winget-manifests-*.zip
           retention-days: 30
 
       - name: Publicar Release
@@ -138,6 +179,7 @@ jobs:
             dist/SafeTrim-Setup-*.exe
             dist/SafeTrim-portable-*.zip
             dist/SHA256SUMS.txt
+            dist/winget-manifests-*.zip
           body: |
             **Instalador** (recomendado): `SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe`
             SHA256: `${{ steps.hash.outputs.setup }}`
@@ -152,3 +194,46 @@ jobs:
             ```
 
             Cambios: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ env.RELEASE_TAG }}/CHANGELOG.md).
+
+  arm64:
+    # Windows en ARM (portátiles Snapdragon). No bloquea la publicación: si el runner ARM no está
+    # disponible para el repositorio o alguna dependencia no tiene versión ARM64, el Release sale
+    # igualmente con la versión x64 (que Windows ARM también ejecuta, emulada).
+    name: Portable ARM64 (opcional)
+    needs: build
+    runs-on: windows-11-arm
+    continue-on-error: true
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          architecture: arm64
+
+      - name: Compilar
+        run: |
+          pip install -r requirements-build.txt
+          pyinstaller --clean --noconfirm packaging/SafeTrim.spec
+          $p = Start-Process dist/SafeTrim/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Write-Error "Self-test ARM64 falló"; exit 1 }
+          $v = python -c "from core.constants import APP_VERSION; print(APP_VERSION)"
+          New-Item -ItemType Directory -Force dist/portable/SafeTrim | Out-Null
+          Copy-Item -Recurse dist/SafeTrim/* dist/portable/SafeTrim
+          "Versión portable ARM64." | Out-File -Encoding utf8 dist/portable/SafeTrim/portable.txt
+          Compress-Archive -Path dist/portable/SafeTrim -DestinationPath "dist/SafeTrim-portable-arm64-$v.zip"
+          $h = (Get-FileHash "dist/SafeTrim-portable-arm64-$v.zip" -Algorithm SHA256).Hash.ToLower()
+          "$h  SafeTrim-portable-arm64-$v.zip" | Out-File -Encoding ascii dist/SHA256SUMS-arm64.txt
+
+      - name: Añadir al Release
+        if: env.RELEASE_TAG != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: |
+            dist/SafeTrim-portable-arm64-*.zip
+            dist/SHA256SUMS-arm64.txt

@@ -342,11 +342,18 @@ class Engine:
 
         `confirmed` debe contener los IDs de acciones irreversibles y de tweaks con doble
         confirmación; si falta alguno se omite (defensa en profundidad frente a la UI).
-        `restore_point=False` solo se admite si todo son acciones (limpieza): un punto de
-        restauración no recupera archivos borrados y el mantenimiento mensual no debe crearlo.
+        `restore_point=False` solo se admite para limpiezas (un punto de restauración no recupera
+        archivos borrados) y para tweaks reversibles de riesgo bajo, que se deshacen con su propio
+        snapshot (mantenimiento mensual, modo juego).
         """
-        if not restore_point and not all(self.catalog.get(t).is_action for t in tweak_ids):
-            raise PreflightError("Sin punto de restauración solo se pueden ejecutar limpiezas")
+        if not restore_point and not all(
+            (t := self.catalog.get(tid)).is_action or (t.reversible and t.risk == "bajo")
+            for tid in tweak_ids
+        ):
+            raise PreflightError(
+                "Sin punto de restauración solo se pueden ejecutar limpiezas y cambios "
+                "reversibles de riesgo bajo"
+            )
         if not self._lock.acquire(blocking=False):
             raise PreflightError("Ya hay una operación en curso")
         try:
@@ -412,7 +419,7 @@ class Engine:
         if not self.env.is_admin:
             raise PreflightError("SafeTrim necesita ejecutarse como administrador")
         if not restore_point:
-            session.restore_point = "Omitido: solo limpieza de archivos"
+            session.restore_point = "Omitido: solo limpiezas o cambios reversibles de riesgo bajo"
             return
         result = self.restore.create(f"SafeTrim {session.id}")
         session.restore_point = result.message

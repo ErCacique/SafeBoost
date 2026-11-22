@@ -1968,6 +1968,190 @@
       ]
     },
     {
+      "id": "services.hp_analytics",
+      "name": "HP Insights Analytics (telemetría de HP): pasar a Manual",
+      "description": "Cambia a Manual el servicio de analítica que HP instala en sus portátiles.",
+      "rationale": "Envía datos de uso del equipo a HP y consume recursos al arrancar. No interviene en drivers, teclas de función ni actualizaciones. Solo aparece si el servicio existe.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.vendors:hp_analytics_present"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "HpTouchpointAnalyticsService",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.nvidia_telemetry",
+      "name": "NVIDIA Telemetry Container: pasar a Manual",
+      "description": "Cambia a Manual el servicio de telemetría de los drivers NVIDIA (versiones antiguas).",
+      "rationale": "Recoge y envía datos de uso a NVIDIA. El driver y el panel de control de NVIDIA funcionan igual. Solo aparece si el servicio existe.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.vendors:nvidia_telemetry_present"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "NvTelemetryContainer",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.adobe_genuine",
+      "name": "Adobe Genuine Software Integrity: pasar a Manual",
+      "description": "Cambia a Manual el servicio de Adobe que comprueba licencias en segundo plano.",
+      "rationale": "Arranca con Windows aunque no uses programas de Adobe. Los programas de Adobe siguen funcionando. Solo aparece si el servicio existe.",
+      "category": "services",
+      "level": 2,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": true,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.vendors:adobe_genuine_present"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "AGSService",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
+      "id": "services.adobe_updater",
+      "name": "Adobe Acrobat Update Service: pasar a Manual",
+      "description": "Cambia a Manual el actualizador de Adobe Acrobat/Reader.",
+      "rationale": "Acrobat sigue buscando actualizaciones al abrirlo, pero deja de haber un servicio residente desde el arranque. Opcional porque las actualizaciones de Acrobat corrigen fallos de seguridad. Solo aparece si el servicio existe.",
+      "category": "services",
+      "level": 3,
+      "risk": "bajo",
+      "windows": {
+        "min_build": 19045,
+        "max_build": null,
+        "editions": [
+          "home",
+          "pro",
+          "enterprise",
+          "education"
+        ]
+      },
+      "kind": "tweak",
+      "reversible": true,
+      "auto_profile": false,
+      "confirm_double": false,
+      "reboot_required": false,
+      "requires": {
+        "check": "tweaks.vendors:adobe_updater_present"
+      },
+      "auto_when": {},
+      "apply": [
+        {
+          "op": "service_start",
+          "name": "AdobeARMservice",
+          "start": "manual",
+          "stop": false
+        }
+      ],
+      "revert": [
+        {
+          "op": "restore_snapshot"
+        }
+      ],
+      "detect": [
+        {
+          "op": "match_apply"
+        }
+      ]
+    },
+    {
       "id": "visual.best_performance",
       "name": "Efectos visuales: mejor rendimiento (con suavizado de fuentes)",
       "description": "Desactiva animaciones, sombras y transparencias, pero mantiene ClearType y las miniaturas.",

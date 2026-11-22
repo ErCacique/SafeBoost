@@ -20,6 +20,7 @@ from core.constants import (
     self_command,
 )
 from core.engine import PlanItem
+from core.i18n import _
 from core.logger import get_logger, ui_log_queue
 from core.metrics import (
     Comparison,
@@ -38,6 +39,7 @@ from ui.pages.evolution_page import EvolutionPage
 from ui.pages.history import HistoryPage
 from ui.pages.privacy_page import PrivacyPage
 from ui.pages.settings_page import SettingsPage
+from ui.pages.space_page import SpacePage
 from ui.pages.startup_page import StartupPage
 from ui.pages.tweaks_page import (
     BloatwarePage,
@@ -74,6 +76,7 @@ PAGES: list[tuple[str, str, type[Page]]] = [
     ("diagnostics", "Diagnóstico", DiagnosticsPage),
     ("evolution", "Evolución", EvolutionPage),
     ("privacy", "Privacidad", PrivacyPage),
+    ("space", "Espacio", SpacePage),
     ("bloatware", "Bloatware", BloatwarePage),
     ("startup", "Inicio", StartupPage),
     ("services", "Servicios", ServicesPage),
@@ -119,7 +122,7 @@ class MainWindow(ctk.CTk):
 
         self.loading = ctk.CTkLabel(
             self,
-            text="Detectando entorno (versión, edición, disco, dominio, impresoras)…",
+            text=_("Detectando entorno (versión, edición, disco, dominio, impresoras)…"),
             font=FONT_H2,
         )
         self.loading.pack(expand=True)
@@ -173,7 +176,7 @@ class MainWindow(ctk.CTk):
         for key, label, _cls in PAGES:
             btn = ctk.CTkButton(
                 sidebar,
-                text=label,
+                text=_(label),
                 anchor="w",
                 # 32 px: con 11 páginas el menú cabe en un portátil de 1366x768 al 125 %.
                 height=32,
@@ -279,22 +282,22 @@ class MainWindow(ctk.CTk):
         self.selection_label.pack(side="left", padx=PAD, pady=PAD_S)
         self.log_btn = ctk.CTkButton(
             bar,
-            text="Mostrar log",
+            text=_("Mostrar log"),
             width=110,
             **SECONDARY_BUTTON,
             command=self.toggle_log,
         )
         self.log_btn.pack(side="right", padx=PAD, pady=PAD_S)
         self.cancel_btn = ctk.CTkButton(
-            bar, text="Cancelar", width=90, fg_color=DANGER, command=self._cancel
+            bar, text=_("Cancelar"), width=90, fg_color=DANGER, command=self._cancel
         )
         self.apply_btn = ctk.CTkButton(
-            bar, text="Revisar y aplicar", width=150, command=self.review
+            bar, text=_("Revisar y aplicar"), width=150, command=self.review
         )
         self.apply_btn.pack(side="right", padx=PAD_S, pady=PAD_S)
         self.sim_btn = ctk.CTkButton(
             bar,
-            text="Simular",
+            text=_("Simular"),
             width=100,
             **SECONDARY_BUTTON,
             command=self.simulate,
@@ -322,10 +325,10 @@ class MainWindow(ctk.CTk):
         self.log_visible = not self.log_visible
         if self.log_visible:
             self.log_panel.grid(row=2, column=1, sticky="nsew", padx=PAD, pady=(0, PAD))
-            self.log_btn.configure(text="Ocultar log")
+            self.log_btn.configure(text=_("Ocultar log"))
         else:
             self.log_panel.grid_forget()
-            self.log_btn.configure(text="Mostrar log")
+            self.log_btn.configure(text=_("Mostrar log"))
 
     def refresh_action_bar(self) -> None:
         if self.ui is None:
@@ -333,19 +336,19 @@ class MainWindow(ctk.CTk):
         app = self.ui.app
         count = len(self.ui.selected)
         os_allowed = app.env.supported or app.settings.allow_unsupported_os
-        self.selection_label.configure(text=f"{count} cambios seleccionados")
+        self.selection_label.configure(text=_("{n} cambios seleccionados", n=count))
         if app.settings.dry_run:
             self.mode_label.configure(
-                text="MODO SIMULACIÓN\nno se cambia nada", text_color=RISK_COLORS["medio"]
+                text=_("MODO SIMULACIÓN\nno se cambia nada"), text_color=RISK_COLORS["medio"]
             )
         elif not os_allowed:
             self.mode_label.configure(
-                text="Windows no soportado\nsolo simulación", text_color=DANGER
+                text=_("Windows no soportado\nsolo simulación"), text_color=DANGER
             )
         elif not app.env.is_admin:
-            self.mode_label.configure(text="Sin permisos de administrador", text_color=DANGER)
+            self.mode_label.configure(text=_("Sin permisos de administrador"), text_color=DANGER)
         else:
-            self.mode_label.configure(text="Modo real", text_color=TEXT_MUTED)
+            self.mode_label.configure(text=_("Modo real"), text_color=TEXT_MUTED)
         busy = self.ui.busy
         can_apply = (
             count > 0 and not busy and app.env.is_admin and os_allowed and not app.settings.dry_run

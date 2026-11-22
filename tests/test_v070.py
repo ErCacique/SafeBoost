@@ -161,7 +161,7 @@ def test_cleanup_without_restore_point_only_for_actions(
 ) -> None:
     engine = make_engine()
     with pytest.raises(PreflightError, match="solo se pueden ejecutar limpiezas"):
-        engine.apply(["privacy.feedback_frequency"], restore_point=False)
+        engine.apply(["power.hibernate_off"], restore_point=False)  # riesgo medio
     session = engine.apply(
         ["cleanup.thumbnails"], confirmed={"cleanup.thumbnails"}, restore_point=False
     )
