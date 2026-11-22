@@ -74,6 +74,9 @@ def demo_registry() -> MemoryRegistryBackend:
         "SecurityHealth",
         RegValue("REG_EXPAND_SZ", r"%windir%\system32\SecurityHealthSystray.exe"),
     )
+    uac = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+    backend.seed("HKLM", uac, "EnableLUA", RegValue("REG_DWORD", 1))
+    backend.seed("HKLM", uac, "ConsentPromptBehaviorAdmin", RegValue("REG_DWORD", 5))
     user_run = rf"{DEMO_SID}\Software\Microsoft\Windows\CurrentVersion\Run"
     backend.seed(
         "HKU",
@@ -192,6 +195,18 @@ class DemoRunner:
         if "SequenceNumber" in script:
             self._sequence += 1
             return self._sequence
+        if "Get-NetFirewallProfile" in script:
+            return {
+                "defender": {"av": True, "rt": True, "age": 1, "mode": "Normal"},
+                "firewall": [
+                    {"name": "Domain", "on": True},
+                    {"name": "Private", "on": True},
+                    {"name": "Public", "on": True},
+                ],
+                "license": 1,
+                "bitlocker": "Off",
+                "system": {"maker": "HP", "model": "HP Laptop 15-dw1xxx", "serial": "5CD0DEMO01"},
+            }
         if "MSFT_TaskLogonTrigger" in script:
             return [
                 {

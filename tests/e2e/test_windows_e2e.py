@@ -133,3 +133,13 @@ def test_read_only_queries_on_real_windows() -> None:
 
     updates = read_update_status(Registry(WinRegBackend()), runner)
     print(f"Windows Update: reinicio={updates.reboot_pending} · días={updates.last_update_days}")
+
+    from core.environment import EnvironmentInfo
+    from core.security import read_security
+
+    security = read_security(Registry(WinRegBackend()), runner, EnvironmentInfo())
+    print("Seguridad: " + " · ".join(f"{c.name}={c.ok}" for c in security.checks))
+    print(f"Equipo: {security.system.manufacturer} {security.system.model}")
+    names = {c.name for c in security.checks}
+    assert "Firewall" in names, "Get-NetFirewallProfile no devolvió perfiles"
+    assert security.system.model, "Win32_ComputerSystem no devolvió el modelo"

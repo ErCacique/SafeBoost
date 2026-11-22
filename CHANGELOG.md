@@ -7,6 +7,24 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-22
+
+### Added
+- **Informes de error sin conexión**: si algo falla (interfaz, hilos o el propio proceso) se
+  guarda un informe en `crashes/` (se conservan los 20 últimos) y se incluye en "Exportar logs".
+  No se envía nada a ningún sitio.
+- **Estado de seguridad** (Diagnóstico): Windows Defender y definiciones, firewall por perfil,
+  activación de Windows, control de cuentas (UAC), BitLocker y actualizaciones. Antivirus,
+  firewall o UAC desactivados aparecen como problema importante en el veredicto.
+- **Retrasar 90 s** un programa de inicio (página Inicio): en vez de desactivarlo, arranca 90 s
+  después de iniciar sesión mediante una tarea programada en `\SafeTrim\Delayed\`. Se deshace
+  desde Historial (borra la tarea y reactiva la entrada).
+- **Programas de prueba o del fabricante** (Espacio → Programas): antivirus de prueba, juegos
+  preinstalados y utilidades OEM prescindibles, con botón para abrir su desinstalador oficial
+  (con confirmación; los MSI se desinstalan con `/X`).
+- **Drivers y BIOS de tu modelo** (Diagnóstico): fabricante, modelo y número de serie, y enlace
+  directo a la página de soporte (Dell y Lenovo por número de serie).
+
 ## [0.8.0] - 2026-11-21
 
 ### Added
