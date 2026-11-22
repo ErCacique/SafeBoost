@@ -51,13 +51,14 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.0 | Diagnóstico, Windows Update, Windows.old, recomendación por RAM, prioridad baja, aviso de versión, guía de inicio, Windows 11 |
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
+| 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Enlaces v0.7.0: `https://github.com/ErCacique/WinOpt/releases/tag/v0.7.0`.
+Última publicada: v0.8.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.8.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
-## v0.8.0
+## v0.8.0 (publicada el 2026-11-22)
 
-Completa en la rama (versión 0.8.0): fabricantes, fuentes oficiales, modo juego, "Arreglar mi PC
+Incluye: fabricantes, fuentes oficiales, modo juego, "Arreglar mi PC
 lento", resumen de mejoras, página Espacio, informe PDF (Edge headless), actualización verificada,
 winget, ARM64 opcional, firma preparada, inglés parcial (menú, títulos, botones, nombres de
 tweaks; descripciones y diagnóstico siguen en español). Tests en `tests/test_v080.py`.
