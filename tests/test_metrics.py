@@ -99,15 +99,18 @@ def test_boot_after_handles_local_and_utc() -> None:
     assert not boot_after(BootInfo(1, "no-es-fecha"), "2026-11-03T08:00:00+00:00")
 
 
-def test_schedule_post_reboot_task(runner: FakeRunner, tmp_path) -> None:
-    assert schedule_post_reboot_capture(runner, [r"C:\Apps\SafeBoost.exe"], tmp_path)
+def test_schedule_post_reboot_task(runner: FakeRunner) -> None:
+    exe = r"C:\Program Files\SafeBoost\SafeBoost.exe"
+    assert schedule_post_reboot_capture(runner, [exe], "PC\\Ana")
     script = runner.scripts[-1]
-    assert "-UserId 'SYSTEM'" in script
-    assert f"SAFEBOOST_HOME={tmp_path}" in script
-    assert "SafeBoost.exe --capture-boot" in script
+    # Con la cuenta del usuario y elevada, nunca como SYSTEM.
+    assert "SYSTEM" not in script and "-UserId 'PC\\Ana'" in script
+    assert "-RunLevel Highest" in script and "-Argument '--capture-boot'" in script
     assert "-TaskPath '\\SafeBoost\\'" in script
+    # Un .exe en una carpeta que el usuario puede modificar no se programa elevado.
+    assert not schedule_post_reboot_capture(runner, [r"C:\Users\Ana\SafeBoost.exe"], "PC\\Ana")
     runner.fail_on.append("Register-ScheduledTask")
-    assert not schedule_post_reboot_capture(runner, ["x.exe"], tmp_path)
+    assert not schedule_post_reboot_capture(runner, [exe], "PC\\Ana")
 
 
 def test_no_profile_recommended_on_unsupported_windows(env: EnvironmentInfo) -> None:

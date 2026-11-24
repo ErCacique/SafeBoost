@@ -316,7 +316,7 @@ def test_game_watcher_only_stops_what_it_started() -> None:
 
 def test_tray_task_script() -> None:
     runner = FakeRunner()
-    assert schedule_tray(runner, [r"C:\SafeBoost\SafeBoost.exe"], "PC\\Ana")
+    assert schedule_tray(runner, [r"C:\Program Files\SafeBoost\SafeBoost.exe"], "PC\\Ana")
     script = runner.scripts[-1]
     assert "-Argument '--tray'" in script and "-AtLogOn -User 'PC\\Ana'" in script
     assert "-RunLevel Highest" in script and "\\SafeBoost\\" in script

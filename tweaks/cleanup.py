@@ -8,6 +8,7 @@ import sys
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from pathlib import Path
 
 import psutil
@@ -53,21 +54,52 @@ class Tally:
     skipped: int = 0
 
 
-def _iter_candidates(target: Target, now: float) -> Iterator[Path]:
-    if not target.root.exists():
-        return
-    iterator = (
-        target.root.rglob(target.pattern) if target.recursive else target.root.glob(target.pattern)
-    )
-    for path in iterator:
+def _is_link(entry: os.DirEntry[str] | Path) -> bool:
+    """Enlace simbólico o junction (punto de montaje NTFS). Cualquier usuario puede crear una
+    junction en su %TEMP% o en C:\\Windows\\Temp apuntando a otra carpeta: si la limpieza (que
+    se ejecuta como administrador) entrara, borraría archivos del sistema o de otros programas."""
+    try:
+        return entry.is_symlink() or entry.is_junction()
+    except OSError:
+        return True
+
+
+def _walk(root: Path, recursive: bool) -> Iterator[tuple[Path, list[os.DirEntry[str]]]]:
+    """Recorre `root` sin seguir enlaces ni junctions. Devuelve (carpeta, entradas)."""
+    stack = [root]
+    while stack:
+        folder = stack.pop()
         try:
-            if not path.is_file() or path.is_symlink() or path.name.lower() in target.keep:
-                continue
-            if now - path.stat().st_mtime < target.min_age_seconds:
-                continue
+            with os.scandir(folder) as it:
+                entries = list(it)
         except OSError:
             continue
-        yield path
+        yield folder, entries
+        if recursive:
+            for entry in entries:
+                try:
+                    if entry.is_dir(follow_symlinks=False) and not _is_link(entry):
+                        stack.append(Path(entry.path))
+                except OSError:
+                    continue
+
+
+def _iter_candidates(target: Target, now: float) -> Iterator[Path]:
+    root = target.root
+    if not root.is_dir() or _is_link(root):
+        return
+    for _folder, entries in _walk(root, target.recursive):
+        for entry in entries:
+            try:
+                if not entry.is_file(follow_symlinks=False) or _is_link(entry):
+                    continue
+                if entry.name.lower() in target.keep or not fnmatch(entry.name, target.pattern):
+                    continue
+                if now - entry.stat(follow_symlinks=False).st_mtime < target.min_age_seconds:
+                    continue
+            except OSError:
+                continue
+            yield Path(entry.path)
 
 
 def _measure(targets: list[Target]) -> Tally:
@@ -103,9 +135,12 @@ def _delete(targets: list[Target]) -> Tally:
 
 
 def _remove_empty_dirs(root: Path) -> None:
-    if not root.exists():
+    if not root.is_dir() or _is_link(root):
         return
-    for directory in sorted((p for p in root.rglob("*") if p.is_dir()), reverse=True):
+    # Sin seguir junctions: rmdir sobre una junction solo quitaría el enlace, pero entrar en ella
+    # vaciaría carpetas ajenas. Las más profundas primero.
+    folders = [folder for folder, _entries in _walk(root, True) if folder != root]
+    for directory in sorted(folders, key=lambda p: len(p.parts), reverse=True):
         try:
             directory.rmdir()
         except OSError:

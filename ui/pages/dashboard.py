@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import subprocess
 import sys
-import tempfile
 import threading
 import webbrowser
 from pathlib import Path
@@ -30,7 +29,13 @@ from core.metrics import (
     take_snapshot,
 )
 from core.selection import Selection, SelectionError, load_selection
-from core.update_check import ReleaseInfo, download_installer, installer_command
+from core.update_check import (
+    ReleaseInfo,
+    download_installer,
+    installer_command,
+    still_verified,
+    update_dir,
+)
 from core.watch import MaintenanceReport, MaintenanceStore
 from tweaks.startup import executable_from_command
 from ui.dialogs import FixPlanDialog
@@ -360,7 +365,7 @@ class DashboardPage(Page):
         self.update_btn.configure(state="disabled", text="Descargando…")
 
         def work(_p: ProgressFn, _c: threading.Event) -> Path:
-            return download_installer(info, Path(tempfile.gettempdir()) / "SafeBoost-update")
+            return download_installer(info, update_dir())
 
         def done(installer: Path) -> None:
             if not messagebox.askyesno(
@@ -369,6 +374,15 @@ class DashboardPage(Page):
                 "actualizará y volverá a abrirse. Tus datos se conservan. ¿Continuar?",
                 parent=self,
             ):
+                self.update_btn.configure(state="normal", text="Actualizar ahora")
+                return
+            if not still_verified(installer):
+                show_error(
+                    "Actualizar SafeBoost",
+                    "El instalador descargado ha cambiado desde que se comprobó. Por seguridad no "
+                    "se ejecuta; vuelve a intentarlo.",
+                    self,
+                )
                 self.update_btn.configure(state="normal", text="Actualizar ahora")
                 return
             subprocess.Popen(installer_command(installer), close_fds=True)

@@ -12,7 +12,6 @@ import customtkinter as ctk
 
 from core.app import AppContext
 from core.constants import (
-    APP_HOME,
     APP_NAME,
     APP_VERSION,
     ICON_FILE,
@@ -26,6 +25,7 @@ from core.metrics import (
     Comparison,
     compare,
     last_boot,
+    process_user,
     schedule_post_reboot_capture,
     take_snapshot,
 )
@@ -476,7 +476,7 @@ class MainWindow(ctk.CTk):
                 and any(r.status in ("applied", "partial") for r in session.results.values())
             ):
                 progress(1.0, "Programando la medición tras reiniciar…")
-                schedule_post_reboot_capture(app.runner, self_command(), APP_HOME)
+                schedule_post_reboot_capture(app.runner, self_command(), process_user())
             return session, compare(before, after)
 
         def done(result: tuple[Session, Comparison]) -> None:

@@ -52,12 +52,13 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
 | 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
+| 0.11.1 | Auditoría de seguridad: 7 arreglos (comillas PowerShell, junctions en limpieza, desinstalador HKCU, tareas elevadas, actualizador, Pillow, parámetros) |
 | 0.11.0 | Cambio de nombre SafeTrim → SafeBoost con migración automática de datos, tareas, instalador y actualizador |
 | 0.10.0 | Prueba de rendimiento, navegadores (caché y extensiones), modo ahorro, vigilancia en segundo plano (bandeja), inglés completo, licencia Técnico (Ed25519 offline), MSIX, web, mypy/cobertura/humo de UI |
 | 0.9.0 | Informes de error locales, estado de seguridad, retrasar inicio 90 s, programas del fabricante con desinstalador, soporte del modelo |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Última publicada: v0.11.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.11.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
+Última publicada: v0.11.1 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.11.1`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
 ## v0.8.0 (publicada el 2026-11-22)
 
@@ -134,3 +135,11 @@ menos un par de versiones. Las tareas \\SafeTrim\\Delayed\\ (inicio retrasado) s
 se deshacen con su sesión, que guarda la carpeta. Tests en `tests/test_v0110.py`.
 Aviso de marca: el nombre se parece a SAFEBOOT (software de cifrado registrado) y "Boost" es
 frecuente en optimizadores (p. ej. STARTUP BOOST de Boost Software); pendiente de comprobar en EUIPO/OEPM.
+
+## v0.11.1 · Auditoría de seguridad (2026-11-24)
+
+Informe y tabla de hallazgos en `docs/AUDITORIA-SEGURIDAD.md`; tests en `tests/test_v0111.py`.
+Reglas que deben mantenerse: todo texto externo a PowerShell con `ps_quote`; recorrer carpetas a
+limpiar con `tweaks.cleanup._walk` (nunca `rglob`); toda tarea elevada nueva debe comprobar
+`constants.protected_location`; parámetros de usuario pasan por `engine.clean_params`; nada que se
+vaya a ejecutar elevado puede salir de HKCU ni de carpetas del usuario.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -21,10 +22,11 @@ from core.constants import (
     RECOMMEND_HIGH_PROC_COUNT,
     RECOMMEND_LOW_RAM_GIB,
     SAFEBOOST_TASK_FOLDER,
+    protected_location,
 )
 from core.environment import EnvironmentInfo
 from core.logger import get_logger
-from core.process import CommandError, Runner, ps_quote, resolve_exe
+from core.process import CommandError, Runner, ps_quote
 
 log = get_logger("metrics")
 
@@ -245,23 +247,33 @@ def human_bytes(value: float) -> str:
 # --------------------------------------------------------------------------- tarea tras reinicio
 
 
-def schedule_post_reboot_capture(runner: Runner, command: list[str], home: Path) -> bool:
+def process_user() -> str:
+    """Cuenta que ejecuta SafeBoost (DOMINIO\\usuario)."""
+    user = os.environ.get("USERNAME", "")
+    domain = os.environ.get("USERDOMAIN", "")
+    return f"{domain}\\{user}" if domain and user else user
+
+
+def schedule_post_reboot_capture(runner: Runner, command: list[str], user: str) -> bool:
     """Programa una medición automática tras el próximo reinicio.
 
-    Tarea de un uso como SYSTEM (leer el evento de arranque requiere privilegios), disparada
-    al iniciar sesión con retraso. `command` lanza SafeBoost con --capture-boot; SAFEBOOST_HOME
-    apunta al perfil del usuario porque SYSTEM tiene otro %LOCALAPPDATA%. La propia ejecución
-    elimina la tarea cuando ya no quedan sesiones pendientes de medir.
+    Tarea de un uso con la misma cuenta que ejecuta SafeBoost y permisos elevados (leer el
+    evento de arranque los requiere), disparada al iniciar sesión con retraso. No se usa SYSTEM:
+    leería y escribiría en la carpeta de datos del usuario, que el usuario puede manipular. Solo
+    con la versión instalada (protected_location). La propia ejecución elimina la tarea cuando
+    ya no quedan sesiones pendientes de medir.
     """
-    inner = f'set "SAFEBOOST_HOME={home}" && ' + subprocess.list2cmdline(
-        [*command, "--capture-boot"]
-    )
+    if not user or not protected_location(command):
+        log.warning("post_reboot_task_skipped", extra={"exe": command[0] if command else ""})
+        return False
+    exe, *args = [*command, "--capture-boot"]
     script = (
-        f"$a = New-ScheduledTaskAction -Execute {ps_quote(resolve_exe('cmd.exe'))} "
-        f"-Argument {ps_quote('/c ' + inner)};"
-        f"$t = New-ScheduledTaskTrigger -AtLogOn; $t.Delay = {ps_quote(POST_REBOOT_DELAY)};"
-        "$p = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount "
-        "-RunLevel Highest;"
+        f"$a = New-ScheduledTaskAction -Execute {ps_quote(exe)}"
+        f" -Argument {ps_quote(subprocess.list2cmdline(args))};"
+        f"$t = New-ScheduledTaskTrigger -AtLogOn -User {ps_quote(user)};"
+        f" $t.Delay = {ps_quote(POST_REBOOT_DELAY)};"
+        f"$p = New-ScheduledTaskPrincipal -UserId {ps_quote(user)} -LogonType Interactive"
+        " -RunLevel Highest;"
         "$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries "
         "-ExecutionTimeLimit (New-TimeSpan -Minutes 5);"
         f"Register-ScheduledTask -TaskPath {ps_quote(SAFEBOOST_TASK_FOLDER)} "
