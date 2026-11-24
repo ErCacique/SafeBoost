@@ -20,18 +20,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # Dos fases, como la plantilla oficial de GitHub Pages: deploy-pages solo ve el paquete de la
+  # web cuando la fase que lo sube ha terminado (en una sola fase encontraba 0 paquetes).
+  build:
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
