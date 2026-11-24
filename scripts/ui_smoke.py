@@ -26,6 +26,7 @@ PAGE_DELAY_MS = 700
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--lang", default="es")
+    parser.add_argument("--appearance", default="dark", choices=["dark", "light"])
     parser.add_argument("--screenshots", type=Path)
     parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument(
@@ -48,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
 
     set_language(args.lang)
     settings = Settings(first_run=False, check_updates=False, language=args.lang)
-    ctk.set_appearance_mode("dark")
+    ctk.set_appearance_mode(args.appearance)
     ctk.set_default_color_theme(COLOR_THEME)
     errors: list[str] = []
 
@@ -71,6 +72,8 @@ def main(argv: list[str] | None = None) -> int:
     steps: list[tuple[str, str | None]] = [(key, None) for key, _l, _c in PAGES]
     space_views = ("Carpetas", "Archivos grandes", "Duplicados", "Programas", "Navegadores")
     steps += [("space", view) for view in space_views]
+    # Los dos modos de la interfaz: el menú se reconstruye y cada uno abre su página de inicio.
+    steps += [("mode", "Avanzado"), ("mode", "Fácil")]
 
     def capture(name: str) -> None:
         if args.screenshots is None or (sys.platform != "win32" and not os.environ.get("DISPLAY")):
@@ -99,6 +102,14 @@ def main(argv: list[str] | None = None) -> int:
             return
         key, view = steps[index]
         try:
+            if key == "mode":
+                from core.i18n import _
+
+                window.mode_var.set(_(view or ""))
+                window._change_mode(_(view or ""))
+                print(f"OK  modo {view} · {window.current}", flush=True)
+                window.after(args.delay, lambda: run_step(index + 1))
+                return
             window.show(key)
             if view is not None:
                 page: Any = window.pages[key]

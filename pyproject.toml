@@ -1,6 +1,6 @@
 [project]
 name = "safeboost"
-version = "0.11.2"
+version = "0.12.0"
 description = "Eliminación de bloatware y optimización reversible de Windows 10/11"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"

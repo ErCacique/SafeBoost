@@ -33,7 +33,7 @@ from ui.theme import (
     TEXT_MUTED,
     WRAP,
 )
-from ui.widgets import Card
+from ui.widgets import Card, Chip, IconBadge
 from ui.worker import BackgroundTask, ProgressFn
 
 if TYPE_CHECKING:
@@ -45,6 +45,29 @@ LEVEL_STYLE: dict[str, tuple[str, tuple[str, str]]] = {
     "info": ("Información", ACCENT),
     "ok": ("Bien", RISK_COLORS["bajo"]),
 }
+FINDING_TONE = {"critical": "critical", "warning": "warning", "info": "info", "ok": "ok"}
+# Icono por palabras del título del hallazgo (en español o inglés); si no encaja, el genérico.
+FINDING_ICONS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("memoria", "ram", "memory"), "memory"),
+    (("arranque", "startup", "boot"), "clock"),
+    (("disco", "ssd", "disk", "espacio", "space"), "drive"),
+    (("seguridad", "security", "antivirus", "firewall"), "shield"),
+    (("actualiz", "reinicio", "update", "restart"), "refresh"),
+    (("procesador", "cpu", "processor"), "pulse"),
+    (("batería", "battery"), "battery"),
+    (("windows 10", "windows 11"), "apps"),
+    (("cuello de botella", "bottleneck"), "check"),
+)
+
+
+def finding_icon(title: str) -> str:
+    lowered = title.lower()
+    for words, name in FINDING_ICONS:
+        if any(w in lowered for w in words):
+            return name
+    return "alert"
+
+
 REQ_MARK: dict[bool | None, tuple[str, tuple[str, str]]] = {
     True: ("✔", RISK_COLORS["bajo"]),
     False: ("✘", DANGER),
@@ -246,15 +269,28 @@ class DiagnosticsPage(Page):
         ctk.CTkLabel(self.body, text=title, font=FONT_H2).pack(anchor="w", pady=(PAD, PAD_S))
 
     def _finding(self, finding: Finding) -> None:
-        label, color = LEVEL_STYLE[finding.level]
+        label, _color = LEVEL_STYLE[finding.level]
+        tone = FINDING_TONE.get(finding.level, "neutral")
         card = Card(self.body)
         card.pack(fill="x", pady=PAD_S)
-        ctk.CTkLabel(card, text=f"{label} · {finding.title}", font=FONT_H2, text_color=color).pack(
-            anchor="w", padx=PAD, pady=(PAD, 0)
+        row = ctk.CTkFrame(card, fg_color="transparent")
+        row.pack(fill="x", padx=PAD + 4, pady=PAD + 2)
+        IconBadge(row, finding_icon(finding.title), tone, 44).pack(side="left", anchor="n")
+        texts = ctk.CTkFrame(row, fg_color="transparent")
+        texts.pack(side="left", fill="x", expand=True, padx=(PAD + 2, 0))
+        Chip(texts, _(label).upper(), tone).pack(anchor="w")
+        ctk.CTkLabel(texts, text=finding.title, font=FONT_H2, anchor="w", justify="left").pack(
+            anchor="w", pady=(PAD_S, 0)
         )
         ctk.CTkLabel(
-            card, text=finding.detail, font=FONT_BODY, wraplength=WRAP, justify="left"
-        ).pack(anchor="w", padx=PAD, pady=(PAD_S, PAD))
+            texts,
+            text=finding.detail,
+            font=FONT_BODY,
+            text_color=TEXT_MUTED,
+            wraplength=WRAP - 80,
+            justify="left",
+            anchor="w",
+        ).pack(anchor="w", pady=(2, 0))
 
     def _process_list(
         self, parent: Any, column: int, title: str, procs: list[ProcessUsage], memory: bool
