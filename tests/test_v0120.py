@@ -100,7 +100,7 @@ def test_both_menus_reach_every_section_they_promise() -> None:
     advanced = {k for k, _l, _i in _nav("ADVANCED_NAV") if k}
     assert easy <= pages and advanced <= pages
     # Nada se pierde: el modo Avanzado tiene todas las secciones salvo el Inicio del Fácil.
-    assert advanced == pages - {"home"}
+    assert advanced == pages - {"home", "fix"}  # «fix» se abre con el botón Arreglar mi PC
     assert {
         "home",
         "diagnostics",
@@ -118,7 +118,13 @@ def test_both_menus_reach_every_section_they_promise() -> None:
 
 def test_new_interface_texts_are_translated() -> None:
     en = json.loads((ROOT / "data" / "i18n" / "en.json").read_text(encoding="utf-8"))["ui"]
-    for module in ("core/health.py", "ui/pages/home_page.py", "ui/widgets.py", "ui/app.py"):
+    for module in (
+        "core/health.py",
+        "ui/pages/home_page.py",
+        "ui/pages/fix_page.py",
+        "ui/widgets.py",
+        "ui/app.py",
+    ):
         for node in ast.walk(_module_ast(module)):
             if (
                 isinstance(node, ast.Call)
@@ -131,3 +137,48 @@ def test_new_interface_texts_are_translated() -> None:
     for _k, label, _i in _nav("EASY_NAV") + _nav("ADVANCED_NAV"):
         assert label in en, f"menú sin traducir: {label}"
     assert en["Inicio"] == "Home"
+
+
+# --------------------------------------------------------------------------- v0.13.0
+
+
+class _Resp:
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+
+    def read(self) -> bytes:
+        return self.data
+
+    def __enter__(self) -> _Resp:
+        return self
+
+    def __exit__(self, *_a: object) -> None:
+        return None
+
+
+def test_check_update_explains_every_outcome() -> None:
+    import urllib.error
+
+    from core.update_check import check_update
+
+    def release(tag: str) -> object:
+        payload = json.dumps({"tag_name": tag, "html_url": "https://x/rel", "assets": []}).encode()
+        return lambda _r, timeout=0: _Resp(payload)
+
+    assert check_update("0.13.0", opener=release("v0.13.0")).status == "latest"
+    new = check_update("0.12.0", opener=release("v0.13.0"))
+    assert new.status == "new" and new.info is not None and new.info.version == "0.13.0"
+
+    def http(code: int) -> object:
+        def opener(_r: object, timeout: float = 0) -> object:
+            raise urllib.error.HTTPError("https://x", code, "x", {}, None)  # type: ignore[arg-type]
+
+        return opener
+
+    assert "no son públicas" in check_update("0.1.0", opener=http(404)).message
+    assert "prueba más tarde" in check_update("0.1.0", opener=http(403)).message
+
+    def offline(_r: object, timeout: float = 0) -> object:
+        raise urllib.error.URLError("sin red")
+
+    assert check_update("0.1.0", opener=offline).message == "no hay conexión con GitHub"

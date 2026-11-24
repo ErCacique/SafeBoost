@@ -331,7 +331,7 @@ class HomePage(Page):
         return page
 
     def fix(self) -> None:
-        self._dashboard().fix_my_pc()
+        self._dashboard().fix_my_pc()  # abre la página «Arreglar mi PC»
 
     def free_space(self) -> None:
         from core.fixplan import FIX_CLEANUPS

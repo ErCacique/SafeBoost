@@ -15,7 +15,6 @@ import customtkinter as ctk
 from core.catalog import LEVEL_LABELS
 from core.constants import APP_VERSION, PORTABLE_MODE
 from core.engine import DriftItem
-from core.fixplan import FIX_CLEANUPS, FixPlan, build_plan
 from core.gamemode import BatteryMode, GameMode, TweakMode
 from core.i18n import _
 from core.metrics import (
@@ -37,8 +36,6 @@ from core.update_check import (
     update_dir,
 )
 from core.watch import MaintenanceReport, MaintenanceStore
-from tweaks.startup import executable_from_command
-from ui.dialogs import FixPlanDialog
 from ui.pages.base import Page, show_error
 from ui.theme import (
     ACCENT,
@@ -92,11 +89,6 @@ def describe_maintenance(report: MaintenanceReport) -> str:
     if report.drift:
         text += f" Windows ha deshecho {len(report.drift)} cambio(s): revísalos abajo."
     return text
-
-
-def _file_of(command: str) -> str:
-    exe = executable_from_command(command)
-    return exe.name if exe else ""
 
 
 class DashboardPage(Page):
@@ -253,43 +245,13 @@ class DashboardPage(Page):
     # ------------------------------------------------------------------ arreglar / modo juego
 
     def fix_my_pc(self) -> None:
-        app = self.state.app
-        self.fix_btn.configure(state="disabled", text="Analizando el equipo…")
+        """Abre la pantalla «Arreglar mi PC» (plan con casillas; luego revisión y resumen)."""
+        from ui.pages.fix_page import FixPage
 
-        def work(_p: ProgressFn, _c: threading.Event) -> FixPlan:
-            from core.diagnostics import collect
-            from tweaks.startup import StartupManager
-
-            report = collect(app.env, app.registry, app.runner)
-            entries = StartupManager(app.registry, app.runner, app.engine.tasks, app.env).list()
-            startup = [(e.name, _file_of(e.command), e.impact) for e in entries if e.enabled]
-            engine = app.engine
-            cleanups = [
-                tid
-                for tid in FIX_CLEANUPS
-                if tid in engine.catalog and engine.evaluate(engine.catalog.get(tid)).applicable
-            ]
-            return build_plan(
-                report, recommend_profile(app.env, report.snapshot), startup, cleanups
-            )
-
-        def done(plan: FixPlan) -> None:
-            self.fix_btn.configure(state="normal", text=_("Arreglar mi PC lento"))
-            FixPlanDialog(self, plan, self._prepare_fix, lambda: self.main.show("startup"))
-
-        def failed(exc: BaseException) -> None:
-            self.fix_btn.configure(state="normal", text=_("Arreglar mi PC lento"))
-            show_error("Arreglar mi PC lento", exc, self)
-
-        BackgroundTask(self, work, done, failed).start()
-
-    def _prepare_fix(self, plan: FixPlan) -> None:
-        if plan.level is not None:
-            self.state.apply_profile(plan.level)
-            self.profile_var.set(plan.level)
-        self.state.selected |= set(plan.cleanups)
-        self.state.notify()
-        self.main.simulate()
+        page = self.main.page("fix")
+        if isinstance(page, FixPage):
+            page.plan = None  # se recalcula con el estado actual del equipo
+        self.main.show("fix")
 
     def _refresh_game_button(self) -> None:
         engine = self.state.app.engine

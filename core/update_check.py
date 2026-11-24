@@ -46,15 +46,25 @@ def parse_version(text: str) -> tuple[int, ...] | None:
         return None
 
 
-def check_latest(
+@dataclass(frozen=True)
+class UpdateCheck:
+    """Resultado de comprobar si hay versión nueva, para explicárselo al usuario."""
+
+    status: str  # "new" (hay versión nueva), "latest" (al día) o "error"
+    info: ReleaseInfo | None = None
+    message: str = ""
+
+
+def check_update(
     current: str = APP_VERSION,
     opener: Opener = urllib.request.urlopen,
     url: str = UPDATE_API_URL,
     timeout: float = UPDATE_CHECK_TIMEOUT,
-) -> ReleaseInfo | None:
-    """Devuelve la Release publicada si es más nueva que `current`; None en cualquier otro caso."""
+) -> UpdateCheck:
+    """Consulta la última Release y dice si hay versión nueva, si se está al día o por qué no se
+    pudo comprobar (sin conexión, GitHub no responde, repositorio no accesible…)."""
     if not url.startswith("https://"):
-        return None
+        return UpdateCheck("error", message="dirección de comprobación no segura")
     request = urllib.request.Request(  # noqa: S310 - esquema https comprobado arriba
         url,
         headers={
@@ -66,19 +76,29 @@ def check_latest(
         with opener(request, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        # 404: repositorio privado o sin Releases. No es un error para el usuario.
         log.info("update_check_http", extra={"status": exc.code})
-        return None
-    except (urllib.error.URLError, OSError, ValueError) as exc:
+        if exc.code == 404:
+            return UpdateCheck("error", message="no hay versiones publicadas o no son públicas")
+        if exc.code in (403, 429):
+            return UpdateCheck(
+                "error", message="GitHub ha limitado las consultas; prueba más tarde"
+            )
+        return UpdateCheck("error", message=f"GitHub respondió con el error {exc.code}")
+    except (urllib.error.URLError, OSError) as exc:
         log.info("update_check_failed", extra={"err": str(exc)})
-        return None
+        return UpdateCheck("error", message="no hay conexión con GitHub")
+    except ValueError as exc:
+        log.info("update_check_failed", extra={"err": str(exc)})
+        return UpdateCheck("error", message="respuesta no válida de GitHub")
     if not isinstance(data, dict) or data.get("draft") or data.get("prerelease"):
-        return None
+        return UpdateCheck("latest")
     latest = parse_version(str(data.get("tag_name") or ""))
     mine = parse_version(current)
     page = str(data.get("html_url") or "")
-    if latest is None or mine is None or latest <= mine or not page.startswith("https://"):
-        return None
+    if latest is None or mine is None or not page.startswith("https://"):
+        return UpdateCheck("error", message="respuesta no válida de GitHub")
+    if latest <= mine:
+        return UpdateCheck("latest")
     version = ".".join(map(str, latest))
     assets = {
         str(a.get("name")): str(a.get("browser_download_url") or "")
@@ -92,7 +112,19 @@ def check_latest(
     sums = assets.get("SHA256SUMS.txt", "")
     if not (setup.startswith("https://") and sums.startswith("https://")):
         setup = sums = ""
-    return ReleaseInfo(version, page, setup, sums)
+    return UpdateCheck("new", ReleaseInfo(version, page, setup, sums))
+
+
+def check_latest(
+    current: str = APP_VERSION,
+    opener: Opener = urllib.request.urlopen,
+    url: str = UPDATE_API_URL,
+    timeout: float = UPDATE_CHECK_TIMEOUT,
+) -> ReleaseInfo | None:
+    """La Release publicada si es más nueva que `current`; None en cualquier otro caso (el aviso
+    automático al arrancar no molesta si no hay conexión)."""
+    result = check_update(current, opener, url, timeout)
+    return result.info if result.status == "new" else None
 
 
 def _download(url: str, target: Path, opener: Opener, timeout: float = 120) -> None:
