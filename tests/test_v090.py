@@ -142,10 +142,12 @@ def test_support_urls() -> None:
 
 def test_oem_bloat_detection_and_msi_uninstall() -> None:
     programs = [
-        Program("a", "McAfee LiveSafe", uninstall_string=r'"C:\McAfee\uninst.exe"'),
-        Program("b", "HP Audio Switch", uninstall_string="x"),  # útil: no está en la lista
-        Program("c", "WildTangent Games", uninstall_string="MsiExec.exe /I{1234}"),
-        Program("d", "Norton Security"),  # sin desinstalador registrado: no se ofrece
+        Program("HKLM\\a", "McAfee LiveSafe", uninstall_string=r'"C:\McAfee\uninst.exe"'),
+        Program("HKLM\\b", "HP Audio Switch", uninstall_string="x"),  # útil: no está en la lista
+        Program("HKLM\\c", "WildTangent Games", uninstall_string="MsiExec.exe /I{1234}"),
+        Program("HKLM\\d", "Norton Security"),  # sin desinstalador registrado: no se ofrece
+        # En HKCU cualquier programa sin permisos puede escribir: nunca se ejecuta elevado.
+        Program("HKCU\\e", "McAfee Fake", uninstall_string="calc.exe"),
     ]
     found = find_oem_bloat(programs)
     assert [c.program.name for c in found] == ["McAfee LiveSafe", "WildTangent Games"]

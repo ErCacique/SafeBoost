@@ -160,9 +160,17 @@ class SubprocessRunner:
             raise CommandError(f"Salida JSON inválida de PowerShell: {text[:200]}", result) from exc
 
 
+# PowerShell acepta como comilla simple también las tipográficas ‘ ’ ‚ ‛: si no se escapan, un
+# nombre como «Spotify’; Remove-Item …» cerraría la cadena e inyectaría órdenes (con permisos de
+# administrador). Cada una se duplica, que es el escape que PowerShell entiende para todas.
+_PS_SINGLE_QUOTES = ("'", "\u2018", "\u2019", "\u201a", "\u201b")
+
+
 def ps_quote(value: str) -> str:
-    """Literal de cadena PowerShell entre comillas simples (escapa comillas simples)."""
-    return "'" + value.replace("'", "''") + "'"
+    """Literal de cadena PowerShell entre comillas simples, seguro para cualquier texto."""
+    for quote in _PS_SINGLE_QUOTES:
+        value = value.replace(quote, quote * 2)
+    return "'" + value + "'"
 
 
 def as_list(value: Any) -> list[Any]:

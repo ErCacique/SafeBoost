@@ -9,6 +9,7 @@ Principios:
 from __future__ import annotations
 
 import dataclasses
+import re
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -82,6 +83,37 @@ def _noop_progress(_fraction: float, _message: str) -> None:
     return None
 
 
+_DRIVE_RE = re.compile(r"^[A-Za-z]:\\?$")
+
+
+def clean_params(tweak: Tweak, params: dict[str, Any]) -> dict[str, Any]:
+    """Solo los parámetros que declara el tweak y con un valor válido para su tipo. Los
+    parámetros pueden venir de un archivo de selección hecho por otra persona: un valor
+    inesperado no debe llegar nunca a un handler (que lo usaría en órdenes del sistema)."""
+    clean: dict[str, Any] = {}
+    for name, value in params.items():
+        spec = tweak.params.get(name)
+        kind = spec.get("type") if spec else None
+        ok = False
+        if kind == "choice":
+            ok = value in (spec or {}).get("choices", [])
+        elif kind == "int":
+            # El mínimo lo comprueba el handler, que explica el motivo al usuario.
+            ok = isinstance(value, int) and not isinstance(value, bool)
+        elif kind == "bool":
+            ok = isinstance(value, bool)
+        elif kind == "drives":
+            ok = value == "non_system" or (
+                isinstance(value, list)
+                and all(isinstance(d, str) and _DRIVE_RE.match(d) for d in value)
+            )
+        if ok:
+            clean[name] = value
+        else:
+            log.warning("param_rejected", extra={"tweak": tweak.id, "param": name})
+    return clean
+
+
 class Engine:
     def __init__(
         self,
@@ -123,7 +155,7 @@ class Engine:
         prior: Session | None = None,
     ) -> HandlerContext:
         merged = {k: v.get("default") for k, v in tweak.params.items()}
-        merged.update(params or {})
+        merged.update(clean_params(tweak, params or {}))
         ctx = HandlerContext(
             tweak=tweak,
             env=self.env,

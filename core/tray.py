@@ -24,7 +24,13 @@ from typing import TYPE_CHECKING, Any
 
 import psutil
 
-from core.constants import APP_HOME, APP_NAME, ICON_FILE, SAFEBOOST_TASK_FOLDER
+from core.constants import (
+    APP_HOME,
+    APP_NAME,
+    ICON_FILE,
+    SAFEBOOST_TASK_FOLDER,
+    protected_location,
+)
 from core.logger import get_logger
 from core.process import Runner, ps_quote
 
@@ -117,6 +123,10 @@ class GameWatcher:
 
 
 def schedule_tray(runner: Runner, command: list[str], user: str) -> bool:
+    """Tarea elevada al iniciar sesión. Solo con la versión instalada (protected_location)."""
+    if not protected_location(command):
+        log.warning("tray_task_unprotected_exe", extra={"exe": command[0] if command else ""})
+        return False
     exe, *args = [*command, "--tray"]
     script = (
         f"$a = New-ScheduledTaskAction -Execute {ps_quote(exe)}"

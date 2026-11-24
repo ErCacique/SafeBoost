@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
+import tempfile
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -17,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from core.constants import APP_NAME, APP_VERSION, UPDATE_API_URL, UPDATE_CHECK_TIMEOUT
+from core.constants import APP_NAME, APP_VERSION, SYSTEM_ROOT, UPDATE_API_URL, UPDATE_CHECK_TIMEOUT
 from core.logger import get_logger
 
 log = get_logger("update_check")
@@ -134,6 +136,31 @@ def download_installer(
         target.unlink(missing_ok=True)
         raise ValueError("La huella SHA-256 del instalador no coincide: descarga descartada")
     return target
+
+
+def update_dir() -> Path:
+    """Carpeta nueva para la descarga. En Windows, dentro de C:\\Windows\\Temp: SafeBoost se
+    ejecuta como administrador y lo que crea ahí no lo puede modificar un programa sin permisos
+    (en el %TEMP% del usuario sí podría cambiar el instalador antes de que se ejecute)."""
+    system_temp = SYSTEM_ROOT / "Temp"
+    if sys.platform == "win32" and system_temp.is_dir():
+        try:
+            return Path(tempfile.mkdtemp(prefix="SafeBoost-update-", dir=system_temp))
+        except OSError:
+            pass
+    return Path(tempfile.mkdtemp(prefix="SafeBoost-update-"))
+
+
+def still_verified(installer: Path) -> bool:
+    """Repite la comprobación de la huella justo antes de ejecutar el instalador."""
+    try:
+        sums = (installer.parent / "SHA256SUMS.txt").read_text(encoding="utf-8", errors="replace")
+        expected = expected_hash(sums, installer.name)
+        return (
+            expected is not None and hashlib.sha256(installer.read_bytes()).hexdigest() == expected
+        )
+    except OSError:
+        return False
 
 
 def installer_command(installer: Path) -> list[str]:

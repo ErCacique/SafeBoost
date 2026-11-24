@@ -143,7 +143,10 @@ def test_maintenance_store_and_seen_flag(tmp_path: Path) -> None:
 
 def test_schedule_maintenance_task() -> None:
     runner = FakeRunner()
-    assert schedule_maintenance(runner, ["C:\\SafeBoost\\SafeBoost.exe"], "PC\\Ana") is True
+    assert (
+        schedule_maintenance(runner, ["C:\\Program Files\\SafeBoost\\SafeBoost.exe"], "PC\\Ana")
+        is True
+    )
     script = runner.scripts[-1]
     for part in (
         "-Weekly -WeeksInterval 4",

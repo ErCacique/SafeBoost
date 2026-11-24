@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from core.constants import APP_HOME, SAFEBOOST_TASK_FOLDER, SERVICES_KEY
+from core.constants import APP_HOME, SAFEBOOST_TASK_FOLDER, SERVICES_KEY, protected_location
 from core.logger import get_logger
 from core.process import CommandError, Runner, as_list, ps_quote
 from core.programs import list_programs
@@ -358,7 +358,13 @@ class MaintenanceStore:
 
 def schedule_maintenance(runner: Runner, command: list[str], user: str) -> bool:
     """Cada 4 semanas, como el usuario con sesión y con privilegios elevados (sin contraseña:
-    solo se ejecuta si ha iniciado sesión). Si el equipo estaba apagado, se hace al encenderlo."""
+    solo se ejecuta si ha iniciado sesión). Si el equipo estaba apagado, se hace al encenderlo.
+    Solo con la versión instalada (ver constants.protected_location)."""
+    if not protected_location(command):
+        log.warning(
+            "maintenance_task_unprotected_exe", extra={"exe": command[0] if command else ""}
+        )
+        return False
     exe, *args = [*command, "--maintenance"]
     script = (
         f"$a = New-ScheduledTaskAction -Execute {ps_quote(exe)}"

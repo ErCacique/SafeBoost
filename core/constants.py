@@ -5,13 +5,14 @@ Todo valor "mágico" del proyecto vive aquí o en data/tweaks.json.
 
 from __future__ import annotations
 
+import ntpath
 import os
 import sys
 from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeBoost"
-APP_VERSION: Final = "0.11.0"
+APP_VERSION: Final = "0.11.1"
 APP_ID: Final = "ErCacique.SafeBoost"
 
 # --------------------------------------------------------------------------- rutas
@@ -107,6 +108,26 @@ SETTINGS_FILE: Final = APP_HOME / "settings.json"
 RESOURCE_ROOT: Final = _resource_root()
 TWEAKS_FILE: Final = RESOURCE_ROOT / "data" / "tweaks.json"
 ICON_FILE: Final = RESOURCE_ROOT / "assets" / "safeboost.ico"
+
+
+def protected_location(command: list[str], roots: list[str] | None = None) -> bool:
+    """El ejecutable de `command` está en una carpeta que solo pueden modificar administradores
+    (Program Files o Windows). Las tareas programadas que se ejecutan con permisos elevados solo se
+    crean en ese caso: si apuntaran a un .exe en una carpeta del usuario o en un USB (versión
+    portable), cualquiera podría sustituirlo y obtener permisos de administrador sin UAC."""
+    if PORTABLE_MODE or not command:
+        return False
+    if roots is None:
+        roots = [
+            os.environ.get(var) or default
+            for var, default in (
+                ("ProgramFiles", r"C:\Program Files"),
+                ("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+                ("SystemRoot", r"C:\Windows"),
+            )
+        ]
+    exe = ntpath.normpath(command[0]).lower()
+    return any(exe.startswith(ntpath.normpath(root).lower() + "\\") for root in roots if root)
 
 
 def self_command() -> list[str]:

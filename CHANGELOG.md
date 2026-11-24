@@ -7,6 +7,23 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-24
+
+### Security
+Auditoría completa (informe en `docs/AUDITORIA-SEGURIDAD.md`). Todos los fallos eran explotables
+solo desde el propio equipo (un programa sin permisos aprovechando que SafeBoost es administrador).
+- Las órdenes de PowerShell escapan también las comillas tipográficas (‘ ’ ‚ ‛), que PowerShell
+  trata como comillas: un nombre de programa de inicio manipulado ya no puede inyectar órdenes.
+- La limpieza nunca entra en enlaces ni junctions: antes se podía dirigir el borrado a carpetas
+  del sistema desde %TEMP%.
+- «Desinstalar» programas del fabricante solo usa entradas de HKLM y muestra la orden exacta.
+- Las tareas elevadas (mantenimiento, vigilancia, medición tras reiniciar) solo se crean con la
+  versión instalada en Program Files; la medición tras reiniciar ya no se ejecuta como SYSTEM.
+- «Actualizar ahora» descarga en una carpeta protegida y vuelve a comprobar la huella SHA-256
+  justo antes de instalar.
+- Pillow 13.0.0 (corrige 8 CVE). La CI comprueba las dependencias con pip-audit.
+- Los parámetros de un archivo de selección importado se validan.
+
 ## [0.11.0] - 2026-11-24
 
 ### Changed

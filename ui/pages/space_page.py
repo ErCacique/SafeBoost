@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
-from core.constants import SYSTEM_ROOT
+from core.constants import SYSTEM32, SYSTEM_ROOT
 from core.diskusage import find_duplicates, last_used_by_exe, scan
 from core.extensions import list_extensions
 from core.metrics import human_bytes
@@ -146,16 +146,19 @@ class SpacePage(Page):
             )
 
     def _uninstall(self, cand: OemCandidate) -> None:
+        command = uninstall_command(cand.program)
         if not messagebox.askyesno(
             "Desinstalar",
             f"Se abrirá el desinstalador de {cand.program.name} ({cand.reason}). Sigue sus pasos. "
             "No se puede deshacer desde SafeBoost, pero puedes reinstalarlo desde la web del "
-            "fabricante. ¿Continuar?",
+            f"fabricante.\n\nOrden que se ejecutará:\n{command}\n\n¿Continuar?",
             parent=self,
         ):
             return
         if sys.platform == "win32":
-            subprocess.Popen(["cmd.exe", "/c", uninstall_command(cand.program)], close_fds=True)
+            # Ruta completa: sin ella, Windows buscaría antes cmd.exe en la carpeta del programa
+            # (en la versión portable, un USB donde cualquiera puede dejar un cmd.exe falso).
+            subprocess.Popen([str(SYSTEM32 / "cmd.exe"), "/c", command], close_fds=True)
         self.data.pop("Programas", None)
 
     def _clean_browsers(self) -> None:

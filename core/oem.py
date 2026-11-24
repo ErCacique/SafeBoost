@@ -44,8 +44,13 @@ class OemCandidate:
 
 
 def find_oem_bloat(programs: list[Program]) -> list[OemCandidate]:
+    """Solo entradas de HKLM: SafeBoost ejecuta el desinstalador como administrador, y una entrada
+    de HKCU la puede crear cualquier programa del usuario sin permisos (con un nombre como
+    «McAfee» y una orden maliciosa) para que se ejecute elevada al pulsar «Desinstalar»."""
     out = []
     for program in programs:
+        if not program.key.upper().startswith("HKLM\\"):
+            continue
         name = program.name.lower()
         for pattern, why in _COMPILED:
             if pattern.search(name) and program.uninstall_string:

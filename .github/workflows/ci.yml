@@ -48,6 +48,12 @@ jobs:
       - name: Tipos (mypy)
         run: mypy
 
+      # Vulnerabilidades conocidas (CVE) en las dependencias que se empaquetan en el .exe.
+      - name: Dependencias vulnerables (pip-audit)
+        run: |
+          pip install pip-audit==2.10.0
+          pip-audit -r requirements.txt -r requirements-build.txt --progress-spinner off
+
       - name: Tests (registro simulado) y cobertura
         run: pytest -m "not windows" --cov --cov-report=term
 
