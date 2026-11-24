@@ -97,8 +97,8 @@
       bloatware, retrasa lo que frena el arranque, ajusta servicios y limpia. Cada cambio queda
       guardado y se deshace con un clic.</p>
     <div class="cta">
-      <a class="btn primary" id="dl-setup" href="https://github.com/ErCacique/WinOpt/releases/latest">Descargar instalador</a>
-      <a class="btn secondary" id="dl-portable" href="https://github.com/ErCacique/WinOpt/releases/latest">Versión portable (USB)</a>
+      <a class="btn primary" id="dl-setup" href="https://github.com/ErCacique/SafeBoost/releases/latest">Descargar instalador</a>
+      <a class="btn secondary" id="dl-portable" href="https://github.com/ErCacique/SafeBoost/releases/latest">Versión portable (USB)</a>
     </div>
     <p class="small" id="dl-version">Windows 10 22H2 y Windows 11 · Gratis · Sin anuncios</p>
     <div class="shot"><img src="img/dashboard.webp" width="1280" height="810" alt="Panel principal de SafeBoost con el estado del equipo y los tres perfiles"></div>
@@ -150,7 +150,7 @@
       <h2>Edición Técnico</h2>
       <div class="card">
         <p>Para quien arregla equipos de otros. El informe en PDF para el cliente (estado, cambios hechos y recomendaciones de hardware) lleva tu nombre, tu contacto y tu logo. Funciona sin internet, también en la versión portable desde un USB. El resto de SafeBoost es igual y gratis.</p>
-        <p style="margin-top:12px"><a href="https://github.com/ErCacique/WinOpt/issues/new?title=Licencia%20T%C3%A9cnico">Pedir una licencia</a></p>
+        <p style="margin-top:12px"><a href="https://github.com/ErCacique/SafeBoost/issues/new?title=Licencia%20T%C3%A9cnico">Pedir una licencia</a></p>
       </div>
     </div>
   </section>
@@ -167,14 +167,14 @@
 </main>
 
 <footer>
-  <div class="wrap">SafeBoost · <a href="https://github.com/ErCacique/WinOpt">Código en GitHub</a> · <a href="https://github.com/ErCacique/WinOpt/blob/main/CHANGELOG.md">Novedades</a></div>
+  <div class="wrap">SafeBoost · <a href="https://github.com/ErCacique/SafeBoost">Código en GitHub</a> · <a href="https://github.com/ErCacique/SafeBoost/blob/main/CHANGELOG.md">Novedades</a></div>
 </footer>
 
 <script>
   // Enlaces directos a la última versión (si la API de GitHub no responde, quedan los de la página de Releases).
   (async () => {
     try {
-      const res = await fetch("https://api.github.com/repos/ErCacique/WinOpt/releases/latest");
+      const res = await fetch("https://api.github.com/repos/ErCacique/SafeBoost/releases/latest");
       if (!res.ok) return;
       const rel = await res.json();
       const find = (re) => (rel.assets || []).find((a) => re.test(a.name));

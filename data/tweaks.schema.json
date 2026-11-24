@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/ErCacique/WinOpt/data/tweaks.schema.json",
+  "$id": "https://github.com/ErCacique/SafeBoost/data/tweaks.schema.json",
   "title": "SafeBoost tweaks catalog",
   "type": "object",
   "required": ["schema_version", "tweaks"],

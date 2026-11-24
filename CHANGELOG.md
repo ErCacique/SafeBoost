@@ -7,6 +7,13 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-11-24
+
+### Changed
+- El repositorio pasa a llamarse `ErCacique/SafeBoost` (antes `WinOpt`). El aviso de versiones,
+  el instalador, la web, winget y la documentación usan la dirección nueva. Las versiones ya
+  instaladas siguen encontrando actualizaciones: GitHub redirige la dirección antigua.
+
 ## [0.11.1] - 2026-11-24
 
 ### Security
