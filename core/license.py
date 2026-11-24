@@ -5,7 +5,7 @@ Formato de la licencia (una línea de texto):  ST1.<datos>.<firma>
   fecha de emisión (iat), la de caducidad (exp, null = perpetua) y un identificador (id).
 - firma: Ed25519 de "ST1.<datos>" con la clave privada del autor (scripts/license_tool.py).
 
-SafeTrim solo lleva la clave pública: nadie puede fabricar licencias sin la privada, y la
+SafeBoost solo lleva la clave pública: nadie puede fabricar licencias sin la privada, y la
 comprobación no envía nada a ningún sitio. Lo que desbloquea la licencia es la marca del técnico
 en el informe para el cliente (nombre, contacto y logo); el resto del programa es igual.
 """
@@ -80,7 +80,7 @@ def parse_license(text: str, public_key: bytes = PUBLIC_KEY, today: date | None 
     """Comprueba firma y caducidad. Lanza LicenseError con un motivo legible."""
     parts = "".join(text.split()).split(".")
     if len(parts) != 3 or parts[0] != PREFIX:
-        raise LicenseError("No es una licencia de SafeTrim (debe empezar por ST1.)")
+        raise LicenseError("No es una licencia de SafeBoost (debe empezar por ST1.)")
     try:
         signature = _b64decode(parts[2])
         payload = json.loads(_b64decode(parts[1]))

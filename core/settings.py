@@ -1,4 +1,4 @@
-"""Ajustes de usuario persistidos en %LOCALAPPDATA%\\SafeTrim\\settings.json."""
+"""Ajustes de usuario persistidos en %LOCALAPPDATA%\\SafeBoost\\settings.json."""
 
 from __future__ import annotations
 
@@ -25,10 +25,10 @@ class Settings:
     first_run: bool = True
     # Una petición a la API de Releases de GitHub al arrancar; nada más sale del equipo.
     check_updates: bool = True
-    # Tarea \SafeTrim\Maintenance cada 4 semanas (Ajustes → General).
+    # Tarea \SafeBoost\Maintenance cada 4 semanas (Ajustes → General).
     maintenance: bool = False
     language: str = "es"  # "es" o "en" (core.i18n); se aplica al reiniciar
-    # Icono junto al reloj (core.tray), tarea \SafeTrim\Tray al iniciar sesión.
+    # Icono junto al reloj (core.tray), tarea \SafeBoost\Tray al iniciar sesión.
     background_watch: bool = False
     # Con la vigilancia: modo juego al abrir un juego de Steam, Epic, GOG, Xbox…
     auto_game_mode: bool = False

@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
     issue.add_argument("--email", default="")
     issue.add_argument("--days", type=int, default=0, help="0 = perpetua")
     verify = sub.add_parser(
-        "verify", help="comprueba una licencia con la clave pública de SafeTrim"
+        "verify", help="comprueba una licencia con la clave pública de SafeBoost"
     )
     verify.add_argument("license")
     genkey = sub.add_parser("genkey", help="crea un par de claves nuevo")
@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         parse_license(text)
     except LicenseError as exc:
         raise SystemExit(
-            f"La clave privada no corresponde a la pública de SafeTrim: {exc}"
+            f"La clave privada no corresponde a la pública de SafeBoost: {exc}"
         ) from exc
     print(text)
     return 0

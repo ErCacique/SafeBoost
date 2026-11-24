@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SafeTrim · Optimiza Windows sin miedo</title>
-<meta name="description" content="SafeTrim acelera Windows 10 y 11 con cambios que puedes deshacer uno a uno: bloatware, arranque, servicios, limpieza y diagnóstico. Gratis, sin anuncios y sin enviar tus datos.">
+<title>SafeBoost · Optimiza Windows sin miedo</title>
+<meta name="description" content="SafeBoost acelera Windows 10 y 11 con cambios que puedes deshacer uno a uno: bloatware, arranque, servicios, limpieza y diagnóstico. Gratis, sin anuncios y sin enviar tus datos.">
 <link rel="icon" href="favicon.ico">
 <style>
   :root {
@@ -80,7 +80,7 @@
 <body>
 <header>
   <div class="wrap">
-    <a class="brand" href="#">SafeTrim</a>
+    <a class="brand" href="#">SafeBoost</a>
     <nav>
       <a href="#que-hace">Qué hace</a>
       <a href="#seguridad">Seguridad</a>
@@ -93,7 +93,7 @@
 <main>
   <div class="hero wrap">
     <h1>Tu Windows más rápido.<br>Y todo se puede deshacer.</h1>
-    <p>SafeTrim te dice por qué va lento el equipo y lo arregla con cambios revisables: quita
+    <p>SafeBoost te dice por qué va lento el equipo y lo arregla con cambios revisables: quita
       bloatware, retrasa lo que frena el arranque, ajusta servicios y limpia. Cada cambio queda
       guardado y se deshace con un clic.</p>
     <div class="cta">
@@ -101,7 +101,7 @@
       <a class="btn secondary" id="dl-portable" href="https://github.com/ErCacique/WinOpt/releases/latest">Versión portable (USB)</a>
     </div>
     <p class="small" id="dl-version">Windows 10 22H2 y Windows 11 · Gratis · Sin anuncios</p>
-    <div class="shot"><img src="img/dashboard.webp" width="1280" height="810" alt="Panel principal de SafeTrim con el estado del equipo y los tres perfiles"></div>
+    <div class="shot"><img src="img/dashboard.webp" width="1280" height="810" alt="Panel principal de SafeBoost con el estado del equipo y los tres perfiles"></div>
   </div>
 
   <section id="que-hace">
@@ -149,7 +149,7 @@
     <div class="wrap">
       <h2>Edición Técnico</h2>
       <div class="card">
-        <p>Para quien arregla equipos de otros. El informe en PDF para el cliente (estado, cambios hechos y recomendaciones de hardware) lleva tu nombre, tu contacto y tu logo. Funciona sin internet, también en la versión portable desde un USB. El resto de SafeTrim es igual y gratis.</p>
+        <p>Para quien arregla equipos de otros. El informe en PDF para el cliente (estado, cambios hechos y recomendaciones de hardware) lleva tu nombre, tu contacto y tu logo. Funciona sin internet, también en la versión portable desde un USB. El resto de SafeBoost es igual y gratis.</p>
         <p style="margin-top:12px"><a href="https://github.com/ErCacique/WinOpt/issues/new?title=Licencia%20T%C3%A9cnico">Pedir una licencia</a></p>
       </div>
     </div>
@@ -158,16 +158,16 @@
   <section id="preguntas">
     <div class="wrap">
       <h2>Preguntas</h2>
-      <details><summary>¿Windows dice que el programa no es de confianza?</summary><p>SmartScreen avisa de los programas nuevos sin firma de pago. Pulsa «Más información» → «Ejecutar de todas formas». Puedes comprobar la huella SHA-256 de la descarga con <code>Get-FileHash .\SafeTrim-Setup-X.exe</code> y compararla con la de la página de la versión.</p></details>
+      <details><summary>¿Windows dice que el programa no es de confianza?</summary><p>SmartScreen avisa de los programas nuevos sin firma de pago. Pulsa «Más información» → «Ejecutar de todas formas». Puedes comprobar la huella SHA-256 de la descarga con <code>Get-FileHash .\SafeBoost-Setup-X.exe</code> y compararla con la de la página de la versión.</p></details>
       <details><summary>¿Por qué pide permisos de administrador?</summary><p>Porque cambia ajustes del sistema (servicios, tareas programadas, planes de energía). Sin ellos solo puede simular.</p></details>
-      <details><summary>¿Y si algo va mal?</summary><p>Abre SafeTrim → Historial y pulsa «Deshacer», o usa «SafeTrim · deshacer todo» en el menú Inicio. Si Windows no arranca bien, también puedes usar Restaurar sistema.</p></details>
+      <details><summary>¿Y si algo va mal?</summary><p>Abre SafeBoost → Historial y pulsa «Deshacer», o usa «SafeBoost · deshacer todo» en el menú Inicio. Si Windows no arranca bien, también puedes usar Restaurar sistema.</p></details>
       <details><summary>¿Funciona en Windows 7, 8 o en versiones antiguas de Windows 10?</summary><p>No. Solo Windows 10 22H2 y Windows 11, que son los que reciben actualizaciones. En otros solo deja simular.</p></details>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap">SafeTrim · <a href="https://github.com/ErCacique/WinOpt">Código en GitHub</a> · <a href="https://github.com/ErCacique/WinOpt/blob/main/CHANGELOG.md">Novedades</a></div>
+  <div class="wrap">SafeBoost · <a href="https://github.com/ErCacique/WinOpt">Código en GitHub</a> · <a href="https://github.com/ErCacique/WinOpt/blob/main/CHANGELOG.md">Novedades</a></div>
 </footer>
 
 <script>
@@ -178,8 +178,8 @@
       if (!res.ok) return;
       const rel = await res.json();
       const find = (re) => (rel.assets || []).find((a) => re.test(a.name));
-      const setup = find(/^SafeTrim-Setup-.*\.exe$/);
-      const portable = find(/^SafeTrim-portable-\d.*\.zip$/);
+      const setup = find(/^SafeBoost-Setup-.*\.exe$/);
+      const portable = find(/^SafeBoost-portable-\d.*\.zip$/);
       if (setup) document.getElementById("dl-setup").href = setup.browser_download_url;
       if (portable) document.getElementById("dl-portable").href = portable.browser_download_url;
       if (rel.tag_name) {

@@ -80,7 +80,7 @@ agrupa las actualizaciones semanales para minimizar PRs y ejecuciones.
 - El job de Linux (lint, catálogo, tests y gitleaks) tarda unos 1-2 minutos.
 - El job de Windows solo corre si el de Linux pasa, y solo ejecuta los tests de `winreg`.
 - El job `e2e` (Windows, ~2-3 min) solo corre si el anterior pasa: aplica y revierte tweaks
-  reales en la VM del runner. Es el único que comprueba SafeTrim contra Windows de verdad en
+  reales en la VM del runner. Es el único que comprueba SafeBoost contra Windows de verdad en
   cada PR; si los minutos aprietan, se puede limitar a `push` en `main`.
   Los minutos de Windows cuentan con multiplicador respecto a Linux en el cómputo de minutos
   incluidos.
@@ -103,7 +103,7 @@ git push -u origin chore/release-vX.Y.Z      # PR → CI → squash merge
 
 # 4. Tag sobre main ya integrado
 git checkout main && git pull origin main
-git tag -a vX.Y.Z -m "SafeTrim vX.Y.Z"
+git tag -a vX.Y.Z -m "SafeBoost vX.Y.Z"
 git push origin vX.Y.Z                         # dispara release.yml
 ```
 
@@ -111,7 +111,7 @@ git push origin vX.Y.Z                         # dispara release.yml
 con `tag = vX.Y.Z`. El workflow compila y crea el tag y el Release en esa misma ejecución.
 Con `tag` vacío solo compila y deja el `.exe` como artifact.
 
-`release.yml` compila en `windows-latest` y ejecuta `SafeTrim.exe --self-test`. Después
+`release.yml` compila en `windows-latest` y ejecuta `SafeBoost.exe --self-test`. Después
 calcula el SHA256 y publica el `.exe` y el `.sha256` como assets del Release y como artifact.
 
 ## Pendiente si el repo se hace público

@@ -90,7 +90,7 @@ def render_client_html(
 <h2>Diagnóstico</h2><ul>{findings or "<li>Sin problemas detectados.</li>"}</ul>
 <h2>Cambios realizados</h2>
 <ul>{"".join(changes) or "<li>No se ha aplicado ningún cambio.</li>"}</ul>
-<p class="muted">Todos los cambios se pueden deshacer desde SafeTrim (Historial), salvo las
+<p class="muted">Todos los cambios se pueden deshacer desde SafeBoost (Historial), salvo las
 limpiezas de archivos.</p>
 {f"<h2>Recomendación de hardware</h2><p>{escape(advice)}</p>" if advice else ""}
 </body></html>"""

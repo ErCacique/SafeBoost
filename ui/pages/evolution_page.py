@@ -200,7 +200,7 @@ class EvolutionPage(Page):
             canvas.create_text(
                 width / 2,
                 height / 2,
-                text="Aún no hay suficientes arranques medidos. SafeTrim guarda uno cada vez que "
+                text="Aún no hay suficientes arranques medidos. SafeBoost guarda uno cada vez que "
                 "lo abres tras reiniciar.",
                 fill=muted,
                 width=width - 40,
@@ -260,7 +260,7 @@ class EvolutionPage(Page):
             f"RAM en uso al abrir {human_bytes(summary.ram_before)} → "
             f"{human_bytes(summary.ram_after)}"
         )
-        self.improvement_label.configure(text="Desde que usas SafeTrim: " + ", ".join(parts) + ".")
+        self.improvement_label.configure(text="Desde que usas SafeBoost: " + ", ".join(parts) + ".")
 
     # ------------------------------------------------------------------ eventos
 

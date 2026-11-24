@@ -3,8 +3,8 @@
 - avisa en cuanto un programa se añade al inicio de Windows (cada 2 minutos), y
 - si el usuario lo pide, activa el modo juego al abrir un juego y lo desactiva al cerrarlo.
 
-Lo arranca la tarea programada \\SafeTrim\\Tray al iniciar sesión (con privilegios elevados, sin
-pedir UAC, porque el modo juego cambia ajustes del sistema). SafeTrim sin esta opción sigue sin
+Lo arranca la tarea programada \\SafeBoost\\Tray al iniciar sesión (con privilegios elevados, sin
+pedir UAC, porque el modo juego cambia ajustes del sistema). SafeBoost sin esta opción sigue sin
 dejar nada residente.
 
 La lógica (qué es un juego, cuándo activar o desactivar) está separada del icono para poder
@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any
 
 import psutil
 
-from core.constants import APP_HOME, APP_NAME, ICON_FILE, SAFETRIM_TASK_FOLDER
+from core.constants import APP_HOME, APP_NAME, ICON_FILE, SAFEBOOST_TASK_FOLDER
 from core.logger import get_logger
 from core.process import Runner, ps_quote
 
@@ -127,10 +127,10 @@ def schedule_tray(runner: Runner, command: list[str], user: str) -> bool:
         " -RunLevel Highest;"
         "$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries"
         " -ExecutionTimeLimit ([TimeSpan]::Zero);"
-        f"Register-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)}"
+        f"Register-ScheduledTask -TaskPath {ps_quote(SAFEBOOST_TASK_FOLDER)}"
         f" -TaskName {ps_quote(TRAY_TASK)} -Action $a -Trigger $t -Principal $p"
         " -Settings $s -Force | Out-Null;"
-        f"Start-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)}"
+        f"Start-ScheduledTask -TaskPath {ps_quote(SAFEBOOST_TASK_FOLDER)}"
         f" -TaskName {ps_quote(TRAY_TASK)}"
     )
     result = runner.powershell(script)
@@ -140,7 +140,7 @@ def schedule_tray(runner: Runner, command: list[str], user: str) -> bool:
 
 
 def remove_tray(runner: Runner) -> None:
-    folder, task = ps_quote(SAFETRIM_TASK_FOLDER), ps_quote(TRAY_TASK)
+    folder, task = ps_quote(SAFEBOOST_TASK_FOLDER), ps_quote(TRAY_TASK)
     runner.powershell(
         f"Stop-ScheduledTask -TaskPath {folder} -TaskName {task} -ErrorAction SilentlyContinue;"
         f"Unregister-ScheduledTask -TaskPath {folder} -TaskName {task} -Confirm:$false"
@@ -186,7 +186,7 @@ class TrayService:
         for item in new:
             self.notify(
                 f"{item.name} se ha añadido al inicio de Windows. "
-                "Si no lo quieres, desactívalo en SafeTrim → Inicio."
+                "Si no lo quieres, desactívalo en SafeBoost → Inicio."
             )
 
     def check_games(self) -> None:
@@ -252,7 +252,7 @@ def run_tray(build: Callable[..., AppContext], open_app: Callable[[], None]) -> 
             icon.stop()
 
         menu = pystray.Menu(
-            pystray.MenuItem("Abrir SafeTrim", lambda _i, _m: open_app(), default=True),
+            pystray.MenuItem("Abrir SafeBoost", lambda _i, _m: open_app(), default=True),
             pystray.MenuItem(
                 "Modo juego automático",
                 toggle_auto,

@@ -79,7 +79,7 @@ def test_license_valid_and_tampered() -> None:
     with pytest.raises(LicenseError, match="ST1"):
         parse_license("hola", PUB)
     with pytest.raises(LicenseError, match="firma"):
-        parse_license(text)  # firmada con otra clave: la pública real de SafeTrim no la acepta
+        parse_license(text)  # firmada con otra clave: la pública real de SafeBoost no la acepta
 
 
 def test_license_expiry() -> None:
@@ -130,7 +130,7 @@ def test_license_tool_issue_and_verify(tmp_path: Path, capsys: Any) -> None:
     with pytest.raises(SystemExit):
         license_tool.main(["genkey", str(key)])  # no sobrescribe
     capsys.readouterr()
-    # Con una clave que no es la de SafeTrim, emitir avisa en vez de dar una licencia inútil.
+    # Con una clave que no es la de SafeBoost, emitir avisa en vez de dar una licencia inútil.
     with pytest.raises(SystemExit, match="no corresponde"):
         license_tool.main(["issue", "--key", str(key), "--name", "X"])
     assert license_tool.main(["verify", "ST1.a.b"]) == 1
@@ -272,7 +272,7 @@ def test_benchmark_runs_and_stores(tmp_path: Path, monkeypatch: Any) -> None:
     assert result.disk_write_mbs and result.disk_read_mbs and result.disk_random_iops
     assert result.cpu_single_mbs and result.cpu_multi_mbs and result.threads >= 1
     assert result.apps_ms == {"notepad.exe": 420, "mspaint.exe": 1310}
-    assert len(steps) == 3 and not list(tmp_path.glob("safetrim-bench-*"))
+    assert len(steps) == 3 and not list(tmp_path.glob("safeboost-bench-*"))
     store = benchmark.BenchStore(tmp_path / "b.json")
     store.add(result)
     store.add(result)
@@ -316,10 +316,10 @@ def test_game_watcher_only_stops_what_it_started() -> None:
 
 def test_tray_task_script() -> None:
     runner = FakeRunner()
-    assert schedule_tray(runner, [r"C:\SafeTrim\SafeTrim.exe"], "PC\\Ana")
+    assert schedule_tray(runner, [r"C:\SafeBoost\SafeBoost.exe"], "PC\\Ana")
     script = runner.scripts[-1]
     assert "-Argument '--tray'" in script and "-AtLogOn -User 'PC\\Ana'" in script
-    assert "-RunLevel Highest" in script and "\\SafeTrim\\" in script
+    assert "-RunLevel Highest" in script and "\\SafeBoost\\" in script
 
 
 def test_settings_defaults_keep_nothing_resident() -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 # Dell admite el número de serie (service tag) en la URL; el resto, la página de drivers del
-# fabricante, donde el usuario introduce el número de serie que SafeTrim le muestra.
+# fabricante, donde el usuario introduce el número de serie que SafeBoost le muestra.
 VENDORS: tuple[tuple[str, str], ...] = (
     ("dell", "https://www.dell.com/support/home/product-support/servicetag/{serial}/drivers"),
     ("hewlett", "https://support.hp.com/drivers"),

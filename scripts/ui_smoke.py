@@ -1,4 +1,4 @@
-"""Prueba de humo de la interfaz: abre SafeTrim en modo demo, recorre todas las páginas (y las
+"""Prueba de humo de la interfaz: abre SafeBoost en modo demo, recorre todas las páginas (y las
 vistas de Espacio) y falla si alguna lanza una excepción. Opcionalmente guarda una captura de
 cada página.
 
@@ -6,7 +6,7 @@ Uso:
     python scripts/ui_smoke.py [--lang es|en] [--screenshots CARPETA] [--timeout 120]
 
 Código de salida: 0 bien, 1 alguna página falló, 2 la interfaz no llegó a construirse.
-Los datos se guardan en una carpeta temporal (SAFETRIM_HOME), nunca en los del usuario.
+Los datos se guardan en una carpeta temporal (SAFEBOOST_HOME), nunca en los del usuario.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # Antes de importar core: APP_HOME se calcula al importar core.constants.
-    os.environ["SAFETRIM_HOME"] = tempfile.mkdtemp(prefix="safetrim-smoke-")
+    os.environ["SAFEBOOST_HOME"] = tempfile.mkdtemp(prefix="safeboost-smoke-")
     sys.path.insert(0, str(ROOT))
 
     import customtkinter as ctk

@@ -21,11 +21,11 @@ SESSION_SCHEMA_VERSION = 2
 
 
 class SessionVersionError(ValueError):
-    """La sesión la creó una versión de SafeTrim más nueva que la instalada."""
+    """La sesión la creó una versión de SafeBoost más nueva que la instalada."""
 
 
 def _migrate_1_to_2(data: dict[str, Any]) -> dict[str, Any]:
-    # v1 (SafeTrim 0.1.x) no guardaba versión ni la detección previa/verificación por tweak.
+    # v1 (SafeBoost 0.1.x) no guardaba versión ni la detección previa/verificación por tweak.
     data["app_version"] = "0.1.x"
     for result in data.get("results", {}).values():
         result.setdefault("detect_before", None)
@@ -42,8 +42,8 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
     version = int(data.get("schema_version", 1))
     if version > SESSION_SCHEMA_VERSION:
         raise SessionVersionError(
-            f"La sesión {data.get('id')} usa el formato v{version}; esta versión de SafeTrim "
-            f"solo entiende hasta v{SESSION_SCHEMA_VERSION}. Actualiza SafeTrim para deshacerla."
+            f"La sesión {data.get('id')} usa el formato v{version}; esta versión de SafeBoost "
+            f"solo entiende hasta v{SESSION_SCHEMA_VERSION}. Actualiza SafeBoost para deshacerla."
         )
     while version < SESSION_SCHEMA_VERSION:
         data = MIGRATIONS[version](data)

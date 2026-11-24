@@ -2,7 +2,7 @@
 
 La edición Técnico añade la marca del técnico (nombre, contacto y logo) al informe para el
 cliente. Todo lo demás es igual en la edición gratuita. La licencia se comprueba sin internet:
-SafeTrim lleva la clave pública en `core/license.py` y solo quien tiene la clave privada puede
+SafeBoost lleva la clave pública en `core/license.py` y solo quien tiene la clave privada puede
 emitir licencias.
 
 ## La clave privada
@@ -18,12 +18,12 @@ emitir licencias.
 ## Emitir una licencia
 
 ```powershell
-python scripts/license_tool.py issue --key C:\ruta\safetrim-license-private.key `
+python scripts/license_tool.py issue --key C:\ruta\safeboost-license-private.key `
     --name "Taller Pérez" --email cliente@ejemplo.com --days 365
 ```
 
 - `--days 0` (o sin `--days`) emite una licencia perpetua.
-- El script comprueba que la licencia generada la acepta la clave pública de SafeTrim; si la clave
+- El script comprueba que la licencia generada la acepta la clave pública de SafeBoost; si la clave
   privada no corresponde, se detiene sin dar una licencia inútil.
 - Envía al cliente la línea que empieza por `ST1.`. Él la pega en **Ajustes → Edición Técnico →
   Introducir licencia**.

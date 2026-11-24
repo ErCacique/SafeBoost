@@ -163,7 +163,7 @@ class EnvironmentDetector:
         if env.build and env.build < MIN_BUILD_WIN10:
             env.warnings.append(
                 f"Build {env.build} no soportada (mínimo {MIN_BUILD_WIN10}, Windows 10 22H2). "
-                "Actualiza Windows: hasta entonces SafeTrim solo puede simular."
+                "Actualiza Windows: hasta entonces SafeBoost solo puede simular."
             )
         if MIN_BUILD_WIN10 <= env.build < MIN_BUILD_WIN11:
             env.warnings.append(
@@ -173,7 +173,7 @@ class EnvironmentDetector:
             )
         if env.edition == "unknown":
             env.warnings.append(
-                f"Edición no reconocida: {env.edition_id!r}. SafeTrim solo puede simular."
+                f"Edición no reconocida: {env.edition_id!r}. SafeBoost solo puede simular."
             )
 
     def _interactive_user(self, env: EnvironmentInfo) -> None:
@@ -190,7 +190,7 @@ class EnvironmentDetector:
         env.interactive_user = owner or current
         if owner and current and owner.lower() != current.lower():
             env.warnings.append(
-                f"SafeTrim se ejecuta como {current} pero la sesión es de {owner}: "
+                f"SafeBoost se ejecuta como {current} pero la sesión es de {owner}: "
                 "los ajustes de usuario se aplicarán a la sesión de " + owner + "."
             )
 

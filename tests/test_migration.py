@@ -1,4 +1,4 @@
-"""Migración de datos de WinTune (nombre anterior, hasta 0.2.x) a SafeTrim."""
+"""Migración de datos de WinTune (nombre anterior, hasta 0.2.x) a SafeBoost."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def _legacy(tmp_path: Path) -> Path:
 
 
 def test_copies_legacy_data_and_keeps_original(tmp_path: Path) -> None:
-    legacy, new = _legacy(tmp_path), tmp_path / "SafeTrim"
+    legacy, new = _legacy(tmp_path), tmp_path / "SafeBoost"
     runner = FakeRunner()
     result = migrate_legacy_data(runner, legacy, new, overridden=False)
     assert result.migrated
@@ -44,7 +44,7 @@ def test_copies_legacy_data_and_keeps_original(tmp_path: Path) -> None:
 
 
 def test_migration_runs_once(tmp_path: Path) -> None:
-    legacy, new = _legacy(tmp_path), tmp_path / "SafeTrim"
+    legacy, new = _legacy(tmp_path), tmp_path / "SafeBoost"
     assert migrate_legacy_data(None, legacy, new, overridden=False).migrated
     assert not migrate_legacy_data(None, legacy, new, overridden=False).migrated
 
@@ -53,7 +53,7 @@ def test_does_not_touch_another_programs_wintune_folder(tmp_path: Path) -> None:
     other = tmp_path / "WinTune"
     other.mkdir()
     (other / "config.ini").write_text("[otro programa]", encoding="utf-8")
-    result = migrate_legacy_data(None, other, tmp_path / "SafeTrim", overridden=False)
+    result = migrate_legacy_data(None, other, tmp_path / "SafeBoost", overridden=False)
     assert not result.migrated
     assert "no es de este programa" in result.reason
     assert not (other / LEGACY_MIGRATED_MARKER).exists()
@@ -61,7 +61,7 @@ def test_does_not_touch_another_programs_wintune_folder(tmp_path: Path) -> None:
 
 
 def test_skips_when_new_home_already_has_sessions(tmp_path: Path) -> None:
-    legacy, new = _legacy(tmp_path), tmp_path / "SafeTrim"
+    legacy, new = _legacy(tmp_path), tmp_path / "SafeBoost"
     (new / "sessions").mkdir(parents=True)
     (new / "sessions" / "x.json").write_text("{}", encoding="utf-8")
     assert not migrate_legacy_data(None, legacy, new, overridden=False).migrated
@@ -86,8 +86,8 @@ def test_legacy_selection_files_still_import(tmp_path: Path) -> None:
 def test_legacy_env_var_is_accepted(monkeypatch, tmp_path: Path) -> None:
     from core.constants import _home_override
 
-    monkeypatch.delenv("SAFETRIM_HOME", raising=False)
+    monkeypatch.delenv("SAFEBOOST_HOME", raising=False)
     monkeypatch.setenv("WINTUNE_HOME", str(tmp_path))
     assert _home_override() == str(tmp_path)
-    monkeypatch.setenv("SAFETRIM_HOME", str(tmp_path / "nuevo"))
+    monkeypatch.setenv("SAFEBOOST_HOME", str(tmp_path / "nuevo"))
     assert _home_override() == str(tmp_path / "nuevo")  # la variable nueva tiene prioridad

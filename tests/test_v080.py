@@ -232,7 +232,7 @@ def fake_web(files: dict[str, bytes]) -> Callable[..., Response]:
 SETUP = b"instalador de prueba"
 DIGEST = hashlib.sha256(SETUP).hexdigest()
 INFO = ReleaseInfo(
-    "0.9.0", "https://x/rel", "https://x/SafeTrim-Setup-0.9.0.exe", "https://x/SHA256SUMS.txt"
+    "0.9.0", "https://x/rel", "https://x/SafeBoost-Setup-0.9.0.exe", "https://x/SHA256SUMS.txt"
 )
 
 
@@ -242,7 +242,7 @@ def test_release_assets_are_read() -> None:
             "tag_name": "v0.9.0",
             "html_url": "https://x/rel",
             "assets": [
-                {"name": "SafeTrim-Setup-0.9.0.exe", "browser_download_url": INFO.setup_url},
+                {"name": "SafeBoost-Setup-0.9.0.exe", "browser_download_url": INFO.setup_url},
                 {"name": "SHA256SUMS.txt", "browser_download_url": INFO.sums_url},
             ],
         }
@@ -252,18 +252,18 @@ def test_release_assets_are_read() -> None:
 
 
 def test_download_verifies_sha256(tmp_path: Path) -> None:
-    sums = f"{DIGEST}  SafeTrim-Setup-0.9.0.exe\n".encode()
+    sums = f"{DIGEST}  SafeBoost-Setup-0.9.0.exe\n".encode()
     web = fake_web({INFO.sums_url: sums, INFO.setup_url: SETUP})
     path = download_installer(INFO, tmp_path, opener=web)
     assert path.read_bytes() == SETUP
 
 
 def test_download_rejects_tampered_installer(tmp_path: Path) -> None:
-    sums = f"{'0' * 64}  SafeTrim-Setup-0.9.0.exe\n".encode()
+    sums = f"{'0' * 64}  SafeBoost-Setup-0.9.0.exe\n".encode()
     web = fake_web({INFO.sums_url: sums, INFO.setup_url: SETUP})
     with pytest.raises(ValueError, match="no coincide"):
         download_installer(INFO, tmp_path, opener=web)
-    assert not (tmp_path / "SafeTrim-Setup-0.9.0.exe").exists()
+    assert not (tmp_path / "SafeBoost-Setup-0.9.0.exe").exists()
 
 
 def test_update_helpers() -> None:
@@ -285,8 +285,8 @@ def test_winget_manifests(tmp_path: Path) -> None:
     import make_winget
 
     assert make_winget.main(["0.8.0", "a" * 64, str(tmp_path)]) == 0
-    installer = (tmp_path / "ErCacique.SafeTrim.installer.yaml").read_text(encoding="utf-8")
-    assert "InstallerType: inno" in installer and "SafeTrim-Setup-0.8.0.exe" in installer
+    installer = (tmp_path / "ErCacique.SafeBoost.installer.yaml").read_text(encoding="utf-8")
+    assert "InstallerType: inno" in installer and "SafeBoost-Setup-0.8.0.exe" in installer
     assert make_winget.main(["0.8.0", "corto", str(tmp_path)]) == 2
 
 
@@ -320,5 +320,5 @@ def test_unknown_language_falls_back_to_spanish() -> None:
 
 
 def test_spec_bundles_translations() -> None:
-    spec = (ROOT / "packaging" / "SafeTrim.spec").read_text(encoding="utf-8")
+    spec = (ROOT / "packaging" / "SafeBoost.spec").read_text(encoding="utf-8")
     assert '"i18n"), "data/i18n"' in spec

@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 # PyInstaller 6.22.3 · Python 3.12 · Ejecutar desde la raíz del repo:
-#   pyinstaller --clean --noconfirm packaging/SafeTrim.spec
+#   pyinstaller --clean --noconfirm packaging/SafeBoost.spec
 #
-# Genera una carpeta (onedir) en dist/SafeTrim: SafeTrim.exe + _internal/. A partir de ella el
-# release crea el instalador (packaging/SafeTrim.iss) y la versión portable (.zip).
+# Genera una carpeta (onedir) en dist/SafeBoost: SafeBoost.exe + _internal/. A partir de ella el
+# release crea el instalador (packaging/SafeBoost.iss) y la versión portable (.zip).
 #
 # Por qué onedir y no onefile: un .exe de un solo archivo se descomprime entero en %TEMP% cada
 # vez que se abre (varios segundos en un equipo lento) y los antivirus desconfían más de ese
@@ -18,7 +18,7 @@ ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH lo inyecta PyInstaller
 datas = [
     (str(ROOT / "data" / "tweaks.json"), "data"),
     (str(ROOT / "data" / "tweaks.schema.json"), "data"),
-    (str(ROOT / "assets" / "safetrim.ico"), "assets"),
+    (str(ROOT / "assets" / "safeboost.ico"), "assets"),
     (str(ROOT / "data" / "i18n"), "data/i18n"),
 ]
 # Temas JSON y fuentes de CustomTkinter: sin esto el .exe arranca sin estilos.
@@ -46,14 +46,14 @@ exe = EXE(  # noqa: F821
     a.scripts,
     [],
     exclude_binaries=True,
-    name="SafeTrim",
+    name="SafeBoost",
     console=False,
     # Manifest con requestedExecutionLevel=requireAdministrator: Windows pide UAC al abrir.
     uac_admin=True,
     # UPX desactivado: los binarios comprimidos con UPX disparan más falsos positivos de AV.
     upx=False,
     version=str(ROOT / "packaging" / "version_info.txt"),
-    icon=str(ROOT / "assets" / "safetrim.ico"),
+    icon=str(ROOT / "assets" / "safeboost.ico"),
     disable_windowed_traceback=False,
     contents_directory="_internal",
 )
@@ -64,5 +64,5 @@ coll = COLLECT(  # noqa: F821
     a.datas,
     strip=False,
     upx=False,
-    name="SafeTrim",
+    name="SafeBoost",
 )

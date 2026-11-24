@@ -52,11 +52,12 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
 | 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
+| 0.11.0 | Cambio de nombre SafeTrim → SafeBoost con migración automática de datos, tareas, instalador y actualizador |
 | 0.10.0 | Prueba de rendimiento, navegadores (caché y extensiones), modo ahorro, vigilancia en segundo plano (bandeja), inglés completo, licencia Técnico (Ed25519 offline), MSIX, web, mypy/cobertura/humo de UI |
 | 0.9.0 | Informes de error locales, estado de seguridad, retrasar inicio 90 s, programas del fabricante con desinstalador, soporte del modelo |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Última publicada: v0.10.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.10.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
+Última publicada: v0.11.0 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.11.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
 ## v0.8.0 (publicada el 2026-11-22)
 
@@ -119,3 +120,17 @@ Lecciones: mypy con `platform = "win32"` evita falsos positivos de winreg/ctypes
 relativas de Windows con `\` deben unirse por partes (`joinpath(*rel.split("\\"))`) para que los
 tests funcionen en Linux; pystray no se puede importar en Linux sin pantalla (importarlo dentro de
 `run_tray`).
+
+## v0.11.0 · SafeTrim → SafeBoost (2026-11-24)
+
+El usuario eligió el nombre **SafeBoost**. El repositorio sigue llamándose WinOpt. Compatibilidad:
+`core/migration.py:migrate_from_safetrim` (copia la carpeta entera una vez, marca
+`MIGRADO_A_SAFEBOOST.txt`) y `migrate_tasks` (lee el usuario de \\SafeTrim\\Maintenance y Tray,
+las borra y las recrea en \\SafeBoost\\); se ejecuta al principio de `main()` con permisos de
+administrador. Instalador con el mismo AppId, `UsePreviousAppDir=no` e `[InstallDelete]` de
+`{autopf}\\SafeTrim`; tras una actualización silenciosa desde SafeTrim abre el nuevo .exe. La
+Release publica `SafeTrim-Setup-X.exe` como copia para el actualizador de 0.10.x: mantenerlo al
+menos un par de versiones. Las tareas \\SafeTrim\\Delayed\\ (inicio retrasado) siguen funcionando y
+se deshacen con su sesión, que guarda la carpeta. Tests en `tests/test_v0110.py`.
+Aviso de marca: el nombre se parece a SAFEBOOT (software de cifrado registrado) y "Boost" es
+frecuente en optimizadores (p. ej. STARTUP BOOST de Boost Software); pendiente de comprobar en EUIPO/OEPM.

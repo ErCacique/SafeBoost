@@ -7,6 +7,24 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-24
+
+### Changed
+- **SafeTrim pasa a llamarse SafeBoost.** Programa, instalador, carpeta de datos
+  (`%LOCALAPPDATA%\SafeBoost`, `SafeBoostData` en la portable), tareas programadas
+  (`\SafeBoost\`), web y documentación.
+
+### Migración automática
+- Al primer arranque se copian todos los datos de SafeTrim (sesiones para deshacer, copias .reg,
+  vigilancia, ajustes, licencia Técnico, mediciones) y se recrean con el nombre nuevo el
+  mantenimiento mensual y la vigilancia en segundo plano si estaban activos. No se borra nada.
+- El instalador mantiene el mismo identificador: actualiza SafeTrim sin desinstalar, se instala en
+  `C:\Program Files\SafeBoost` y elimina la carpeta y los accesos directos antiguos.
+- Las Releases publican también `SafeTrim-Setup-X.exe` (copia idéntica) para que "Actualizar
+  ahora" de SafeTrim 0.10.x siga funcionando. Se aceptan los archivos de selección
+  `safetrim-selection` y la variable `SAFETRIM_HOME`. Las licencias `ST1.` siguen siendo válidas.
+- El desinstalador quita también las tareas de mantenimiento y vigilancia.
+
 ## [0.10.0] - 2026-11-22
 
 ### Added

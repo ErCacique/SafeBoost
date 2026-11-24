@@ -37,7 +37,7 @@ def write_report(
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         path = directory / f"crash-{stamp}.txt"
         text = (
-            f"SafeTrim {APP_VERSION} · {datetime.now().isoformat(timespec='seconds')}\n"
+            f"SafeBoost {APP_VERSION} · {datetime.now().isoformat(timespec='seconds')}\n"
             f"Dónde: {where}\n"
             f"Sistema: {platform.platform()} · Python {platform.python_version()}\n\n"
             + "".join(traceback.format_exception(exc_type, exc, tb))

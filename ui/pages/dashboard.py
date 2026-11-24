@@ -332,7 +332,7 @@ class DashboardPage(Page):
             messagebox.showinfo(
                 title,
                 f"El {title.lower()} cambia ajustes de verdad: desactiva el modo simulación en "
-                "Ajustes (y ejecuta SafeTrim como administrador en un Windows soportado).",
+                "Ajustes (y ejecuta SafeBoost como administrador en un Windows soportado).",
                 parent=self,
             )
             return
@@ -360,12 +360,12 @@ class DashboardPage(Page):
         self.update_btn.configure(state="disabled", text="Descargando…")
 
         def work(_p: ProgressFn, _c: threading.Event) -> Path:
-            return download_installer(info, Path(tempfile.gettempdir()) / "SafeTrim-update")
+            return download_installer(info, Path(tempfile.gettempdir()) / "SafeBoost-update")
 
         def done(installer: Path) -> None:
             if not messagebox.askyesno(
-                "Actualizar SafeTrim",
-                f"Descargada y verificada la versión {info.version}. SafeTrim se cerrará, se "
+                "Actualizar SafeBoost",
+                f"Descargada y verificada la versión {info.version}. SafeBoost se cerrará, se "
                 "actualizará y volverá a abrirse. Tus datos se conservan. ¿Continuar?",
                 parent=self,
             ):
@@ -376,7 +376,7 @@ class DashboardPage(Page):
 
         def failed(exc: BaseException) -> None:
             self.update_btn.configure(state="normal", text="Actualizar ahora")
-            show_error("Actualizar SafeTrim", exc, self)
+            show_error("Actualizar SafeBoost", exc, self)
 
         BackgroundTask(self, work, done, failed).start()
 
@@ -387,7 +387,7 @@ class DashboardPage(Page):
             self.update_btn.pack(side="right", pady=PAD)
         self.update_url = info.url
         self.update_label.configure(
-            text=f"Hay una versión nueva de SafeTrim: {info.version} (tienes {APP_VERSION}). "
+            text=f"Hay una versión nueva de SafeBoost: {info.version} (tienes {APP_VERSION}). "
             "Descárgala y sustituye este .exe; tus datos se conservan."
         )
         self.update_card.pack(fill="x", pady=(0, PAD_S), before=self.env_card)
@@ -524,8 +524,8 @@ class DashboardPage(Page):
             parent=self,
             title="Exportar selección",
             defaultextension=".json",
-            initialfile="safetrim-seleccion.json",
-            filetypes=[("Selección SafeTrim", "*.json")],
+            initialfile="safeboost-seleccion.json",
+            filetypes=[("Selección SafeBoost", "*.json")],
         )
         if not target:
             return
@@ -545,7 +545,7 @@ class DashboardPage(Page):
 
     def _import_selection(self) -> None:
         source = filedialog.askopenfilename(
-            parent=self, title="Importar selección", filetypes=[("Selección SafeTrim", "*.json")]
+            parent=self, title="Importar selección", filetypes=[("Selección SafeBoost", "*.json")]
         )
         if not source:
             return

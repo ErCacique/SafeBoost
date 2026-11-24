@@ -84,7 +84,7 @@ def build_context(
 
 
 def _run_as(env: EnvironmentInfo) -> str | None:
-    """Usuario de la sesión si SafeTrim se elevó con otra cuenta; None si es la misma."""
+    """Usuario de la sesión si SafeBoost se elevó con otra cuenta; None si es la misma."""
     interactive = (env.interactive_user or "").lower()
     elevated = (env.elevated_user or "").lower()
     if interactive and elevated and interactive != elevated:

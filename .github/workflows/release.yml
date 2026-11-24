@@ -73,11 +73,11 @@ jobs:
           pytest -q
 
       - name: PyInstaller
-        run: pyinstaller --clean --noconfirm packaging/SafeTrim.spec
+        run: pyinstaller --clean --noconfirm packaging/SafeBoost.spec
 
       - name: Self-test del ejecutable (catálogo y handlers empaquetados)
         run: |
-          $p = Start-Process dist/SafeTrim/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
+          $p = Start-Process dist/SafeBoost/SafeBoost.exe -ArgumentList '--self-test' -Wait -PassThru
           if ($p.ExitCode -ne 0) { Write-Error "Self-test falló (código $($p.ExitCode))"; exit 1 }
 
       - name: Firmar el ejecutable (solo si hay certificado)
@@ -91,7 +91,7 @@ jobs:
           $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
             Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
           & $signtool.FullName sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
-            /f $pfx /p $env:SIGN_PFX_PASSWORD dist/SafeTrim/SafeTrim.exe
+            /f $pfx /p $env:SIGN_PFX_PASSWORD dist/SafeBoost/SafeBoost.exe
           if ($LASTEXITCODE -ne 0) { Remove-Item $pfx; Write-Error "signtool falló"; exit 1 }
           Remove-Item $pfx
 
@@ -104,23 +104,23 @@ jobs:
       - name: Portable (.zip con portable.txt)
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          $stage = "dist/portable/SafeTrim"
+          $stage = "dist/portable/SafeBoost"
           New-Item -ItemType Directory -Force $stage | Out-Null
-          Copy-Item -Recurse dist/SafeTrim/* $stage
-          "Versión portable: los datos se guardan en la carpeta SafeTrimData junto al programa." |
+          Copy-Item -Recurse dist/SafeBoost/* $stage
+          "Versión portable: los datos se guardan en la carpeta SafeBoostData junto al programa." |
             Out-File -Encoding utf8 "$stage/portable.txt"
-          Compress-Archive -Path $stage -DestinationPath "dist/SafeTrim-portable-$v.zip" -Force
+          Compress-Archive -Path $stage -DestinationPath "dist/SafeBoost-portable-$v.zip" -Force
 
       # Paquete para Microsoft Store (sin firmar: la Store lo firma). No bloquea la Release.
       - name: Paquete MSIX (Microsoft Store)
         continue-on-error: true
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          python scripts/make_msix.py $v dist/SafeTrim dist/msix
+          python scripts/make_msix.py $v dist/SafeBoost dist/msix
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter makeappx.exe |
             Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
-          & $makeappx.FullName pack /d dist/msix /p "dist/SafeTrim-store-$v.msix" /nv /o
+          & $makeappx.FullName pack /d dist/msix /p "dist/SafeBoost-store-$v.msix" /nv /o
           if ($LASTEXITCODE -ne 0) { Write-Error "makeappx falló"; exit 1 }
 
       - name: Instalador (Inno Setup)
@@ -131,7 +131,7 @@ jobs:
             choco install innosetup -y --no-progress | Out-Null
             $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           }
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging/SafeTrim.iss
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging/SafeBoost.iss
           if ($LASTEXITCODE -ne 0) { Write-Error "ISCC falló ($LASTEXITCODE)"; exit 1 }
 
       - name: Firmar el instalador (solo si hay certificado)
@@ -145,7 +145,7 @@ jobs:
           $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
             Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
           & $signtool.FullName sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
-            /f $pfx /p $env:SIGN_PFX_PASSWORD "dist/SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe"
+            /f $pfx /p $env:SIGN_PFX_PASSWORD "dist/SafeBoost-Setup-${{ steps.ver.outputs.version }}.exe"
           if ($LASTEXITCODE -ne 0) { Remove-Item $pfx; Write-Error "signtool falló"; exit 1 }
           Remove-Item $pfx
 
@@ -153,7 +153,10 @@ jobs:
         id: hash
         run: |
           $v = "${{ steps.ver.outputs.version }}"
-          $files = @("SafeTrim-Setup-$v.exe", "SafeTrim-portable-$v.zip")
+          # Transición: SafeTrim 0.10.x busca "SafeTrim-Setup-X.exe" en la última Release para
+          # actualizarse. Se publica una copia idéntica con ese nombre (también en SHA256SUMS).
+          Copy-Item "dist/SafeBoost-Setup-$v.exe" "dist/SafeTrim-Setup-$v.exe"
+          $files = @("SafeBoost-Setup-$v.exe", "SafeBoost-portable-$v.zip", "SafeTrim-Setup-$v.exe")
           $lines = foreach ($f in $files) {
             $h = (Get-FileHash "dist/$f" -Algorithm SHA256).Hash.ToLower()
             "$h  $f"
@@ -172,13 +175,13 @@ jobs:
       - name: Subir artifact
         uses: actions/upload-artifact@v7
         with:
-          name: SafeTrim-${{ env.RELEASE_TAG || github.sha }}
+          name: SafeBoost-${{ env.RELEASE_TAG || github.sha }}
           path: |
-            dist/SafeTrim-Setup-*.exe
-            dist/SafeTrim-portable-*.zip
+            dist/SafeBoost-Setup-*.exe
+            dist/SafeBoost-portable-*.zip
             dist/SHA256SUMS.txt
             dist/winget-manifests-*.zip
-            dist/SafeTrim-store-*.msix
+            dist/SafeBoost-store-*.msix
           retention-days: 30
 
       - name: Publicar Release
@@ -187,23 +190,26 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           target_commitish: ${{ github.sha }}
-          name: SafeTrim ${{ env.RELEASE_TAG }}
+          name: SafeBoost ${{ env.RELEASE_TAG }}
           files: |
+            dist/SafeBoost-Setup-*.exe
+            dist/SafeBoost-portable-*.zip
             dist/SafeTrim-Setup-*.exe
-            dist/SafeTrim-portable-*.zip
             dist/SHA256SUMS.txt
             dist/winget-manifests-*.zip
           body: |
-            **Instalador** (recomendado): `SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe`
+            **SafeTrim ahora se llama SafeBoost.** Al actualizar se conservan el historial, los ajustes y la licencia. `SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe` es el mismo instalador con el nombre antiguo, para que las versiones anteriores se actualicen solas.
+
+            **Instalador** (recomendado): `SafeBoost-Setup-${{ steps.ver.outputs.version }}.exe`
             SHA256: `${{ steps.hash.outputs.setup }}`
 
             **Portable** (USB / sin instalar; los datos se guardan junto al programa):
-            `SafeTrim-portable-${{ steps.ver.outputs.version }}.zip`
+            `SafeBoost-portable-${{ steps.ver.outputs.version }}.zip`
             SHA256: `${{ steps.hash.outputs.portable }}`
 
             Verificar en PowerShell:
             ```powershell
-            (Get-FileHash .\SafeTrim-Setup-${{ steps.ver.outputs.version }}.exe -Algorithm SHA256).Hash.ToLower()
+            (Get-FileHash .\SafeBoost-Setup-${{ steps.ver.outputs.version }}.exe -Algorithm SHA256).Hash.ToLower()
             ```
 
             Cambios: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ env.RELEASE_TAG }}/CHANGELOG.md).
@@ -231,16 +237,16 @@ jobs:
       - name: Compilar
         run: |
           pip install -r requirements-build.txt
-          pyinstaller --clean --noconfirm packaging/SafeTrim.spec
-          $p = Start-Process dist/SafeTrim/SafeTrim.exe -ArgumentList '--self-test' -Wait -PassThru
+          pyinstaller --clean --noconfirm packaging/SafeBoost.spec
+          $p = Start-Process dist/SafeBoost/SafeBoost.exe -ArgumentList '--self-test' -Wait -PassThru
           if ($p.ExitCode -ne 0) { Write-Error "Self-test ARM64 falló"; exit 1 }
           $v = python -c "from core.constants import APP_VERSION; print(APP_VERSION)"
-          New-Item -ItemType Directory -Force dist/portable/SafeTrim | Out-Null
-          Copy-Item -Recurse dist/SafeTrim/* dist/portable/SafeTrim
-          "Versión portable ARM64." | Out-File -Encoding utf8 dist/portable/SafeTrim/portable.txt
-          Compress-Archive -Path dist/portable/SafeTrim -DestinationPath "dist/SafeTrim-portable-arm64-$v.zip"
-          $h = (Get-FileHash "dist/SafeTrim-portable-arm64-$v.zip" -Algorithm SHA256).Hash.ToLower()
-          "$h  SafeTrim-portable-arm64-$v.zip" | Out-File -Encoding ascii dist/SHA256SUMS-arm64.txt
+          New-Item -ItemType Directory -Force dist/portable/SafeBoost | Out-Null
+          Copy-Item -Recurse dist/SafeBoost/* dist/portable/SafeBoost
+          "Versión portable ARM64." | Out-File -Encoding utf8 dist/portable/SafeBoost/portable.txt
+          Compress-Archive -Path dist/portable/SafeBoost -DestinationPath "dist/SafeBoost-portable-arm64-$v.zip"
+          $h = (Get-FileHash "dist/SafeBoost-portable-arm64-$v.zip" -Algorithm SHA256).Hash.ToLower()
+          "$h  SafeBoost-portable-arm64-$v.zip" | Out-File -Encoding ascii dist/SHA256SUMS-arm64.txt
 
       - name: Añadir al Release
         if: env.RELEASE_TAG != ''
@@ -248,5 +254,5 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           files: |
-            dist/SafeTrim-portable-arm64-*.zip
+            dist/SafeBoost-portable-arm64-*.zip
             dist/SHA256SUMS-arm64.txt

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from core.constants import (
     PROTECTED_APPX_PREFIXES,
-    SAFETRIM_TASK_FOLDER,
+    SAFEBOOST_TASK_FOLDER,
     TIMEOUT_APPX,
     TIMEOUT_WINGET,
 )
@@ -46,7 +46,7 @@ class AppxManager:
     """Gestión de AppX.
 
     `user_sid`: SID del usuario interactivo, para el reintento por usuario al eliminar.
-    `run_as`: cuenta del usuario interactivo si NO es la que ejecuta SafeTrim elevado; en ese
+    `run_as`: cuenta del usuario interactivo si NO es la que ejecuta SafeBoost elevado; en ese
     caso la reinstalación con winget se lanza en su sesión (las apps de la Store son por
     usuario: instalarlas desde la cuenta elevada las dejaría en el perfil equivocado).
     """
@@ -194,7 +194,7 @@ class AppxManager:
         name = f"Reinstall-{uuid.uuid4().hex[:8]}"
         winget_line = subprocess.list2cmdline(["winget", *self._winget_args(store_id, store_name)])
         script = (
-            f"$path = {ps_quote(SAFETRIM_TASK_FOLDER)}; $name = {ps_quote(name)};"
+            f"$path = {ps_quote(SAFEBOOST_TASK_FOLDER)}; $name = {ps_quote(name)};"
             "$a = New-ScheduledTaskAction -Execute 'cmd.exe' "
             f"-Argument {ps_quote('/c ' + winget_line)};"
             f"$p = New-ScheduledTaskPrincipal -UserId {ps_quote(self.run_as)} "

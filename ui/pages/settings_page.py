@@ -1,4 +1,4 @@
-"""Ajustes de SafeTrim."""
+"""Ajustes de SafeBoost."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 class SettingsPage(Page):
     title = "Ajustes"
-    subtitle = f"SafeTrim {APP_VERSION} · Datos en {APP_HOME}"
+    subtitle = f"SafeBoost {APP_VERSION} · Datos en {APP_HOME}"
 
     def __init__(self, master: Any, main: MainWindow) -> None:
         super().__init__(master, main)
@@ -148,9 +148,9 @@ class SettingsPage(Page):
 
         lang_row = ctk.CTkFrame(other, fg_color="transparent")
         lang_row.pack(anchor="w", padx=PAD, pady=(0, PAD))
-        ctk.CTkLabel(lang_row, text=_("Idioma (requiere reiniciar SafeTrim)"), font=FONT_BODY).pack(
-            side="left"
-        )
+        ctk.CTkLabel(
+            lang_row, text=_("Idioma (requiere reiniciar SafeBoost)"), font=FONT_BODY
+        ).pack(side="left")
         self.language = ctk.StringVar(value=LANGUAGES.get(settings.language, "Español"))
         ctk.CTkOptionMenu(
             lang_row,
@@ -234,7 +234,7 @@ class SettingsPage(Page):
     def _toggle_no_restore(self) -> None:
         if self.no_restore.get() and not messagebox.askyesno(
             "Sin punto de restauración",
-            "Si el punto de restauración falla, SafeTrim seguirá aplicando cambios. Deshacer "
+            "Si el punto de restauración falla, SafeBoost seguirá aplicando cambios. Deshacer "
             "seguirá funcionando, pero no tendrás la red de seguridad de Windows. ¿Seguro?",
             icon="warning",
             parent=self,
@@ -340,7 +340,8 @@ class SettingsPage(Page):
         if lic is None:
             self.license_label.configure(
                 text="Sin licencia. Con la edición Técnico, el informe para el cliente lleva tu "
-                "nombre, tu contacto y tu logo. El resto de SafeTrim es igual en las dos ediciones."
+                "nombre, tu contacto y tu logo. El resto de SafeBoost es igual en las dos "
+                "ediciones."
             )
             self.remove_license_btn.pack_forget()
             self.brand_frame.pack_forget()

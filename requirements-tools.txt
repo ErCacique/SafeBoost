@@ -1,3 +1,3 @@
-# Herramientas de apoyo para sesiones de Claude Code (no las usa SafeTrim).
+# Herramientas de apoyo para sesiones de Claude Code (no las usa SafeBoost).
 # graphify: grafo de conocimiento del código (skill del proyecto en .claude/skills/graphify).
 graphifyy==0.9.101

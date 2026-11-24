@@ -32,7 +32,7 @@ from core.tasks import TaskManager
 log = get_logger("tweaks.startup")
 
 # Tareas de los programas de inicio retrasados (se crean al pulsar "Retrasar").
-DELAYED_TASK_FOLDER = "\\SafeTrim\\Delayed\\"
+DELAYED_TASK_FOLDER = "\\SafeBoost\\Delayed\\"
 
 Source = Literal["run", "run32", "folder", "task"]
 Impact = Literal["alto", "medio", "bajo", "desconocido"]

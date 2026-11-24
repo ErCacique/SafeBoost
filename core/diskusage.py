@@ -1,6 +1,6 @@
 """Qué ocupa el disco: carpetas y archivos más grandes y duplicados en Descargas. Solo lee.
 
-SafeTrim no borra nada desde aquí: enseña dónde está el espacio y el usuario decide (botón para
+SafeBoost no borra nada desde aquí: enseña dónde está el espacio y el usuario decide (botón para
 abrir la carpeta). El recorrido no sigue enlaces ni uniones y se salta lo que no puede leer.
 """
 
