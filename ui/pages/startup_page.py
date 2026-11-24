@@ -8,32 +8,28 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
+from core.i18n import _
 from core.session import Session
 from tweaks.startup import StartupEntry, StartupManager
 from ui.pages.base import Page, show_error
 from ui.theme import (
+    BORDER,
     FONT_BODY,
     FONT_SMALL,
     PAD,
     PAD_S,
-    RISK_COLORS,
     SECONDARY_BUTTON,
-    STATE_COLORS,
     TEXT_MUTED,
     WRAP,
 )
-from ui.widgets import Badge, Card
+from ui.widgets import Card, Chip, tone_colors
 from ui.worker import BackgroundTask, ProgressFn
 
 if TYPE_CHECKING:
     from ui.app import MainWindow
 
-IMPACT_COLORS = {
-    "alto": RISK_COLORS["alto"],
-    "medio": RISK_COLORS["medio"],
-    "bajo": RISK_COLORS["bajo"],
-    "desconocido": STATE_COLORS["unknown"],
-}
+IMPACT_TONE = {"alto": "critical", "medio": "warning", "bajo": "ok", "desconocido": "neutral"}
+IMPACT_LEVEL = {"alto": 1.0, "medio": 0.6, "bajo": 0.25, "desconocido": 0.1}
 SOURCE_LABELS = {
     "run": "Registro",
     "run32": "Registro (32 bits)",
@@ -105,7 +101,7 @@ class StartupPage(Page):
                 font=FONT_BODY,
                 command=lambda e=entry, v=var: self._toggle(e, v.get()),
             ).pack(side="left")
-            Badge(top, f"impacto {entry.impact}", IMPACT_COLORS[entry.impact]).pack(
+            Chip(top, f"{_('impacto')} {entry.impact}".upper(), IMPACT_TONE[entry.impact]).pack(
                 side="left", padx=PAD_S
             )
             ctk.CTkLabel(
@@ -119,6 +115,16 @@ class StartupPage(Page):
                     **SECONDARY_BUTTON,
                     command=lambda e=entry: self._delay(e),
                 ).pack(side="right", padx=PAD_S)
+            # Barra de impacto: se entiende de un vistazo qué retrasa más el arranque.
+            bar = ctk.CTkProgressBar(
+                card,
+                height=8,
+                corner_radius=4,
+                progress_color=tone_colors(IMPACT_TONE[entry.impact])[0],
+                fg_color=BORDER,
+            )
+            bar.set(IMPACT_LEVEL[entry.impact])
+            bar.pack(fill="x", padx=PAD * 2, pady=(PAD_S, 2))
             ctk.CTkLabel(
                 card,
                 text=f"{entry.command}\n{entry.impact_detail}",

@@ -28,6 +28,8 @@ class Settings:
     # Tarea \SafeBoost\Maintenance cada 4 semanas (Ajustes → General).
     maintenance: bool = False
     language: str = "es"  # "es" o "en" (core.i18n); se aplica al reiniciar
+    # Interfaz: "easy" (Inicio con nota de salud y menú corto) o "advanced" (todo a la vista).
+    ui_mode: str = "easy"
     # Icono junto al reloj (core.tray), tarea \SafeBoost\Tray al iniciar sesión.
     background_watch: bool = False
     # Con la vigilancia: modo juego al abrir un juego de Steam, Epic, GOG, Xbox…

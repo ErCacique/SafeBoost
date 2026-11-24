@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import queue
+import tkinter as tk
 from collections.abc import Callable
 from typing import Any
 
@@ -13,28 +14,39 @@ from core.context import DETECT_LABELS, DetectResult
 from core.environment import EnvironmentInfo
 from core.i18n import _, tweak_name, tweak_text
 from core.sources import source_for
+from ui.icons import icon
 from ui.theme import (
     BG_CARD,
+    BG_CARD_HI,
+    BORDER,
+    FONT_BIG,
     FONT_BODY,
+    FONT_CHIP,
     FONT_H2,
     FONT_METRIC,
     FONT_MONO,
+    FONT_SCORE,
     FONT_SMALL,
     LOG_MAX_LINES,
     LOG_POLL_MS,
+    NAV_HOVER,
     PAD,
     PAD_S,
     RADIUS,
     RISK_COLORS,
     STATE_COLORS,
     TEXT_MUTED,
+    TONES,
     WRAP,
 )
 
 
 class Card(ctk.CTkFrame):
     def __init__(self, master: Any, **kwargs: Any) -> None:
-        super().__init__(master, fg_color=BG_CARD, corner_radius=RADIUS, **kwargs)
+        kwargs.setdefault("fg_color", BG_CARD)
+        kwargs.setdefault("border_width", 1)
+        kwargs.setdefault("border_color", BORDER)
+        super().__init__(master, corner_radius=RADIUS, **kwargs)
 
 
 class MetricCard(Card):
@@ -298,3 +310,164 @@ class ProgressBar(ctk.CTkFrame):
 
     def reset(self, message: str = "Listo") -> None:
         self.update_progress(0.0, message)
+
+
+# ------------------------------------------------------------------ v0.12: componentes visuales
+
+
+def mode_color(pair: tuple[str, str] | str) -> str:
+    """Color concreto del par (claro, oscuro) según el modo de apariencia actual."""
+    if isinstance(pair, str):
+        return pair
+    return pair[1] if ctk.get_appearance_mode() == "Dark" else pair[0]
+
+
+def tone_colors(tone: str) -> tuple[tuple[str, str], tuple[str, str]]:
+    return TONES.get(tone, TONES["neutral"])
+
+
+class Chip(ctk.CTkLabel):
+    """Etiqueta en mayúsculas con fondo del color de su estado (BIEN, ATENCIÓN…)."""
+
+    def __init__(self, master: Any, text: str, tone: str = "neutral") -> None:
+        fg, bg = tone_colors(tone)
+        super().__init__(
+            master,
+            text=text,
+            font=FONT_CHIP,
+            text_color=fg,
+            fg_color=bg,
+            corner_radius=999,
+            height=24,
+            padx=10,
+        )
+
+    def set(self, text: str, tone: str) -> None:
+        fg, bg = tone_colors(tone)
+        self.configure(text=text, text_color=fg, fg_color=bg)
+
+
+class IconBadge(ctk.CTkLabel):
+    """Icono dentro de un cuadrado redondeado del color de su estado."""
+
+    def __init__(self, master: Any, name: str, tone: str = "info", size: int = 40) -> None:
+        fg, bg = tone_colors(tone)
+        super().__init__(
+            master,
+            text="",
+            image=icon(name, fg, size // 2),
+            fg_color=bg,
+            corner_radius=size // 4,
+            width=size,
+            height=size,
+        )
+
+    def set(self, name: str, tone: str) -> None:
+        fg, bg = tone_colors(tone)
+        self.configure(image=icon(name, fg, self.cget("width") // 2), fg_color=bg)
+
+
+class Gauge(ctk.CTkFrame):
+    """Anillo de 0 a 100 con la cifra en el centro (la nota de salud del Inicio)."""
+
+    def __init__(self, master: Any, size: int = 176, thickness: int = 14) -> None:
+        super().__init__(master, fg_color="transparent", width=size, height=size)
+        self.size = size
+        self.thickness = thickness
+        self.value: int | None = None
+        self.tone = "neutral"
+        self.canvas = tk.Canvas(self, width=size, height=size, highlightthickness=0, bd=0)
+        self.canvas.place(x=0, y=0)
+        self.number = ctk.CTkLabel(self, text="—", font=FONT_SCORE, fg_color="transparent")
+        self.number.place(relx=0.5, rely=0.46, anchor="center")
+        self.caption = ctk.CTkLabel(
+            self, text=_("de 100"), font=FONT_SMALL, text_color=TEXT_MUTED, fg_color="transparent"
+        )
+        self.caption.place(relx=0.5, rely=0.66, anchor="center")
+        self._paint()
+
+    def set(self, value: int | None, tone: str) -> None:
+        self.value, self.tone = value, tone
+        self.number.configure(text="—" if value is None else str(value))
+        self._paint()
+
+    def _paint(self) -> None:
+        c, s, t = self.canvas, self.size, self.thickness
+        c.delete("all")
+        c.configure(bg=mode_color(BG_CARD_HI))
+        box = (t, t, s - t, s - t)
+        c.create_oval(*box, outline=mode_color(BORDER), width=t)
+        if self.value:
+            extent = -359.9 * max(0, min(100, self.value)) / 100
+            color = mode_color(tone_colors(self.tone)[0])
+            c.create_arc(*box, start=90, extent=extent, style="arc", outline=color, width=t)
+
+    def _set_appearance_mode(self, mode_string: str) -> None:
+        super()._set_appearance_mode(mode_string)
+        self._paint()
+
+
+class StatusTile(Card):
+    """Tarjeta de estado del Inicio: icono, chip, nombre, cifra grande y explicación."""
+
+    def __init__(self, master: Any, icon_name: str, title: str) -> None:
+        super().__init__(master)
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=PAD + 4, pady=(PAD + 4, PAD_S))
+        self.badge = IconBadge(top, icon_name, "neutral")
+        self.badge.pack(side="left")
+        self.icon_name = icon_name
+        self.chip = Chip(top, "…", "neutral")
+        self.chip.pack(side="right")
+        ctk.CTkLabel(self, text=title, font=FONT_BODY, text_color=TEXT_MUTED).pack(
+            anchor="w", padx=PAD + 4
+        )
+        self.value = ctk.CTkLabel(self, text="—", font=FONT_BIG)
+        self.value.pack(anchor="w", padx=PAD + 4)
+        self.sub = ctk.CTkLabel(self, text="", font=FONT_SMALL, text_color=TEXT_MUTED)
+        self.sub.pack(anchor="w", padx=PAD + 4, pady=(0, PAD + 4))
+
+    def set(self, value: str, sub: str, tone: str, chip: str) -> None:
+        self.value.configure(text=value)
+        self.sub.configure(text=sub)
+        self.chip.set(chip, tone)
+        self.badge.set(self.icon_name, tone)
+
+
+class ShortcutTile(Card):
+    """Atajo grande: icono en su recuadro de color, título y subtítulo. Toda la tarjeta es
+    clicable (y con el teclado: Tab para llegar, Intro o Espacio para pulsar)."""
+
+    def __init__(
+        self,
+        master: Any,
+        icon_name: str,
+        title: str,
+        subtitle: str,
+        tone: str,
+        command: Callable[[], None],
+    ) -> None:
+        super().__init__(master, cursor="hand2")
+        self.command = command
+        inner = ctk.CTkFrame(self, fg_color="transparent", cursor="hand2")
+        inner.pack(fill="x", padx=PAD + 4, pady=PAD)
+        badge = IconBadge(inner, icon_name, tone, 44)
+        badge.pack(side="left")
+        texts = ctk.CTkFrame(inner, fg_color="transparent", cursor="hand2")
+        texts.pack(side="left", padx=PAD)
+        self.title = ctk.CTkLabel(texts, text=title, font=FONT_H2, anchor="w", cursor="hand2")
+        self.title.pack(anchor="w")
+        self.subtitle = ctk.CTkLabel(
+            texts, text=subtitle, font=FONT_SMALL, text_color=TEXT_MUTED, anchor="w", cursor="hand2"
+        )
+        self.subtitle.pack(anchor="w")
+        for widget in (self, inner, badge, texts, self.title, self.subtitle):
+            widget.bind("<Button-1>", lambda _e: self.command())
+            widget.bind("<Enter>", lambda _e: self.configure(fg_color=NAV_HOVER))
+            widget.bind("<Leave>", lambda _e: self.configure(fg_color=BG_CARD))
+        tk.Frame.configure(self, takefocus=1)  # CTkFrame no acepta takefocus
+        self.bind("<Return>", lambda _e: self.command())
+        self.bind("<space>", lambda _e: self.command())
+
+    def set_subtitle(self, text: str) -> None:
+        self.subtitle.configure(text=text)

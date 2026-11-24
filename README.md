@@ -184,6 +184,13 @@ arriba y se crea una tarea programada en `\SafeBoost\Delayed\` que lanza el mism
 después de iniciar sesión, con los permisos del usuario. Deshacer borra la tarea y reactiva la
 entrada.
 
+### Modo Fácil y modo Avanzado
+
+La interfaz arranca en modo **Fácil**: una nota de salud de 0 a 100 (`core/health.py`), una frase
+con lo que le pasa al equipo y un botón «Arreglar mi PC». El modo **Avanzado** muestra todas las
+secciones (perfiles, bloatware, servicios, limpieza, optimización…). Se cambia con el interruptor
+«Vista» del menú y la elección se guarda en `settings.json` (`ui_mode`).
+
 ### Vigilancia en segundo plano (opcional)
 
 Desactivada por defecto. En Ajustes se activa un icono junto al reloj (tarea programada

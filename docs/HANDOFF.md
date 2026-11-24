@@ -52,6 +52,7 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
 | 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
+| 0.12.0 | Interfaz nueva: modo Fácil (nota de salud, Inicio, menú de 8) y Avanzado (menú agrupado), iconos, paleta, diagnóstico en tarjetas, barras de impacto |
 | 0.11.2 | Repositorio renombrado a ErCacique/SafeBoost: enlaces y aviso de versiones actualizados |
 | 0.11.1 | Auditoría de seguridad: 7 arreglos (comillas PowerShell, junctions en limpieza, desinstalador HKCU, tareas elevadas, actualizador, Pillow, parámetros) |
 | 0.11.0 | Cambio de nombre SafeTrim → SafeBoost con migración automática de datos, tareas, instalador y actualizador |
@@ -59,7 +60,7 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.9.0 | Informes de error locales, estado de seguridad, retrasar inicio 90 s, programas del fabricante con desinstalador, soporte del modelo |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Última publicada: v0.11.2 (`https://github.com/ErCacique/SafeBoost/releases/tag/v0.11.2`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
+Última publicada: v0.12.0 (`https://github.com/ErCacique/SafeBoost/releases/tag/v0.12.0`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
 ## v0.8.0 (publicada el 2026-11-22)
 
@@ -149,3 +150,14 @@ vaya a ejecutar elevado puede salir de HKCU ni de carpetas del usuario.
 
 WinOpt → SafeBoost en GitHub. No crear nunca otro repo llamado WinOpt en la cuenta: rompería la
 redirección de la que dependen las versiones antiguas para encontrar actualizaciones.
+
+## v0.12.0 · Interfaz nueva (2026-11-24)
+
+Maqueta aprobada por el usuario: https://claude.ai/artifact/2qq1J6QYVXdGJ1dXWjf962 (privada).
+Piezas: `ui/theme.py` (tokens BG_APP, BORDER, NAV_*, TONES por estado), `ui/icons.py` (iconos con
+Pillow, `icon(nombre, (claro, oscuro), tamaño)`), `ui/widgets.py` (Chip, IconBadge, Gauge,
+StatusTile, ShortcutTile), `ui/pages/home_page.py` (Inicio Fácil; reutiliza las acciones del Panel
+vía `MainWindow.page("dashboard")`), `ui/app.py` (EASY_NAV, ADVANCED_NAV, `_change_mode`),
+`core/health.py` (nota 0-100). `scripts/ui_smoke.py` recorre también los dos modos y acepta
+`--appearance light`. Pendiente posible: rediseñar el asistente «Arreglar mi PC» como pantalla
+(ahora sigue siendo el diálogo de siempre) y pasar más pantallas avanzadas al estilo de tarjetas.

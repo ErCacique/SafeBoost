@@ -7,6 +7,25 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-24
+
+### Added
+- **Interfaz nueva con dos modos** (interruptor «Vista» abajo en el menú; se recuerda):
+  - **Fácil** (por defecto): pantalla Inicio con la **nota de salud del equipo** (0-100, en un
+    anillo de color), una frase que explica qué le pasa, el botón «Arreglar mi PC», cuatro
+    tarjetas de semáforo (arranque, memoria, disco, seguridad) y atajos a liberar espacio, modo
+    juego y modo ahorro. Menú de 8 secciones con iconos: Inicio, Revisar el PC, Arranque, Espacio,
+    Evolución, Privacidad, Deshacer cambios y Ajustes.
+  - **Avanzado**: todas las secciones de siempre, agrupadas (Equipo, Optimizar, SafeBoost).
+- Nota de salud calculada en `core/health.py` a partir del diagnóstico (no mide nada nuevo).
+
+### Changed
+- Paleta azul marino con tarjetas con borde, iconos de línea dibujados por el programa, chips de
+  estado con palabra y color (no solo color), en tema oscuro y claro.
+- Diagnóstico: cada hallazgo es una tarjeta con icono y nivel. Programas de inicio: barra de
+  impacto por programa.
+- Ninguna función se ha quitado: el modo Avanzado mantiene todas las pantallas anteriores.
+
 ## [0.11.2] - 2026-11-24
 
 ### Changed

@@ -32,11 +32,13 @@ from core.metrics import (
 from core.session import Session
 from core.update_check import ReleaseInfo, check_latest
 from ui.dialogs import ReviewDialog, SummaryDialog, WelcomeWizard
+from ui.icons import icon
 from ui.pages.base import Page, show_error
 from ui.pages.dashboard import DashboardPage
 from ui.pages.diagnostics_page import DiagnosticsPage
 from ui.pages.evolution_page import EvolutionPage
 from ui.pages.history import HistoryPage
+from ui.pages.home_page import HomePage
 from ui.pages.privacy_page import PrivacyPage
 from ui.pages.settings_page import SettingsPage
 from ui.pages.space_page import SpacePage
@@ -50,17 +52,22 @@ from ui.pages.tweaks_page import (
 )
 from ui.state import UiState
 from ui.theme import (
+    BG_APP,
     BG_SIDEBAR,
     DANGER,
     FONT_BODY,
     FONT_H2,
+    FONT_NAV,
     FONT_SMALL,
+    NAV_ACTIVE,
+    NAV_HOVER,
     PAD,
     PAD_S,
     RISK_COLORS,
     SCREEN_MARGIN,
     SECONDARY_BUTTON,
     SIDEBAR_WIDTH,
+    TEXT,
     TEXT_MUTED,
     WINDOW_MIN,
     WINDOW_SIZE,
@@ -72,19 +79,52 @@ from ui.worker import BackgroundTask, ProgressFn
 log = get_logger("ui")
 
 PAGES: list[tuple[str, str, type[Page]]] = [
+    ("home", "Inicio", HomePage),
     ("dashboard", "Dashboard", DashboardPage),
     ("diagnostics", "Diagnóstico", DiagnosticsPage),
     ("evolution", "Evolución", EvolutionPage),
     ("privacy", "Privacidad", PrivacyPage),
     ("space", "Espacio", SpacePage),
     ("bloatware", "Bloatware", BloatwarePage),
-    ("startup", "Inicio", StartupPage),
+    ("startup", "Inicio de Windows", StartupPage),
     ("services", "Servicios", ServicesPage),
     ("cleanup", "Limpieza", CleanupPage),
     ("optimization", "Optimización", OptimizationPage),
     ("history", "Historial / Deshacer", HistoryPage),
     ("settings", "Ajustes", SettingsPage),
 ]
+
+# Menú de cada modo: (clave de página, texto, icono). None como clave = título de grupo.
+NavItem = tuple[str | None, str, str]
+EASY_NAV: list[NavItem] = [
+    ("home", "Inicio", "home"),
+    ("diagnostics", "Revisar el PC", "pulse"),
+    ("startup", "Arranque", "clock"),
+    ("space", "Espacio", "trash"),
+    ("evolution", "Evolución", "chart"),
+    ("privacy", "Privacidad", "lock"),
+    ("history", "Deshacer cambios", "undo"),
+    ("settings", "Ajustes", "gear"),
+]
+ADVANCED_NAV: list[NavItem] = [
+    (None, "EQUIPO", ""),
+    ("dashboard", "Panel", "home"),
+    ("diagnostics", "Diagnóstico", "pulse"),
+    ("evolution", "Evolución", "chart"),
+    ("privacy", "Privacidad", "lock"),
+    ("space", "Espacio", "drive"),
+    (None, "OPTIMIZAR", ""),
+    ("bloatware", "Bloatware", "apps"),
+    ("startup", "Inicio de Windows", "clock"),
+    ("services", "Servicios", "server"),
+    ("cleanup", "Limpieza", "sparkle"),
+    ("optimization", "Optimización", "sliders"),
+    (None, "SAFEBOOST", ""),
+    ("history", "Historial y deshacer", "undo"),
+    ("settings", "Ajustes", "gear"),
+]
+MODES = {"easy": EASY_NAV, "advanced": ADVANCED_NAV}
+HOME_OF = {"easy": "home", "advanced": "dashboard"}
 
 
 def fit_window(screen_w: int, screen_h: int, scaling: float) -> tuple[str, tuple[int, int], bool]:
@@ -179,29 +219,38 @@ class MainWindow(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        self.configure(fg_color=BG_APP)
         sidebar = ctk.CTkFrame(self, width=SIDEBAR_WIDTH, corner_radius=0, fg_color=BG_SIDEBAR)
         sidebar.grid(row=0, column=0, rowspan=3, sticky="nsw")
         sidebar.grid_propagate(False)
-        ctk.CTkLabel(sidebar, text=APP_NAME, font=("Segoe UI", 24, "bold")).pack(
-            pady=(PAD * 2, PAD)
+        sidebar.pack_propagate(False)
+        ctk.CTkLabel(
+            sidebar,
+            text=f"  {APP_NAME}",
+            image=icon("rocket", ("#2563eb", "#2f7bf5"), 26),
+            compound="left",
+            font=(FONT_H2[0], 20, "bold"),
+            anchor="w",
+        ).pack(fill="x", padx=PAD, pady=(PAD * 2, PAD))
+        self.mode_label = ctk.CTkLabel(sidebar, text="", font=FONT_SMALL, wraplength=190)
+        self.mode_label.pack(side="bottom", pady=(PAD_S, PAD))
+        mode = app.settings.ui_mode if app.settings.ui_mode in MODES else "easy"
+        self.mode_var = ctk.StringVar(value=_("Fácil") if mode == "easy" else _("Avanzado"))
+        ctk.CTkSegmentedButton(
+            sidebar,
+            values=[_("Fácil"), _("Avanzado")],
+            variable=self.mode_var,
+            command=self._change_mode,
+            height=34,
+        ).pack(side="bottom", fill="x", padx=PAD, pady=(PAD_S, 0))
+        ctk.CTkLabel(sidebar, text=_("Vista"), font=FONT_SMALL, text_color=TEXT_MUTED).pack(
+            side="bottom", anchor="w", padx=PAD + 2
         )
+        self.nav_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
+        self.nav_frame.pack(fill="both", expand=True)
         self.nav: dict[str, ctk.CTkButton] = {}
-        for key, label, _cls in PAGES:
-            btn = ctk.CTkButton(
-                sidebar,
-                text=_(label),
-                anchor="w",
-                # 32 px: con 11 páginas el menú cabe en un portátil de 1366x768 al 125 %.
-                height=32,
-                fg_color="transparent",
-                text_color=("gray10", "gray90"),
-                hover_color=("gray75", "gray25"),
-                command=lambda k=key: self.show(k),
-            )
-            btn.pack(fill="x", padx=PAD_S, pady=1)
-            self.nav[key] = btn
-        self.mode_label = ctk.CTkLabel(sidebar, text="", font=FONT_SMALL, wraplength=180)
-        self.mode_label.pack(side="bottom", pady=PAD)
+        self.mode = mode
+        self._build_nav()
 
         self.content = ctk.CTkFrame(self, fg_color="transparent")
         self.content.grid(row=0, column=1, sticky="nsew")
@@ -214,7 +263,7 @@ class MainWindow(ctk.CTk):
 
         self.ui.subscribe(self.refresh_action_bar)
         self.refresh_action_bar()
-        self.show("dashboard")
+        self.show(HOME_OF[self.mode])
         if app.settings.first_run:
             self.after(400, self.show_welcome)
         self._check_updates()
@@ -282,14 +331,17 @@ class MainWindow(ctk.CTk):
             return
 
         def done(info: ReleaseInfo | None) -> None:
-            page = self.pages.get("dashboard")
-            if info is not None and isinstance(page, DashboardPage):
-                page.show_update(info)
+            if info is None:
+                return
+            for key in ("home", "dashboard"):
+                page = self.pages.get(key)
+                if isinstance(page, (HomePage, DashboardPage)):
+                    page.show_update(info)
 
         BackgroundTask(self, lambda _p, _c: check_latest(), done, lambda _e: None).start()
 
     def _build_action_bar(self) -> None:
-        bar = ctk.CTkFrame(self, corner_radius=0)
+        bar = ctk.CTkFrame(self, corner_radius=0, fg_color=BG_SIDEBAR)
         bar.grid(row=1, column=1, sticky="ew")
         self.selection_label = ctk.CTkLabel(bar, text="", font=FONT_BODY)
         self.selection_label.pack(side="left", padx=PAD, pady=PAD_S)
@@ -321,16 +373,70 @@ class MainWindow(ctk.CTk):
 
     # ================================================================== navegación
 
-    def show(self, key: str) -> None:
+    def _build_nav(self) -> None:
+        for child in self.nav_frame.winfo_children():
+            child.destroy()
+        self.nav = {}
+        easy = self.mode == "easy"
+        for key, label, icon_name in MODES[self.mode]:
+            if key is None:
+                ctk.CTkLabel(
+                    self.nav_frame,
+                    text=_(label),
+                    font=(FONT_SMALL[0], 10, "bold"),
+                    text_color=TEXT_MUTED,
+                    anchor="w",
+                ).pack(fill="x", padx=PAD + 4, pady=(PAD_S, 0))
+                continue
+            btn = ctk.CTkButton(
+                self.nav_frame,
+                text=f"  {_(label)}",
+                image=icon(icon_name, ("#3b4350", "#aeb6c4"), 18 if easy else 16),
+                compound="left",
+                anchor="w",
+                font=FONT_NAV if easy else FONT_BODY,
+                # Avanzado: 30 px para que las 12 secciones quepan en 1366x768 al 125 %.
+                height=40 if easy else 30,
+                corner_radius=10,
+                fg_color="transparent",
+                text_color=TEXT,
+                hover_color=NAV_HOVER,
+                command=lambda k=key: self.show(k),
+            )
+            btn.pack(fill="x", padx=PAD_S + 2, pady=1)
+            self.nav[key] = btn
+        if self.current is not None:
+            self._highlight(self.current)
+
+    def _highlight(self, key: str) -> None:
+        for name, btn in self.nav.items():
+            btn.configure(fg_color=NAV_ACTIVE if name == key else "transparent")
+
+    def _change_mode(self, value: str) -> None:
+        if self.ui is None:
+            return
+        self.mode = "easy" if value == _("Fácil") else "advanced"
+        settings = self.ui.app.settings
+        settings.ui_mode = self.mode
+        settings.save()
+        self._build_nav()
+        valid = {key for key, _l, _i in MODES[self.mode] if key}
+        if self.current not in valid:
+            self.show(HOME_OF[self.mode])
+
+    def page(self, key: str) -> Page:
+        """Página ya creada o nueva, sin mostrarla (para usar sus acciones desde otra página)."""
         if key not in self.pages:
             cls = next(c for k, _l, c in PAGES if k == key)
             page = cls(self.content, self)
             page.grid(row=0, column=0, sticky="nsew")
             self.pages[key] = page
-        page = self.pages[key]
+        return self.pages[key]
+
+    def show(self, key: str) -> None:
+        page = self.page(key)
         page.tkraise()
-        for name, btn in self.nav.items():
-            btn.configure(fg_color=("gray75", "gray25") if name == key else "transparent")
+        self._highlight(key)
         self.current = key
         page.on_show()
 
