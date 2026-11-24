@@ -1,8 +1,10 @@
-# SafeTrim
+# SafeBoost
 
-> Antes se llamaba **WinTune** (hasta la 0.2.x). Al primer arranque, SafeTrim copia los datos de
-> `%LOCALAPPDATA%\WinTune` a `%LOCALAPPDATA%\SafeTrim`, así que las sesiones aplicadas con
-> WinTune se pueden seguir deshaciendo. La carpeta antigua no se borra.
+> Antes se llamaba **SafeTrim** (0.3.0 a 0.10.x) y, al principio, **WinTune** (hasta la 0.2.x).
+> Al primer arranque, SafeBoost copia los datos de `%LOCALAPPDATA%\SafeTrim` (o de `SafeTrimData`
+> en la versión portable) a su carpeta nueva y vuelve a crear con el nombre nuevo las tareas
+> programadas que tuvieras activas, así que todo lo aplicado antes se puede seguir deshaciendo. Las
+> carpetas antiguas no se borran.
 
 Herramienta de escritorio para eliminar bloatware y optimizar Windows 10/11 de forma
 **reversible**, con tres perfiles acumulativos (Conservador, Equilibrado, Máximo), modo
@@ -21,7 +23,7 @@ simulación, copias de seguridad automáticas y deshacer por sesión.
 | psutil | 7.2.2 |
 | PyInstaller | 6.22.3 |
 
-En un Windows fuera de esta tabla (por ejemplo, Windows 10 1909) SafeTrim abre en modo
+En un Windows fuera de esta tabla (por ejemplo, Windows 10 1909) SafeBoost abre en modo
 solo simulación: muestra el estado y simula, pero no aplica cambios hasta actualizar Windows.
 
 El ejecutable se ejecuta siempre con privilegios de administrador (manifest `requireAdministrator`).
@@ -49,7 +51,7 @@ la validación del catálogo.
 ruff check . && ruff format --check .
 python scripts/validate_tweaks.py      # esquema + reglas + handlers resolubles
 pytest                                  # en Linux se omiten los tests marcados "windows"
-# El test e2e (tests/e2e) APLICA tweaks reales: solo corre con SAFETRIM_E2E=1, como admin y
+# El test e2e (tests/e2e) APLICA tweaks reales: solo corre con SAFEBOOST_E2E=1, como admin y
 # en Windows. Lo ejecuta el CI en una VM desechable; no lo lances en tu equipo.
 pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store del catálogo
 ```
@@ -58,20 +60,20 @@ pwsh -File scripts/verify_store_ids.ps1 # solo Windows: valida los IDs de Store 
 
 ```powershell
 pip install -r requirements-build.txt   # PyInstaller 6.22.3
-pyinstaller --clean --noconfirm packaging/SafeTrim.spec
-.\dist\SafeTrim\SafeTrim.exe --self-test     # catálogo y handlers dentro del binario
-iscc /DAppVersion=0.5.0 packaging\SafeTrim.iss   # instalador (Inno Setup 6)
+pyinstaller --clean --noconfirm packaging/SafeBoost.spec
+.\dist\SafeBoost\SafeBoost.exe --self-test     # catálogo y handlers dentro del binario
+iscc /DAppVersion=0.5.0 packaging\SafeBoost.iss   # instalador (Inno Setup 6)
 ```
 
-El `.spec` genera una carpeta (`dist\SafeTrim`, modo *onedir*) con `SafeTrim.exe` sin consola,
+El `.spec` genera una carpeta (`dist\SafeBoost`, modo *onedir*) con `SafeBoost.exe` sin consola,
 manifest `requireAdministrator`, sin UPX y con recurso de versión. A partir de ella el release
 publica dos descargas:
 
-- **`SafeTrim-Setup-X.Y.Z.exe`**: instalador para todo el equipo, con acceso directo
-  "SafeTrim - Deshacer todos los cambios" en el menú Inicio. Al desinstalar se conservan los
+- **`SafeBoost-Setup-X.Y.Z.exe`**: instalador para todo el equipo, con acceso directo
+  "SafeBoost - Deshacer todos los cambios" en el menú Inicio. Al desinstalar se conservan los
   datos (sesiones para deshacer, copias `.reg`, logs).
-- **`SafeTrim-portable-X.Y.Z.zip`**: sin instalar, para USB o técnicos. Lleva un `portable.txt`
-  junto al `.exe`: con él los datos se guardan en `SafeTrimData\` al lado del programa y no se
+- **`SafeBoost-portable-X.Y.Z.zip`**: sin instalar, para USB o técnicos. Lleva un `portable.txt`
+  junto al `.exe`: con él los datos se guardan en `SafeBoostData\` al lado del programa y no se
   programa la medición tras reiniciar.
 
 Se dejó de usar un único `.exe` (*onefile*) porque se descomprime entero en `%TEMP%` en cada
@@ -87,7 +89,7 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    entorno detectado (build, edición, SSD/HDD, portátil/sobremesa, dominio/MDM). Recomienda
    un perfil, o pide reiniciar o actualizar Windows antes si hay actualizaciones pendientes o
    atrasadas. Con menos de 5 GB de RAM avisa de que lo que más se nota es ampliar memoria.
-   Si hay una versión nueva de SafeTrim publicada, muestra un aviso con el enlace.
+   Si hay una versión nueva de SafeBoost publicada, muestra un aviso con el enlace.
 1. **Diagnóstico**: "¿por qué va lento?". Mide durante un par de segundos y da un veredicto en
    lenguaje claro: RAM insuficiente (con ranuras libres y máximo admitido), procesos que
    acaparan CPU o memoria con explicación de los procesos de Windows conocidos, procesador
@@ -107,7 +109,7 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
    (clave, valor actual → valor nuevo, servicio, paquete…) sin ejecutar nada.
 4. **Revisión**: lista final con riesgo por cambio. Las acciones irreversibles (limpieza)
    requieren una casilla de confirmación aparte; los tweaks de riesgo alto, doble confirmación.
-5. **Aplicar**: SafeTrim crea un punto de restauración, exporta las claves de registro
+5. **Aplicar**: SafeBoost crea un punto de restauración, exporta las claves de registro
    afectadas a `.reg` y aplica. Un fallo en un tweak no detiene el resto.
 6. **Resumen**: aplicados / omitidos / fallidos con la causa de cada uno, y medición antes/después.
 7. **Historial/Deshacer**: revierte cualquier sesión anterior y verifica que cada cambio volvió
@@ -120,14 +122,14 @@ dinámicamente; `--self-test` lo verifica en `release.yml`.
 
 | Ruta | Contenido |
 |---|---|
-| `%LOCALAPPDATA%\SafeTrim\backups\<id de sesión>` | `.reg` de cada clave afectada (`YYYYMMDD-HHMMSS_<clave>.reg`), una carpeta por sesión |
-| `%LOCALAPPDATA%\SafeTrim\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
-| `%LOCALAPPDATA%\SafeTrim\logs` | Logs estructurados (JSON Lines) y logs exportados |
-| `%LOCALAPPDATA%\SafeTrim\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
+| `%LOCALAPPDATA%\SafeBoost\backups\<id de sesión>` | `.reg` de cada clave afectada (`YYYYMMDD-HHMMSS_<clave>.reg`), una carpeta por sesión |
+| `%LOCALAPPDATA%\SafeBoost\sessions` | Registro de cambios por sesión (JSON): fuente de verdad para Deshacer |
+| `%LOCALAPPDATA%\SafeBoost\logs` | Logs estructurados (JSON Lines) y logs exportados |
+| `%LOCALAPPDATA%\SafeBoost\metrics` | Mediciones antes/después, incluido el tiempo de arranque tras reiniciar |
 
 ### Deriva tras actualizaciones de Windows
 
-Al abrir SafeTrim, el Dashboard comprueba si alguno de los cambios aplicados (en sesiones no
+Al abrir SafeBoost, el Dashboard comprueba si alguno de los cambios aplicados (en sesiones no
 deshechas) ya no está en vigor. Las actualizaciones grandes de Windows suelen restablecer
 ajustes y reinstalar apps. Si hay deriva, se muestra la lista y un botón para revisarla y
 reaplicarla con el flujo normal de simulación y confirmación.
@@ -139,14 +141,14 @@ En otro equipo, *Importar selección…* los carga en la interfaz, o desde una c
 administrador:
 
 ```powershell
-.\SafeTrim.exe --apply-selection seleccion.json                 # solo simulación
-.\SafeTrim.exe --apply-selection seleccion.json --yes           # aplica
-.\SafeTrim.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
+.\SafeBoost.exe --apply-selection seleccion.json                 # solo simulación
+.\SafeBoost.exe --apply-selection seleccion.json --yes           # aplica
+.\SafeBoost.exe --apply-selection seleccion.json --yes --include-irreversible   # + limpieza
 ```
 
 Los tweaks de riesgo alto (mitigaciones de CPU) nunca se aplican por CLI.
 
-**Kit de rescate**: `SafeTrim.exe --undo-all` deshace todas las sesiones aplicadas, de la más
+**Kit de rescate**: `SafeBoost.exe --undo-all` deshace todas las sesiones aplicadas, de la más
 reciente a la más antigua, sin interfaz gráfica (pide confirmación; `--yes` la omite). Funciona
 también en modo seguro y es lo que ejecuta el acceso directo "Deshacer todos los cambios". Códigos de salida:
 0 correcto, 1 sin permisos, 2 archivo o condiciones previas, 3 hubo fallos.
@@ -178,14 +180,14 @@ Administrador de tareas (valores `StartupApproved`, o deshabilitar la tarea): no
 y cada cambio queda en una sesión que se puede deshacer desde Historial.
 
 **Retrasar 90 s** es la alternativa a desactivar: la entrada original se desactiva igual que
-arriba y se crea una tarea programada en `\SafeTrim\Delayed\` que lanza el mismo programa 90 s
+arriba y se crea una tarea programada en `\SafeBoost\Delayed\` que lanza el mismo programa 90 s
 después de iniciar sesión, con los permisos del usuario. Deshacer borra la tarea y reactiva la
 entrada.
 
 ### Vigilancia en segundo plano (opcional)
 
 Desactivada por defecto. En Ajustes se activa un icono junto al reloj (tarea programada
-`\SafeTrim\Tray` al iniciar sesión, con privilegios elevados y sin pedir UAC) que avisa cuando un
+`\SafeBoost\Tray` al iniciar sesión, con privilegios elevados y sin pedir UAC) que avisa cuando un
 programa se añade al inicio y, si se pide, activa el modo juego al abrir un juego de Steam, Epic,
 GOG, Xbox, Riot, Ubisoft o EA y lo desactiva al cerrarlo (solo apaga lo que encendió él).
 
@@ -319,7 +321,7 @@ Notas:
   muestran como "no aplicable" si no están instaladas.
 - En Home/Pro, `AllowTelemetry=0` no se respeta; por eso hay dos tweaks de telemetría según la edición.
 
-## Qué NO toca SafeTrim
+## Qué NO toca SafeBoost
 
 La lista de protección está en código (`core/constants.py`) y se comprueba en **cada**
 operación. Un `tweaks.json` editado por error no puede saltársela.
@@ -344,7 +346,7 @@ operación. Un `tweaks.json` editado por error no puede saltársela.
 ## Seguridad operativa
 
 - **Punto de restauración** obligatorio antes de aplicar. Si Protección del sistema está desactivada
-  o la creación falla, SafeTrim bloquea la aplicación salvo que en Ajustes se active
+  o la creación falla, SafeBoost bloquea la aplicación salvo que en Ajustes se active
   "Continuar sin punto de restauración". Durante la sesión se ajusta temporalmente
   `SystemRestorePointCreationFrequency` para saltar el límite de 24 h de Windows, y después se restaura.
 - **Copia `.reg`** de cada clave afectada, con timestamp, además del registro JSON de sesión.
@@ -354,7 +356,7 @@ operación. Un `tweaks.json` editado por error no puede saltársela.
 - **Procesos externos con prioridad baja** y PowerShell de uno en uno, para no saturar equipos
   con poca CPU o RAM.
 - **Red**: la única conexión es la consulta de la última versión a la API de Releases de GitHub
-  al arrancar (desactivable en Ajustes). Con el repositorio privado responde 404 y SafeTrim no
+  al arrancar (desactivable en Ajustes). Con el repositorio privado responde 404 y SafeBoost no
   muestra nada; el aviso solo funciona si las Releases son públicas.
 - **Valida siempre en una VM con snapshots** (Hyper-V o VirtualBox) antes de usar una versión
   nueva en un equipo real.

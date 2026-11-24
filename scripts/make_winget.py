@@ -2,7 +2,7 @@
 
 Uso (lo ejecuta release.yml): python scripts/make_winget.py VERSION SHA256_SETUP SALIDA
 Para publicar en winget: abrir un PR con la carpeta generada en microsoft/winget-pkgs
-(manifests/e/ErCacique/SafeTrim/VERSION) o usar `wingetcreate submit`. Requiere que las Releases
+(manifests/e/ErCacique/SafeBoost/VERSION) o usar `wingetcreate submit`. Requiere que las Releases
 sean públicas: winget descarga el instalador desde la URL del manifiesto.
 """
 
@@ -11,13 +11,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-PACKAGE = "ErCacique.SafeTrim"
+PACKAGE = "ErCacique.SafeBoost"
 REPO = "https://github.com/ErCacique/WinOpt"
 SCHEMA = "1.6.0"
 
 
 def manifests(version: str, sha256: str) -> dict[str, str]:
-    url = f"{REPO}/releases/download/v{version}/SafeTrim-Setup-{version}.exe"
+    url = f"{REPO}/releases/download/v{version}/SafeBoost-Setup-{version}.exe"
     head = f"PackageIdentifier: {PACKAGE}\nPackageVersion: {version}\n"
     return {
         f"{PACKAGE}.yaml": f"{head}DefaultLocale: es-ES\nManifestType: version\n"
@@ -27,7 +27,7 @@ def manifests(version: str, sha256: str) -> dict[str, str]:
         f"  - Architecture: x64\n    InstallerUrl: {url}\n    InstallerSha256: {sha256.upper()}\n"
         f"ManifestType: installer\nManifestVersion: {SCHEMA}\n",
         f"{PACKAGE}.locale.es-ES.yaml": f"{head}PackageLocale: es-ES\nPublisher: ErCacique\n"
-        f"PackageName: SafeTrim\nPackageUrl: {REPO}\nLicense: Propietaria\n"
+        f"PackageName: SafeBoost\nPackageUrl: {REPO}\nLicense: Propietaria\n"
         "ShortDescription: Optimización reversible de Windows 10 y 11, con diagnóstico de "
         "hardware y deshacer verificado.\nTags:\n  - optimizacion\n  - privacidad\n  - windows\n"
         f"ReleaseNotesUrl: {REPO}/blob/v{version}/CHANGELOG.md\n"

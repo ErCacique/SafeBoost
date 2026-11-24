@@ -232,7 +232,7 @@ class SummaryDialog(_Modal):
             ctk.CTkLabel(
                 self,
                 text="Reinicia el equipo para completar algunos cambios. Tras reiniciar, "
-                "SafeTrim medirá el nuevo tiempo de arranque.",
+                "SafeBoost medirá el nuevo tiempo de arranque.",
                 font=FONT_BODY,
                 text_color=RISK_COLORS["medio"],
                 wraplength=WRAP,
@@ -280,9 +280,9 @@ class SummaryDialog(_Modal):
 # Texto de cada paso: (título, párrafos). Se mantiene aquí para poder probarlo sin Tk.
 WELCOME_STEPS: list[tuple[str, list[str]]] = [
     (
-        "Bienvenido a SafeTrim",
+        "Bienvenido a SafeBoost",
         [
-            "SafeTrim quita apps preinstaladas, reduce la telemetría y ajusta servicios para "
+            "SafeBoost quita apps preinstaladas, reduce la telemetría y ajusta servicios para "
             "que Windows vaya más ligero.",
             "Empieza en MODO SIMULACIÓN: puedes pulsar “Simular” todas las veces que "
             "quieras para ver qué cambiaría, sin tocar nada.",
@@ -292,7 +292,7 @@ WELCOME_STEPS: list[tuple[str, list[str]]] = [
     (
         "Tu red de seguridad",
         [
-            "Antes de cambiar nada, SafeTrim crea un punto de restauración de Windows y copias "
+            "Antes de cambiar nada, SafeBoost crea un punto de restauración de Windows y copias "
             ".reg de cada clave que toca. Si la Protección del sistema está apagada, se para y "
             "te ofrece activarla en Ajustes.",
             "Todo se puede deshacer desde “Historial / Deshacer”, salvo las limpiezas "
@@ -441,7 +441,7 @@ class FixPlanDialog(_Modal):
             applies.append(
                 "Limpieza de temporales y miniaturas (irreversible; se confirma aparte)."
             )
-        section("Lo que SafeTrim preparará", applies)
+        section("Lo que SafeBoost preparará", applies)
         section(
             "Programas de inicio que conviene desactivar (página Inicio)",
             [f"{c.name}: {c.reason}" for c in plan.startup],

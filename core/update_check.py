@@ -29,7 +29,7 @@ Opener = Callable[..., Any]
 class ReleaseInfo:
     version: str
     url: str
-    setup_url: str = ""  # SafeTrim-Setup-X.Y.Z.exe
+    setup_url: str = ""  # SafeBoost-Setup-X.Y.Z.exe
     sums_url: str = ""  # SHA256SUMS.txt
 
 
@@ -83,7 +83,10 @@ def check_latest(
         for a in data.get("assets") or []
         if isinstance(a, dict)
     }
-    setup = assets.get(f"SafeTrim-Setup-{version}.exe", "")
+    # Hasta 0.10.x el instalador se llamaba SafeTrim-Setup; se acepta por si acaso.
+    setup = assets.get(f"SafeBoost-Setup-{version}.exe") or assets.get(
+        f"SafeTrim-Setup-{version}.exe", ""
+    )
     sums = assets.get("SHA256SUMS.txt", "")
     if not (setup.startswith("https://") and sums.startswith("https://")):
         setup = sums = ""
@@ -134,5 +137,5 @@ def download_installer(
 
 
 def installer_command(installer: Path) -> list[str]:
-    """Instalación silenciosa de Inno Setup: cierra SafeTrim, actualiza y lo vuelve a abrir."""
+    """Instalación silenciosa de Inno Setup: cierra SafeBoost, actualiza y lo vuelve a abrir."""
     return [str(installer), "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/NORESTART"]

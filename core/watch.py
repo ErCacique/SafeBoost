@@ -1,6 +1,6 @@
 """Vigilancia: que el equipo no vuelva a degradarse sin que nadie se entere.
 
-- Programas de inicio nuevos desde la última vez que se abrió SafeTrim.
+- Programas de inicio nuevos desde la última vez que se abrió SafeBoost.
 - Historial de salud (arranque, RAM, disco, programas de inicio) para ver cuándo empeoró.
 - Foto del sistema antes de instalar algo y comparación después.
 - Mantenimiento mensual programado (opcional) con su informe.
@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from core.constants import APP_HOME, SAFETRIM_TASK_FOLDER, SERVICES_KEY
+from core.constants import APP_HOME, SAFEBOOST_TASK_FOLDER, SERVICES_KEY
 from core.logger import get_logger
 from core.process import CommandError, Runner, as_list, ps_quote
 from core.programs import list_programs
@@ -213,7 +213,7 @@ class Improvement:
 
 def improvement_summary(records: list[HealthRecord], since: str) -> Improvement | None:
     """Medianas antes y después de la primera sesión aplicada (`since`, ISO). Para decir
-    "desde que usas SafeTrim: arranque 134 s → 60 s, 11 → 5 programas de inicio"."""
+    "desde que usas SafeBoost: arranque 134 s → 60 s, 11 → 5 programas de inicio"."""
     before = [r for r in records if r.when < since]
     after = [r for r in records if r.when >= since]
     if len(before) < 2 or len(after) < 2:
@@ -368,7 +368,7 @@ def schedule_maintenance(runner: Runner, command: list[str], user: str) -> bool:
         " -RunLevel Highest;"
         "$s = New-ScheduledTaskSettingsSet -StartWhenAvailable"
         " -ExecutionTimeLimit (New-TimeSpan -Minutes 30);"
-        f"Register-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)}"
+        f"Register-ScheduledTask -TaskPath {ps_quote(SAFEBOOST_TASK_FOLDER)}"
         f" -TaskName {ps_quote(MAINTENANCE_TASK)} -Action $a -Trigger $t -Principal $p"
         " -Settings $s -Force | Out-Null"
     )
@@ -380,6 +380,6 @@ def schedule_maintenance(runner: Runner, command: list[str], user: str) -> bool:
 
 def remove_maintenance(runner: Runner) -> None:
     runner.powershell(
-        f"Unregister-ScheduledTask -TaskPath {ps_quote(SAFETRIM_TASK_FOLDER)}"
+        f"Unregister-ScheduledTask -TaskPath {ps_quote(SAFEBOOST_TASK_FOLDER)}"
         f" -TaskName {ps_quote(MAINTENANCE_TASK)} -Confirm:$false -ErrorAction SilentlyContinue"
     )

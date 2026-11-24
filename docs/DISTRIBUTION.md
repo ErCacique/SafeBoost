@@ -8,7 +8,7 @@ El repo es privado, así que los assets de sus Releases **solo los descargan usu
 acceso al repo**. Un enlace a `github.com/ErCacique/WinOpt/releases/...` devuelve 404 a
 cualquier otra persona.
 
-## Opciones para entregar `SafeTrim.exe` a terceros
+## Opciones para entregar `SafeBoost.exe` a terceros
 
 ### a) Invitar colaboradores al repo privado
 
@@ -24,7 +24,7 @@ Adecuado solo para una o dos personas de confianza (p. ej. alguien que te ayuda 
 
 ### b) Repo público aparte solo con Releases y README (recomendada)
 
-Por ejemplo `ErCacique/SafeTrim-releases`, con un README (qué es, requisitos, cómo verificar el
+Por ejemplo `ErCacique/SafeBoost-releases`, con un README (qué es, requisitos, cómo verificar el
 SHA256, aviso de SmartScreen) y solo Releases. El código sigue en el repo privado.
 
 | Pros | Contras |
@@ -44,8 +44,8 @@ Para automatizarlo, añade al final de `release.yml`, con un *fine-grained PAT* 
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: >
-          gh release create "${{ github.ref_name }}" dist/SafeTrim.exe dist/SafeTrim.exe.sha256
-          --repo ErCacique/SafeTrim-releases --title "SafeTrim ${{ github.ref_name }}"
+          gh release create "${{ github.ref_name }}" dist/SafeBoost.exe dist/SafeBoost.exe.sha256
+          --repo ErCacique/SafeBoost-releases --title "SafeBoost ${{ github.ref_name }}"
           --notes "SHA256: ${{ steps.hash.outputs.sha256 }}"
 ```
 
@@ -64,7 +64,7 @@ Para automatizarlo, añade al final de `release.yml`, con un *fine-grained PAT* 
 
 - **PyInstaller `--onefile`**: el bootloader es el mismo que usan muchos programas maliciosos
   empaquetados con PyInstaller, y el ejecutable se autoextrae en `%TEMP%` al arrancar.
-- **Lo que hace SafeTrim**: pide administrador, modifica el registro y los servicios, y
+- **Lo que hace SafeBoost**: pide administrador, modifica el registro y los servicios, y
   desinstala paquetes. Es justo el comportamiento que vigilan las heurísticas.
 - **Sin firma y con poca difusión**: un binario nuevo, sin firmar y con pocas descargas no
   tiene reputación.
@@ -75,7 +75,7 @@ Para automatizarlo, añade al final de `release.yml`, con un *fine-grained PAT* 
 - **Recurso de versión completo** (`packaging/version_info.txt`): empresa, producto y versión.
 - **Sin descargas ni ejecución de código remoto en tiempo de ejecución.** La única excepción
   es `winget` al revertir apps, y siempre a petición del usuario.
-- **SHA256 publicado siempre** junto al `.exe` en el cuerpo del Release y en `SafeTrim.exe.sha256`.
+- **SHA256 publicado siempre** junto al `.exe` en el cuerpo del Release y en `SafeBoost.exe.sha256`.
 
 ### Qué puedes hacer además
 
@@ -101,7 +101,7 @@ Instrucciones para el destinatario (copiar en el README público):
 
 ```powershell
 # 1. Verificar que el archivo es el publicado
-(Get-FileHash .\SafeTrim.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\SafeBoost.exe -Algorithm SHA256).Hash.ToLower()
 # 2. Comparar con el SHA256 del Release. Si coincide y SmartScreen avisa:
 #    Más información → Ejecutar de todas formas
 ```
@@ -131,7 +131,7 @@ calcularse **después** de firmar.
 
 ## Firma de código automática (desde la v0.8.0)
 
-`release.yml` firma `SafeTrim.exe` y el instalador con `signtool` (SHA-256 y sello de tiempo de
+`release.yml` firma `SafeBoost.exe` y el instalador con `signtool` (SHA-256 y sello de tiempo de
 DigiCert) **solo si** el repositorio tiene estos secretos (*Settings → Secrets and variables →
 Actions*):
 
@@ -145,11 +145,11 @@ Trusted Signing, certificados EV en HSM) no se exportan a `.pfx`: necesitarían 
 
 ## winget (desde la v0.8.0)
 
-Cada Release incluye `winget-manifests-X.Y.Z.zip` (esquema 1.6, `ErCacique.SafeTrim`). Para
+Cada Release incluye `winget-manifests-X.Y.Z.zip` (esquema 1.6, `ErCacique.SafeBoost`). Para
 publicarlo, las Releases deben ser públicas; después se abre un PR en
-`microsoft/winget-pkgs` con esos archivos en `manifests/e/ErCacique/SafeTrim/X.Y.Z/` (o con
+`microsoft/winget-pkgs` con esos archivos en `manifests/e/ErCacique/SafeBoost/X.Y.Z/` (o con
 `wingetcreate submit`). Tras la revisión de Microsoft, se instala con
-`winget install ErCacique.SafeTrim`.
+`winget install ErCacique.SafeBoost`.
 
 ## ARM64
 

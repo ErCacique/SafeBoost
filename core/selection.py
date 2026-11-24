@@ -1,7 +1,7 @@
 """Exportar e importar una selección de tweaks (y sus parámetros) a un archivo JSON.
 
 Permite replicar la misma configuración en varios equipos, desde la interfaz o con
-`SafeTrim --apply-selection archivo.json`.
+`SafeBoost --apply-selection archivo.json`.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from typing import Any
 from core.catalog import Catalog
 from core.constants import APP_VERSION, LEGACY_SELECTION_FORMATS
 
-SELECTION_FORMAT = "safetrim-selection"
+SELECTION_FORMAT = "safeboost-selection"
 SELECTION_VERSION = 1
 
 
@@ -60,9 +60,9 @@ def load_selection(path: Path, catalog: Catalog) -> tuple[Selection, list[str]]:
         raise SelectionError(f"No se pudo leer {path}: {exc}") from exc
     formats = (SELECTION_FORMAT, *LEGACY_SELECTION_FORMATS)
     if not isinstance(raw, dict) or raw.get("format") not in formats:
-        raise SelectionError(f"{path.name} no es un archivo de selección de SafeTrim")
+        raise SelectionError(f"{path.name} no es un archivo de selección de SafeBoost")
     if int(raw.get("version", 0)) > SELECTION_VERSION:
-        raise SelectionError("El archivo es de una versión de SafeTrim más nueva")
+        raise SelectionError("El archivo es de una versión de SafeBoost más nueva")
     tweaks = raw.get("tweaks")
     params = raw.get("params") or {}
     if not isinstance(tweaks, list) or not all(isinstance(t, str) for t in tweaks):

@@ -1,6 +1,6 @@
 {
   "_comment": "Copia estos tres valores de Partner Center → tu app → Identidad del producto. Mientras sean de ejemplo, el paquete sirve para probar pero la Store lo rechazará.",
-  "identity_name": "ErCacique.SafeTrim",
+  "identity_name": "ErCacique.SafeBoost",
   "publisher": "CN=00000000-0000-0000-0000-000000000000",
   "publisher_display_name": "ErCacique"
 }

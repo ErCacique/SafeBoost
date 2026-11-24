@@ -1,4 +1,4 @@
-"""Une la vigilancia con el resto del programa: se ejecuta al abrir SafeTrim (en segundo plano)
+"""Une la vigilancia con el resto del programa: se ejecuta al abrir SafeBoost (en segundo plano)
 y en el mantenimiento mensual. Separado de core.watch para que este no dependa de los handlers.
 """
 

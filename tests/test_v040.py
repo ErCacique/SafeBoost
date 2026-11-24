@@ -425,7 +425,7 @@ class FakeResponse(io.BytesIO):
 def opener_for(payload: str) -> Callable[..., FakeResponse]:
     def opener(request: Any, timeout: float = 0) -> FakeResponse:
         assert request.full_url.startswith("https://api.github.com/")
-        assert request.get_header("User-agent").startswith("SafeTrim/")
+        assert request.get_header("User-agent").startswith("SafeBoost/")
         return FakeResponse(payload.encode())
 
     return opener

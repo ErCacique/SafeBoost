@@ -465,7 +465,7 @@ def analyze(report: DiagnosticReport) -> list[Finding]:
 def _ram_advice(ram: int, hw: HardwareInfo | None) -> str:
     text = _(
         "El equipo tiene {ram}. Windows y un navegador ya la llenan, y entonces usa el disco como "
-        "memoria. Ningún perfil de SafeTrim sustituye a ampliar memoria.",
+        "memoria. Ningún perfil de SafeBoost sustituye a ampliar memoria.",
         ram=human_bytes(ram),
     )
     if hw is None or hw.free_slots is None:

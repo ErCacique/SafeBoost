@@ -75,7 +75,7 @@ class BenchResult:
 
 def _disk(directory: Path, result: BenchResult, size_mb: int = DISK_MB) -> None:
     block = os.urandom(CHUNK)  # datos aleatorios: un SSD que comprime no hace trampa
-    fd, name = tempfile.mkstemp(prefix="safetrim-bench-", dir=directory)
+    fd, name = tempfile.mkstemp(prefix="safeboost-bench-", dir=directory)
     path = Path(name)
     try:
         start = time.perf_counter()

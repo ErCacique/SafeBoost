@@ -53,17 +53,17 @@ def test_window_keeps_preferred_size_on_big_screens() -> None:
 def test_portable_marker_moves_data_next_to_exe(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    exe = tmp_path / "SafeTrim.exe"
+    exe = tmp_path / "SafeBoost.exe"
     exe.write_bytes(b"")
     monkeypatch.setattr(sys, "frozen", True, raising=False)
     monkeypatch.setattr(sys, "executable", str(exe))
-    monkeypatch.delenv("SAFETRIM_HOME", raising=False)
+    monkeypatch.delenv("SAFEBOOST_HOME", raising=False)
     monkeypatch.delenv("WINTUNE_HOME", raising=False)
     assert constants._portable_home() is None
     (tmp_path / constants.PORTABLE_MARKER).write_text("x")
-    assert constants._portable_home() == tmp_path / "SafeTrimData"
-    assert constants._home_override() == str(tmp_path / "SafeTrimData")
-    monkeypatch.setenv("SAFETRIM_HOME", str(tmp_path / "otra"))
+    assert constants._portable_home() == tmp_path / "SafeBoostData"
+    assert constants._home_override() == str(tmp_path / "SafeBoostData")
+    monkeypatch.setenv("SAFEBOOST_HOME", str(tmp_path / "otra"))
     assert constants._home_override() == str(tmp_path / "otra")  # la variable manda
 
 
@@ -73,14 +73,14 @@ def test_not_portable_when_running_from_source() -> None:
 
 
 def test_installer_and_spec_are_onedir_with_rescue_shortcut() -> None:
-    spec = (ROOT / "packaging" / "SafeTrim.spec").read_text(encoding="utf-8")
+    spec = (ROOT / "packaging" / "SafeBoost.spec").read_text(encoding="utf-8")
     assert "COLLECT(" in spec and "exclude_binaries=True" in spec
-    iss = (ROOT / "packaging" / "SafeTrim.iss").read_text(encoding="utf-8")
+    iss = (ROOT / "packaging" / "SafeBoost.iss").read_text(encoding="utf-8")
     assert 'Parameters: "--undo-all"' in iss
     assert "PrivilegesRequired=admin" in iss
     assert "PostRebootMetrics" in iss  # la desinstalación quita la tarea temporal
     workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
-    assert "portable.txt" in workflow and "SafeTrim-Setup-" in workflow
+    assert "portable.txt" in workflow and "SafeBoost-Setup-" in workflow
 
 
 # --------------------------------------------------------------- qué retrasa el arranque

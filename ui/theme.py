@@ -7,7 +7,7 @@ from typing import Final
 APPEARANCE: Final = "dark"
 COLOR_THEME: Final = "blue"
 
-WINDOW_TITLE: Final = "SafeTrim"
+WINDOW_TITLE: Final = "SafeBoost"
 # Tamaño preferido y mínimo en píxeles lógicos (CustomTkinter aplica el escalado de Windows).
 # Un portátil de 1366x768 al 125 % solo ofrece ~1090x614 lógicos: ahí se maximiza la ventana.
 WINDOW_SIZE: Final = (1280, 820)

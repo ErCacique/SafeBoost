@@ -1,4 +1,4 @@
-"""Punto de entrada de SafeTrim.
+"""Punto de entrada de SafeBoost.
 
 Uso:
     python main.py           Windows, consola elevada (se autoeleva si hace falta)
@@ -54,7 +54,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--maintenance", action="store_true", help=argparse.SUPPRESS)
     # Uso interno: lo lanza la tarea programada tras reiniciar para medir el arranque.
     parser.add_argument("--capture-boot", action="store_true", help=argparse.SUPPRESS)
-    # Uso interno: icono de vigilancia junto al reloj (tarea \SafeTrim\Tray, opcional).
+    # Uso interno: icono de vigilancia junto al reloj (tarea \SafeBoost\Tray, opcional).
     parser.add_argument("--tray", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
     return parser.parse_args(argv)
@@ -157,7 +157,7 @@ def undo_all_cli(yes: bool, demo: bool, ask: Callable[[str], bool] = _ask) -> in
             print("El kit de rescate solo funciona en Windows (o con --demo).")
             return 2
         if not is_admin():
-            print("Ejecuta SafeTrim como administrador para deshacer los cambios.")
+            print("Ejecuta SafeBoost como administrador para deshacer los cambios.")
             return 1
     setup_logging()
     settings = Settings.load()
@@ -176,9 +176,9 @@ def undo_all_cli(yes: bool, demo: bool, ask: Callable[[str], bool] = _ask) -> in
         app = build_context(settings=settings, warm_checks=False)
     pending = [s for s in app.store.list() if s.kind == "apply" and not s.reverted_by]
     if not pending:
-        print("No hay cambios de SafeTrim que deshacer.")
+        print("No hay cambios de SafeBoost que deshacer.")
         return 0
-    print(f"SafeTrim {APP_VERSION} · kit de rescate\n")
+    print(f"SafeBoost {APP_VERSION} · kit de rescate\n")
     print(f"Se van a deshacer {len(pending)} sesión(es), de la más reciente a la más antigua:")
     for session in pending:
         applied = sum(r.status in ("applied", "partial") for r in session.results.values())
@@ -229,12 +229,9 @@ def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: 
             print("La CLI solo funciona en Windows (o con --demo).")
             return 2
         if not is_admin():
-            print("Ejecuta SafeTrim desde una consola abierta como administrador.")
+            print("Ejecuta SafeBoost desde una consola abierta como administrador.")
             return 1
-    migration = None if demo else _migrate_from_wintune()
     setup_logging()
-    if migration is not None and migration.migrated:
-        print(f"Datos de WinTune copiados a SafeTrim: {', '.join(migration.copied)}")
     settings = Settings.load()
     if demo:
         from core.demo import DemoRunner, demo_environment, demo_registry
@@ -295,13 +292,19 @@ def apply_selection_cli(path: str, yes: bool, include_irreversible: bool, demo: 
     return 3 if summary["failed"] or summary["partial"] else 0
 
 
-def _migrate_from_wintune() -> MigrationResult | None:
-    """Copia los datos de WinTune (nombre anterior) para poder seguir deshaciendo sesiones."""
-    from core.migration import migrate_legacy_data
+def _migrate_legacy() -> MigrationResult | None:
+    """Copia los datos de los nombres anteriores (SafeTrim y, antes, WinTune) para poder seguir
+    deshaciendo sesiones. Se hace antes que nada, también en la CLI y en las tareas programadas,
+    para que "Deshacer todo" funcione aunque no se haya abierto la interfaz tras actualizar."""
+    from core.migration import migrate_from_safetrim, migrate_legacy_data
     from core.process import SubprocessRunner
 
+    runner = SubprocessRunner() if sys.platform == "win32" else None
     try:
-        return migrate_legacy_data(SubprocessRunner() if sys.platform == "win32" else None)
+        result = migrate_from_safetrim(runner)
+        if result.migrated:
+            return result
+        return migrate_legacy_data(runner)
     except OSError:
         # Nunca bloquear el arranque por la migración: los datos antiguos siguen intactos.
         return None
@@ -312,7 +315,7 @@ def maintenance(build: Callable[..., Any] | None = None) -> int:
 
     Solo limpia temporales y miniaturas (las mismas reglas de antigüedad que la interfaz), sin
     punto de restauración porque no recupera archivos. El informe aparece en el Dashboard la
-    próxima vez que se abra SafeTrim.
+    próxima vez que se abra SafeBoost.
     """
     from datetime import datetime
 
@@ -405,6 +408,11 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.self_test:
         return self_test()
+    # Con permisos de administrador: la migración vuelve a crear tareas programadas elevadas. Sin
+    # ellos la interfaz se relanza elevada y migra entonces.
+    migration = (
+        _migrate_legacy() if not args.demo and sys.platform == "win32" and is_admin() else None
+    )
     if args.capture_boot:
         return capture_boot()
     if args.maintenance:
@@ -437,8 +445,6 @@ def main(argv: list[str] | None = None) -> int:
     from ui.app import MainWindow
     from ui.theme import COLOR_THEME
 
-    # Antes de leer los ajustes: la migración trae también settings.json de WinTune.
-    migration = None if args.demo else _migrate_from_wintune()
     settings = Settings.load()
     from core.i18n import set_language
 

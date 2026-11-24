@@ -1,6 +1,6 @@
 """Pruebas con el registro real de Windows (solo se ejecutan en windows-latest).
 
-Usan exclusivamente HKCU\\Software\\SafeTrimTest y lo eliminan al terminar.
+Usan exclusivamente HKCU\\Software\\SafeBoostTest y lo eliminan al terminar.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requiere winreg nativo"),
 ]
 
-BASE = r"Software\SafeTrimTest"
+BASE = r"Software\SafeBoostTest"
 
 
 @pytest.fixture

@@ -117,7 +117,7 @@ def test_selection_drops_unknown_ids(tmp_path: Path) -> None:
     path.write_text(
         json.dumps(
             {
-                "format": "safetrim-selection",
+                "format": "safeboost-selection",
                 "version": 1,
                 "tweaks": ["privacy.diagtrack", "no.existe"],
                 "params": {"no.existe": {"x": 1}},
@@ -134,8 +134,8 @@ def test_selection_drops_unknown_ids(tmp_path: Path) -> None:
     "payload",
     [
         {"format": "otro", "tweaks": []},
-        {"format": "safetrim-selection", "version": 99, "tweaks": []},
-        {"format": "safetrim-selection", "tweaks": "privacy.diagtrack"},
+        {"format": "safeboost-selection", "version": 99, "tweaks": []},
+        {"format": "safeboost-selection", "tweaks": "privacy.diagtrack"},
         "no es json",
     ],
 )
@@ -157,7 +157,7 @@ def test_report_escapes_and_lists_results(make_engine: EngineFactory, tmp_path: 
             {
                 "op": "registry_set",
                 "hive": "HKLM",
-                "path": r"SOFTWARE\SafeTrimTest",
+                "path": r"SOFTWARE\SafeBoostTest",
                 "name": "X",
                 "kind": "REG_DWORD",
                 "value": 1,

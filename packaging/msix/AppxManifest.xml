@@ -12,7 +12,7 @@
   <Identity Name="{{identity_name}}" Publisher="{{publisher}}" Version="{{version}}"
             ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>SafeTrim</DisplayName>
+    <DisplayName>SafeBoost</DisplayName>
     <PublisherDisplayName>{{publisher_display_name}}</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <Description>Optimización reversible de Windows 10/11</Description>
@@ -25,8 +25,8 @@
     <Resource Language="en-US" />
   </Resources>
   <Applications>
-    <Application Id="SafeTrim" Executable="SafeTrim.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="SafeTrim" Description="Optimización reversible de Windows"
+    <Application Id="SafeBoost" Executable="SafeBoost.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="SafeBoost" Description="Optimización reversible de Windows"
         BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />

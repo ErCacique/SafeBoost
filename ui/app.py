@@ -149,7 +149,7 @@ class MainWindow(ctk.CTk):
         messagebox.showerror(
             APP_NAME,
             f"Algo ha fallado: {val}{where}\n\nAjustes → Exportar log incluye este informe para "
-            "que puedas enviarlo. SafeTrim sigue funcionando.",
+            "que puedas enviarlo. SafeBoost sigue funcionando.",
             parent=self,
         )
 
@@ -169,7 +169,7 @@ class MainWindow(ctk.CTk):
 
     def _fatal(self, exc: BaseException) -> None:
         log.error("startup_failed", extra={"err": str(exc)})
-        messagebox.showerror(APP_NAME, f"No se pudo iniciar SafeTrim:\n\n{exc}")
+        messagebox.showerror(APP_NAME, f"No se pudo iniciar SafeBoost:\n\n{exc}")
         self.destroy()
 
     def _build(self, app: AppContext) -> None:
@@ -257,7 +257,7 @@ class MainWindow(ctk.CTk):
             return
         app = self.ui.app
         if not app.env.supported:
-            why = "Este Windows no está soportado: SafeTrim solo puede simular."
+            why = "Este Windows no está soportado: SafeBoost solo puede simular."
         elif not app.env.is_admin:
             why = "Sin permisos de administrador: solo se puede simular."
         else:

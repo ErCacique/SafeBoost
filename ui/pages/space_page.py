@@ -51,7 +51,7 @@ def open_apps_settings() -> None:
 class SpacePage(Page):
     title = "Espacio"
     subtitle = (
-        "Qué ocupa el disco y qué programas tienes instalados. SafeTrim solo te lo enseña: "
+        "Qué ocupa el disco y qué programas tienes instalados. SafeBoost solo te lo enseña: "
         "decides tú qué borrar o desinstalar."
     )
 
@@ -84,7 +84,7 @@ class SpacePage(Page):
         profile = Path.home()
 
         def work(_p: ProgressFn, cancel: threading.Event) -> Any:
-            # Carpeta del usuario con sesión (SafeTrim puede ejecutarse elevado con otra cuenta).
+            # Carpeta del usuario con sesión (SafeBoost puede ejecutarse elevado con otra cuenta).
             try:
                 home = user_profile_dir(app.engine._ctx(app.engine.catalog.tweaks[0], True))
             except Exception:  # noqa: BLE001 - sin perfil del usuario, el del proceso
@@ -149,7 +149,7 @@ class SpacePage(Page):
         if not messagebox.askyesno(
             "Desinstalar",
             f"Se abrirá el desinstalador de {cand.program.name} ({cand.reason}). Sigue sus pasos. "
-            "No se puede deshacer desde SafeTrim, pero puedes reinstalarlo desde la web del "
+            "No se puede deshacer desde SafeBoost, pero puedes reinstalarlo desde la web del "
             "fabricante. ¿Continuar?",
             parent=self,
         ):

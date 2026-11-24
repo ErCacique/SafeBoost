@@ -1,4 +1,4 @@
-"""Constantes globales de SafeTrim: rutas, listas de protección y valores de configuración.
+"""Constantes globales de SafeBoost: rutas, listas de protección y valores de configuración.
 
 Todo valor "mágico" del proyecto vive aquí o en data/tweaks.json.
 """
@@ -10,9 +10,9 @@ import sys
 from pathlib import Path
 from typing import Final
 
-APP_NAME: Final = "SafeTrim"
-APP_VERSION: Final = "0.10.0"
-APP_ID: Final = "ErCacique.SafeTrim"
+APP_NAME: Final = "SafeBoost"
+APP_VERSION: Final = "0.11.0"
+APP_ID: Final = "ErCacique.SafeBoost"
 
 # --------------------------------------------------------------------------- rutas
 
@@ -20,7 +20,7 @@ APP_ID: Final = "ErCacique.SafeTrim"
 # Versión portable (USB): si junto al .exe hay un archivo con este nombre, los datos se guardan
 # en una carpeta al lado del programa y no se toca %LOCALAPPDATA%.
 PORTABLE_MARKER: Final = "portable.txt"
-PORTABLE_DATA_DIR: Final = "SafeTrimData"
+PORTABLE_DATA_DIR: Final = "SafeBoostData"
 
 
 def _portable_home() -> Path | None:
@@ -30,9 +30,17 @@ def _portable_home() -> Path | None:
     return exe_dir / PORTABLE_DATA_DIR if (exe_dir / PORTABLE_MARKER).exists() else None
 
 
+def _env_override() -> str | None:
+    # SAFETRIM_HOME (hasta 0.10.x) y WINTUNE_HOME (hasta 0.2.x) son nombres anteriores: se aceptan.
+    return (
+        os.environ.get("SAFEBOOST_HOME")
+        or os.environ.get("SAFETRIM_HOME")
+        or os.environ.get("WINTUNE_HOME")
+    )
+
+
 def _home_override() -> str | None:
-    # WINTUNE_HOME es el nombre anterior de la variable (hasta 0.2.x): se sigue aceptando.
-    env = os.environ.get("SAFETRIM_HOME") or os.environ.get("WINTUNE_HOME")
+    env = _env_override()
     if env:
         return env
     portable = _portable_home()
@@ -44,7 +52,7 @@ def _local_appdata() -> Path:
 
 
 def _app_home() -> Path:
-    """Raíz de datos locales. SAFETRIM_HOME permite redirigirla (tests, portable)."""
+    """Raíz de datos locales. SAFEBOOST_HOME permite redirigirla (tests, portable)."""
     override = _home_override()
     if override:
         return Path(override)
@@ -62,15 +70,34 @@ def _resource_root() -> Path:
 APP_HOME: Final = _app_home()
 HOME_OVERRIDDEN: Final = _home_override() is not None
 PORTABLE_MODE: Final = _portable_home() is not None
+# Redirigida por variable de entorno (tests, CI): entonces no se migra nada.
+ENV_OVERRIDDEN: Final = _env_override() is not None
 
 # Nombre anterior del programa (hasta 0.2.x). Se usa solo para migrar datos y tareas.
 LEGACY_APP_NAME: Final = "WinTune"
 LEGACY_HOME: Final = _local_appdata() / LEGACY_APP_NAME
 LEGACY_LOG_FILE_NAME: Final = "wintune.jsonl"
 LEGACY_TASK_FOLDER: Final = "\\WinTune\\"
-LEGACY_SELECTION_FORMATS: Final = ("wintune-selection",)
+LEGACY_SELECTION_FORMATS: Final = ("safetrim-selection", "wintune-selection")
 # Marca que se deja en la carpeta antigua tras copiarla (no se borra nada).
 LEGACY_MIGRATED_MARKER: Final = "MIGRADO_A_SAFETRIM.txt"
+
+# Nombre anterior: SafeTrim (0.3.0 a 0.10.x). Se usa solo para migrar datos y tareas.
+SAFETRIM_APP_NAME: Final = "SafeTrim"
+SAFETRIM_PORTABLE_DATA_DIR: Final = "SafeTrimData"
+SAFETRIM_TASK_FOLDER_OLD: Final = "\\SafeTrim\\"
+SAFETRIM_MIGRATED_MARKER: Final = "MIGRADO_A_SAFEBOOST.txt"
+
+
+def _safetrim_home() -> Path:
+    """Datos de SafeTrim: junto al .exe en la versión portable, si no en %LOCALAPPDATA%."""
+    portable = _portable_home()
+    if portable is not None:
+        return portable.parent / SAFETRIM_PORTABLE_DATA_DIR
+    return _local_appdata() / SAFETRIM_APP_NAME
+
+
+SAFETRIM_HOME: Final = _safetrim_home()
 BACKUP_DIR: Final = APP_HOME / "backups"
 SESSIONS_DIR: Final = APP_HOME / "sessions"
 LOG_DIR: Final = APP_HOME / "logs"
@@ -79,11 +106,11 @@ SETTINGS_FILE: Final = APP_HOME / "settings.json"
 
 RESOURCE_ROOT: Final = _resource_root()
 TWEAKS_FILE: Final = RESOURCE_ROOT / "data" / "tweaks.json"
-ICON_FILE: Final = RESOURCE_ROOT / "assets" / "safetrim.ico"
+ICON_FILE: Final = RESOURCE_ROOT / "assets" / "safeboost.ico"
 
 
 def self_command() -> list[str]:
-    """Orden para relanzar SafeTrim: el .exe empaquetado o `python main.py` en desarrollo."""
+    """Orden para relanzar SafeBoost: el .exe empaquetado o `python main.py` en desarrollo."""
     if getattr(sys, "frozen", False):
         return [sys.executable]
     return [sys.executable, str(RESOURCE_ROOT / "main.py")]
@@ -103,7 +130,7 @@ ALLOWED_COMMAND_EXES: Final[dict[str, Path]] = {
 
 # --------------------------------------------------------------------------- logging
 
-LOG_FILE_NAME: Final = "safetrim.jsonl"
+LOG_FILE_NAME: Final = "safeboost.jsonl"
 LOG_MAX_BYTES: Final = 2 * 1024 * 1024
 LOG_BACKUP_COUNT: Final = 5
 
@@ -289,8 +316,8 @@ TIMEOUT_DXDIAG: Final = 90
 
 # --------------------------------------------------------------------------- tareas propias
 
-# Carpeta del Programador de tareas para las tareas temporales que crea SafeTrim.
-SAFETRIM_TASK_FOLDER: Final = "\\SafeTrim\\"
+# Carpeta del Programador de tareas para las tareas temporales que crea SafeBoost.
+SAFEBOOST_TASK_FOLDER: Final = "\\SafeBoost\\"
 POST_REBOOT_TASK_NAME: Final = "PostRebootMetrics"
 # Retraso tras el inicio de sesión: Windows registra el evento de arranque unos minutos
 # después de terminar el arranque.
@@ -400,7 +427,8 @@ KNOWN_PROCESSES: Final[dict[str, str]] = {
     "firefox.exe": _BROWSER_HINT,
     "opera.exe": _BROWSER_HINT,
     "brave.exe": _BROWSER_HINT,
-    "safetrim.exe": "SafeTrim (este programa).",
+    "safeboost.exe": "SafeBoost (este programa).",
+    "safetrim.exe": "SafeTrim (este programa, con su nombre anterior).",
 }
 
 # --------------------------------------------------------------------------- Windows Update

@@ -55,11 +55,11 @@ def test_crash_hooks_installed(monkeypatch: Any) -> None:
 def test_log_export_includes_crash_reports(tmp_path: Path) -> None:
     logs = tmp_path / "logs"
     logs.mkdir()
-    (logs / "safetrim.jsonl").write_text("{}")
+    (logs / "safeboost.jsonl").write_text("{}")
     (tmp_path / "crashes").mkdir()
     (tmp_path / "crashes" / "crash-1.txt").write_text("traza")
     out = export_logs(tmp_path / "out", log_dir=logs)
-    assert (out / "crash-1.txt").exists() and (out / "safetrim.jsonl").exists()
+    assert (out / "crash-1.txt").exists() and (out / "safeboost.jsonl").exists()
 
 
 # --------------------------------------------------------------------------- seguridad

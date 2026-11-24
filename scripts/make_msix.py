@@ -2,9 +2,9 @@
 
     python scripts/make_msix.py VERSION CARPETA_PYINSTALLER CARPETA_SALIDA
 
-Copia el programa compilado (dist/SafeTrim), genera los iconos que pide la Store a partir de
-assets/safetrim.ico y escribe AppxManifest.xml con los datos de packaging/msix/store.json.
-Después, en Windows: makeappx pack /d CARPETA_SALIDA /p SafeTrim.msix /nv
+Copia el programa compilado (dist/SafeBoost), genera los iconos que pide la Store a partir de
+assets/safeboost.ico y escribe AppxManifest.xml con los datos de packaging/msix/store.json.
+Después, en Windows: makeappx pack /d CARPETA_SALIDA /p SafeBoost.msix /nv
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 MSIX_DIR = ROOT / "packaging" / "msix"
-ICON = ROOT / "assets" / "safetrim.ico"
+ICON = ROOT / "assets" / "safeboost.ico"
 # Nombre del archivo → tamaño (ancho, alto) que exige el manifiesto.
 ASSETS = {
     "StoreLogo.png": (50, 50),
@@ -66,8 +66,8 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     version, build, out = argv[0], Path(argv[1]), Path(argv[2])
-    if not (build / "SafeTrim.exe").exists():
-        print(f"No está SafeTrim.exe en {build}")
+    if not (build / "SafeBoost.exe").exists():
+        print(f"No está SafeBoost.exe en {build}")
         return 1
     store = json.loads((MSIX_DIR / "store.json").read_text(encoding="utf-8"))
     if out.exists():
