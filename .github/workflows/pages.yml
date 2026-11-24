@@ -12,6 +12,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # deploy-pages v5 busca el paquete de la web con la API de Actions: sin esto no lo encuentra.
+  actions: read
 
 concurrency:
   group: pages
