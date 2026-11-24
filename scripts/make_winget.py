@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 PACKAGE = "ErCacique.SafeBoost"
-REPO = "https://github.com/ErCacique/WinOpt"
+REPO = "https://github.com/ErCacique/SafeBoost"
 SCHEMA = "1.6.0"
 
 

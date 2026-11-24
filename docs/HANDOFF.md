@@ -15,7 +15,7 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 
 ## Repositorio y procedimiento
 
-- Repo `ErCacique/WinOpt` (privado; el usuario dijo que lo hará público). Rama de trabajo
+- Repo `ErCacique/SafeBoost` (antes WinOpt, renombrado el 2026-11-24; GitHub redirige los enlaces antiguos. Privado; el usuario dijo que lo hará público). Rama de trabajo
   **`ccr-66de96ff-ie0yja`**: solo se hace push ahí. Force-push denegado: para sincronizar con
   `main` tras un squash merge, `git merge origin/main` en la rama.
 - Commits terminan con:
@@ -52,13 +52,14 @@ se reinicia el entorno. Última actualización: 2026-11-21.
 | 0.4.1 | Arranque rápido: una sola PowerShell, dxdiag (HAGS) en segundo plano, progreso por pasos |
 | 0.5.0 | Qué retrasa el arranque (eventos 101-110), navegadores en segundo plano, `--undo-all`, instalador + portable (onedir), ventana para pantallas pequeñas |
 | 0.8.0 | Arreglar mi PC lento, modo juego, fabricantes, fuentes oficiales, Espacio, informe PDF, actualización verificada, inglés parcial, winget, ARM64 (portable), firma preparada |
+| 0.11.2 | Repositorio renombrado a ErCacique/SafeBoost: enlaces y aviso de versiones actualizados |
 | 0.11.1 | Auditoría de seguridad: 7 arreglos (comillas PowerShell, junctions en limpieza, desinstalador HKCU, tareas elevadas, actualizador, Pillow, parámetros) |
 | 0.11.0 | Cambio de nombre SafeTrim → SafeBoost con migración automática de datos, tareas, instalador y actualizador |
 | 0.10.0 | Prueba de rendimiento, navegadores (caché y extensiones), modo ahorro, vigilancia en segundo plano (bandeja), inglés completo, licencia Técnico (Ed25519 offline), MSIX, web, mypy/cobertura/humo de UI |
 | 0.9.0 | Informes de error locales, estado de seguridad, retrasar inicio 90 s, programas del fabricante con desinstalador, soporte del modelo |
 | 0.7.0 | (incluye 0.6.0) Hardware: qué RAM comprar, SMART/batería/CPU frenada/drivers, Defender; vigilancia: inicio nuevo, Evolución (gráfica, tendencia, foto antes/después), mantenimiento mensual, Privacidad |
 
-Última publicada: v0.11.1 (`https://github.com/ErCacique/WinOpt/releases/tag/v0.11.1`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
+Última publicada: v0.11.2 (`https://github.com/ErCacique/SafeBoost/releases/tag/v0.11.2`), con instalador, portable x64, portable ARM64, SHA256SUMS y manifiestos de winget.
 
 ## v0.8.0 (publicada el 2026-11-22)
 
@@ -124,7 +125,7 @@ tests funcionen en Linux; pystray no se puede importar en Linux sin pantalla (im
 
 ## v0.11.0 · SafeTrim → SafeBoost (2026-11-24)
 
-El usuario eligió el nombre **SafeBoost**. El repositorio sigue llamándose WinOpt. Compatibilidad:
+El usuario eligió el nombre **SafeBoost**. El repositorio se renombró después a SafeBoost (v0.11.2). Compatibilidad:
 `core/migration.py:migrate_from_safetrim` (copia la carpeta entera una vez, marca
 `MIGRADO_A_SAFEBOOST.txt`) y `migrate_tasks` (lee el usuario de \\SafeTrim\\Maintenance y Tray,
 las borra y las recrea en \\SafeBoost\\); se ejecuta al principio de `main()` con permisos de
@@ -143,3 +144,8 @@ Reglas que deben mantenerse: todo texto externo a PowerShell con `ps_quote`; rec
 limpiar con `tweaks.cleanup._walk` (nunca `rglob`); toda tarea elevada nueva debe comprobar
 `constants.protected_location`; parámetros de usuario pasan por `engine.clean_params`; nada que se
 vaya a ejecutar elevado puede salir de HKCU ni de carpetas del usuario.
+
+## v0.11.2 · Repositorio renombrado (2026-11-24)
+
+WinOpt → SafeBoost en GitHub. No crear nunca otro repo llamado WinOpt en la cuenta: rompería la
+redirección de la que dependen las versiones antiguas para encontrar actualizaciones.

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeBoost"
-APP_VERSION: Final = "0.11.1"
+APP_VERSION: Final = "0.11.2"
 APP_ID: Final = "ErCacique.SafeBoost"
 
 # --------------------------------------------------------------------------- rutas
@@ -469,7 +469,7 @@ WIN11_MIN_STORAGE_GIB: Final = 64
 
 # --------------------------------------------------------------------------- versión nueva
 
-UPDATE_REPO: Final = "ErCacique/WinOpt"
+UPDATE_REPO: Final = "ErCacique/SafeBoost"
 UPDATE_API_URL: Final = f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"
 UPDATE_CHECK_TIMEOUT: Final = 5
 

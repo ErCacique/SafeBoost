@@ -5,7 +5,7 @@
 ## El problema de partida
 
 El repo es privado, así que los assets de sus Releases **solo los descargan usuarios con
-acceso al repo**. Un enlace a `github.com/ErCacique/WinOpt/releases/...` devuelve 404 a
+acceso al repo**. Un enlace a `github.com/ErCacique/SafeBoost/releases/...` devuelve 404 a
 cualquier otra persona.
 
 ## Opciones para entregar `SafeBoost.exe` a terceros
