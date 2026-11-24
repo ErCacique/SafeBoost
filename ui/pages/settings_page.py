@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
-from core.constants import APP_HOME, APP_VERSION, LOG_DIR, self_command
+from core.constants import APP_HOME, APP_NAME, APP_VERSION, LOG_DIR, self_command
 from core.i18n import LANGUAGES, _
 from core.license import (
     Branding,
@@ -22,6 +22,7 @@ from core.license import (
 from core.logger import ROOT_LOGGER_NAME, export_logs
 from core.restore import RestoreResult
 from core.tray import remove_tray, schedule_tray
+from core.update_check import UpdateCheck, check_update
 from core.watch import remove_maintenance, schedule_maintenance
 from ui.pages.base import Page, open_path, show_error
 from ui.theme import (
@@ -36,6 +37,7 @@ from ui.theme import (
     WRAP,
 )
 from ui.widgets import Card
+from ui.worker import BackgroundTask
 
 if TYPE_CHECKING:
     from ui.app import MainWindow
@@ -109,6 +111,20 @@ class SettingsPage(Page):
             font=FONT_BODY,
             command=self._save,
         ).pack(anchor="w", padx=PAD, pady=PAD_S)
+        update_row = ctk.CTkFrame(other, fg_color="transparent")
+        update_row.pack(anchor="w", padx=PAD, pady=(0, PAD_S))
+        self.update_check_btn = ctk.CTkButton(
+            update_row,
+            text=_("Buscar actualizaciones"),
+            width=190,
+            **SECONDARY_BUTTON,
+            command=self._check_now,
+        )
+        self.update_check_btn.pack(side="left")
+        self.update_status = ctk.CTkLabel(
+            update_row, text=f"{APP_NAME} {APP_VERSION}", font=FONT_SMALL, text_color=TEXT_MUTED
+        )
+        self.update_status.pack(side="left", padx=PAD)
         self.maintenance = ctk.BooleanVar(value=settings.maintenance)
         ctk.CTkSwitch(
             other,
@@ -399,3 +415,57 @@ class SettingsPage(Page):
             messagebox.showerror("Logo", str(exc), parent=self)
             return
         self._refresh_license()
+
+    # ------------------------------------------------------------------ actualizaciones
+
+    def _check_now(self) -> None:
+        self.update_check_btn.configure(state="disabled")
+        self.update_status.configure(text=_("Comprobando…"), text_color=TEXT_MUTED)
+
+        def work(_p: Any, _c: Any) -> UpdateCheck:
+            return check_update()
+
+        def done(result: UpdateCheck) -> None:
+            self.update_check_btn.configure(state="normal")
+            if result.status == "latest":
+                self.update_status.configure(
+                    text=_("Tienes la última versión ({v})", v=APP_VERSION),
+                    text_color=RISK_COLORS["bajo"],
+                )
+                return
+            if result.status == "error":
+                self.update_status.configure(
+                    text=_("No se pudo comprobar: {why}", why=_(result.message)),
+                    text_color=RISK_COLORS["medio"],
+                )
+                return
+            info = result.info
+            assert info is not None  # noqa: S101 - status "new" siempre trae la versión
+            self.update_status.configure(
+                text=_("Hay una versión nueva: {v}", v=info.version),
+                text_color=RISK_COLORS["medio"],
+            )
+            if messagebox.askyesno(
+                _("Buscar actualizaciones"),
+                _(
+                    "Hay una versión nueva de SafeBoost: {v} (tienes {mine}). ¿Descargarla e "
+                    "instalarla ahora? Tus datos se conservan.",
+                    v=info.version,
+                    mine=APP_VERSION,
+                ),
+                parent=self,
+            ):
+                from ui.pages.dashboard import DashboardPage
+
+                dashboard = self.main.page("dashboard")
+                if isinstance(dashboard, DashboardPage):
+                    dashboard.show_update(info)
+                    dashboard._install_update()
+
+        def failed(exc: BaseException) -> None:
+            self.update_check_btn.configure(state="normal")
+            self.update_status.configure(
+                text=_("No se pudo comprobar: {why}", why=str(exc)), text_color=RISK_COLORS["medio"]
+            )
+
+        BackgroundTask(self, work, done, failed).start()

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Final
 
 APP_NAME: Final = "SafeBoost"
-APP_VERSION: Final = "0.12.0"
+APP_VERSION: Final = "0.13.0"
 APP_ID: Final = "ErCacique.SafeBoost"
 
 # --------------------------------------------------------------------------- rutas

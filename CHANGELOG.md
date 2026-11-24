@@ -7,6 +7,22 @@ y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-24
+
+### Added
+- **«Arreglar mi PC» como pantalla** (paso 1 de 2): el plan para tu equipo con una casilla por
+  cambio (perfil recomendado, limpieza), avisos de qué hacer antes, los programas de inicio que
+  conviene revisar y lo que ningún ajuste arregla. «Aplicar N cambios» lleva a la revisión y al
+  resumen con el antes y el después de siempre (paso 2). Sustituye al diálogo anterior.
+- **Buscar actualizaciones** (Ajustes): dice claramente «Tienes la última versión», «Hay una
+  versión nueva» (con opción de instalarla) o por qué no se pudo comprobar (sin conexión,
+  versiones no públicas, límite de GitHub…). El aviso automático al arrancar sigue siendo
+  silencioso si falla.
+
+### Fixed
+- La web (GitHub Pages) se publica en dos fases, construir y desplegar, como la plantilla
+  oficial; en una sola fase `deploy-pages` v5 no encontraba el paquete.
+
 ## [0.12.0] - 2026-11-24
 
 ### Added

@@ -37,6 +37,7 @@ from ui.pages.base import Page, show_error
 from ui.pages.dashboard import DashboardPage
 from ui.pages.diagnostics_page import DiagnosticsPage
 from ui.pages.evolution_page import EvolutionPage
+from ui.pages.fix_page import FixPage
 from ui.pages.history import HistoryPage
 from ui.pages.home_page import HomePage
 from ui.pages.privacy_page import PrivacyPage
@@ -80,6 +81,7 @@ log = get_logger("ui")
 
 PAGES: list[tuple[str, str, type[Page]]] = [
     ("home", "Inicio", HomePage),
+    ("fix", "Arreglar mi PC", FixPage),
     ("dashboard", "Dashboard", DashboardPage),
     ("diagnostics", "Diagnóstico", DiagnosticsPage),
     ("evolution", "Evolución", EvolutionPage),
